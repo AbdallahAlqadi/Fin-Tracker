@@ -44,12 +44,21 @@ const DashboardUser = () => {
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
+  const [visibleItems, setVisibleItems] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         setCategories(response.data.data);
+        // Initialize visible items for each category type
+        const initialVisibleItems = response.data.data.reduce((acc, category) => {
+          if (!acc[category.categoryType]) {
+            acc[category.categoryType] = 12; // Show first 12 items by default
+          }
+          return acc;
+        }, {});
+        setVisibleItems(initialVisibleItems);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -96,6 +105,13 @@ const DashboardUser = () => {
     } catch (error) {
       console.error('Error submitting value:', error);
     }
+  };
+
+  const handleLoadMore = (type) => {
+    setVisibleItems((prev) => ({
+      ...prev,
+      [type]: prev[type] + 12, // Increase visible items by 12
+    }));
   };
 
   if (loading) return <p>Loading...</p>;
@@ -151,7 +167,7 @@ const DashboardUser = () => {
               {getCategoryIcon(type)} {type}
             </h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
-              {groupedCategories[type].map((category) => (
+              {groupedCategories[type].slice(0, visibleItems[type]).map((category) => (
                 <CategoryCard
                   key={category._id}
                   type={category.categoryType}
@@ -176,6 +192,27 @@ const DashboardUser = () => {
                 </CategoryCard>
               ))}
             </div>
+            {groupedCategories[type].length > visibleItems[type] && (
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <Button
+                  onClick={() => handleLoadMore(type)}
+                  style={{
+                    backgroundColor: '#4A90E2',
+                    color: '#FFFFFF',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    textTransform: 'none',
+                    fontSize: '16px',
+                    '&:hover': {
+                      backgroundColor: '#357ABD',
+                    },
+                  }}
+                >
+                  Load More
+                </Button>
+              </div>
+            )}
           </div>
         ))
       )}
