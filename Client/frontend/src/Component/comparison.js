@@ -206,7 +206,9 @@ const Comparison = () => {
       .nice()
       .rangeRound([height - margin.top - margin.bottom, 0]);
 
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const color = d3.scaleOrdinal()
+      .domain(categories)
+      .range(d3.quantize(t => d3.interpolateRainbow(t), categories.length));
 
     // Add bars
     svg.append("g")
@@ -294,7 +296,9 @@ const Comparison = () => {
       .nice()
       .rangeRound([height - margin.top - margin.bottom, 0]);
 
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const color = d3.scaleOrdinal()
+      .domain(categories)
+      .range(d3.quantize(t => d3.interpolateRainbow(t), categories.length));
 
     const line = d3.line()
       .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
