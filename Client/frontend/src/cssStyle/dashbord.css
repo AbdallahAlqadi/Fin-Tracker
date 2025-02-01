@@ -1,0 +1,266 @@
+/* Modern Finance-Themed Form Styling */
+.form-container {
+  max-width: 450px; /* زيادة العرض إلى 500px */
+  padding: 30px;
+  background: linear-gradient(145deg, #abcdee, #e0e7f0);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #1e293b;
+  margin: 80px auto;
+  transition: all 0.4s ease;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+
+
+.form-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #1f2937;
+}
+
+.form-container .input-group {
+  margin-bottom: 20px;
+}
+
+.form-container .input-group label {
+  margin-bottom: 6px;
+  color: #1f2937;
+}
+
+/* Common styles for input elements */
+.form-container input[type="text"],
+.form-container select,
+.form-container input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1f2937;
+  background-color: #ffffff;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.form-container input[type="text"]:focus,
+.form-container select:focus,
+.form-container input[type="file"]:focus {
+  background-color: #f1f5f9;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+/* Common styles for buttons */
+.form-container button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(145deg, #4f46e5, #3730a3);
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+}
+
+.form-container button:hover {
+  background: linear-gradient(145deg, #3730a3, #312e81);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.4);
+}
+
+.form-container button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+
+/* CategoryList.css */
+/* هاي بتمثل الايقونات يلي بختار من user الموجود في صفحه Admin */
+
+
+
+.category-list-container {
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7fafc;
+  }
+  
+  .loading-text {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+  }
+  
+  .error-text {
+    color: #ff4444;
+    text-align: center;
+    font-size: 18px;
+  }
+  
+  .no-categories-text {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+  }
+  
+  .category-type-container {
+    margin-bottom: 40px;
+    padding: 20px;
+    border-radius: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.50);
+    border: 1px solid black;
+  }
+  
+  .category-type-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    color: #2d3748;
+    text-transform: capitalize;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  
+  .category-chunk {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 25px;
+    justify-items: center;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+  
+  .category-item {
+    text-align: center;
+    padding: 20px;
+    border-radius: 20px;
+    background-color: #edf2f7;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s, border-color 0.2s;
+    cursor: pointer;
+    width: 100%;
+    border: 1px solid #cbd5e0;
+  }
+  
+  .category-image-container {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #cbd5e0;
+  }
+  
+  .category-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  
+  .category-name {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 600;
+    color: #4a5568;
+  }
+  
+  .update-button {
+    margin-top: 10px;
+    margin-right: 5px;
+    padding: 5px 10px;
+    background-color: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .delete-button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    text-align: center;
+  }
+  
+  .modal-input {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+  }
+  
+  .modal-select {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+  }
+  
+  .save-button {
+    background-color: #48bb78;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .cancel-button {
+    background-color: #e53e3e;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    margin-top: 10px;
+  }

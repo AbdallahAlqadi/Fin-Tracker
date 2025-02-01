@@ -1,0 +1,235 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(-45deg, #a3b8ff, #c6a8ff, #a3b8ff, #c6a8ff); /* ألوان فاتحة */
+    background-size: 400% 400%;
+    animation: gradientWave 10s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+@keyframes gradientWave {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.title-container {
+    text-align: center;
+    margin-bottom: 25px;
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+.title {
+    font-size: 2.7rem;
+    font-weight: 830;
+    color: white;
+    text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2);
+    letter-spacing: 1.5px;
+    background: white;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+
+.signup-box {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.8rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 340px;
+    text-align: center;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.signup-box h2 {
+    margin-bottom: 1.2rem;
+    font-size: 1.9rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.signup-box .logo {
+    width: 90px;
+    margin-bottom: 1.2rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.input-group {
+    margin-bottom: 1.2rem;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-size: 0.9rem;
+    color: #4a5568;
+    text-align: left;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    color: #333;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    margin-left: -8px;
+}
+
+.input-group input::placeholder {
+    color: #a0aec0;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #a3b8ff; /* لون فاتح */
+    box-shadow: 0 0 0 3px rgba(163, 184, 255, 0.1); /* لون فاتح */
+}
+
+.signup-button {
+    width: 100%;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 10px;
+    background: #6687f1; /* لون فاتح */
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.signup-button:hover {
+    background: #8fa3e6; /* لون فاتح */
+    transform: translateY(-2px);
+}
+
+.signup-button:active {
+    transform: translateY(0);
+}
+
+.social-signup {
+    margin-top: 1.2rem;
+}
+
+.social-signup button {
+    width: 100%;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    margin-bottom: 0.5rem;
+}
+
+.social-signup button.google {
+    background: #ff6b6b; /* لون فاتح */
+    color: #fff;
+}
+
+.social-signup button.facebook {
+    background: #6b9bff; /* لون فاتح */
+    color: #fff;
+}
+
+.social-signup button:hover {
+    transform: translateY(-2px);
+}
+
+.social-signup button:active {
+    transform: translateY(0);
+}
+
+.signup-box .footer {
+    margin-top: 1.2rem;
+    font-size: 0.9rem;
+    color: #4a5568;
+    text-align: center;
+}
+
+.signup-box .footer a {
+    color: #a3b8ff; /* لون فاتح */
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.signup-box .footer a:hover {
+    color: #8fa3e6; /* لون فاتح */
+}
+
+@media (max-width: 768px) {
+    .signup-box {
+        width: 90%;
+        padding: 1.5rem;
+    }
+
+    .title {
+        font-size: 2.2rem;
+    }
+
+    .signup-box h2 {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .signup-box {
+        padding: 1.2rem;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .signup-box h2 {
+        font-size: 1.4rem;
+    }
+
+    .input-group input {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .signup-button {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
