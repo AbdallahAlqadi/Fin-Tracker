@@ -169,7 +169,10 @@ const Graph = () => {
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    // Create a color scale with a large number of colors
+    const color = d3.scaleOrdinal()
+      .domain(data.map((d, i) => i))
+      .range(d3.quantize(t => d3.interpolateRainbow(t), data.length));
 
     const pie = d3.pie()
       .value(d => parseFloat(d.valueitem))
@@ -291,7 +294,7 @@ const Graph = () => {
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
-                      <Box sx={{ width: "20px", height: "20px", backgroundColor: d3.schemeCategory10[index] }} />
+                      <Box sx={{ width: "20px", height: "20px", backgroundColor: d3.interpolateRainbow(index / filteredItems.length) }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId.categoryName} (${((item.valueitem / d3.sum(filteredItems.map(i => i.valueitem))) * 100).toFixed(2)}%)`}
