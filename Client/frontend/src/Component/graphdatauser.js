@@ -24,6 +24,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import * as XLSX from "xlsx";
+import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
@@ -74,6 +75,9 @@ const Graph = () => {
   const [filterType, setFilterType] = useState("Revenues"); // Default to "Revenues"
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
+
+  // إنشاء مقياس لوني باستخدام أكثر من 40 لونًا مختلفًا
+  const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
 
   useEffect(() => {
     fetchBudget();
@@ -169,11 +173,6 @@ const Graph = () => {
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
-    // Create a color scale with a large number of colors
-    const color = d3.scaleOrdinal()
-      .domain(data.map((d, i) => i))
-      .range(d3.quantize(t => d3.interpolateRainbow(t), data.length));
-
     const pie = d3.pie()
       .value(d => parseFloat(d.valueitem))
       .sort(null);
@@ -190,7 +189,7 @@ const Graph = () => {
 
     arcs.append("path")
       .attr("d", arc)
-      .attr("fill", (d, i) => color(i))
+      .attr("fill", (d, i) => colorScale(i)) // استخدام المقياس اللوني الجديد
       .attr("stroke", "#fff")
       .style("stroke-width", "2px");
   };
@@ -294,7 +293,7 @@ const Graph = () => {
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
-                      <Box sx={{ width: "20px", height: "20px", backgroundColor: d3.interpolateRainbow(index / filteredItems.length) }} />
+                      <Box sx={{ width: "20px", height: "20px", backgroundColor: colorScale(index) }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId.categoryName} (${((item.valueitem / d3.sum(filteredItems.map(i => i.valueitem))) * 100).toFixed(2)}%)`}
