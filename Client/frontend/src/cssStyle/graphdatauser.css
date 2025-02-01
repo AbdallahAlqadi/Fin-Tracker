@@ -1,0 +1,47 @@
+/* Graph.css */
+
+.styled-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: linear-gradient(145deg, #ffffff, #f9f9f9);
+    width: 200px;
+    height: 250px;
+  }
+  
+  .styled-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-color: #007BFF;
+  }
+  
+  .image-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 12px;
+  }
+  
+  .styled-select {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .styled-select .MuiOutlinedInput-notchedOutline {
+    border-color: #007BFF;
+  }
+  
+  .styled-select:hover .MuiOutlinedInput-notchedOutline {
+    border-color: #0056b3;
+  }
+  
+  .styled-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #007BFF;
+    border-width: 2px;
+  }
