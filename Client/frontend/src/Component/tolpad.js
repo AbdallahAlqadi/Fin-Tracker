@@ -16,6 +16,7 @@ import CategoryForm from '../Component/dashbordAdmin';
 import DashboardUser from '../Component/dashbordUser';
 import BudgetItems from '../Component/datauser';
 import Graph from '../Component/graphdatauser';
+import Comparison from '../Component/comparison';
 
 const demoTheme = createTheme({
   palette: {
@@ -82,6 +83,7 @@ function DashboardLayoutBasic(props) {
     { path: '/dashboarduser', component: <DashboardUser /> },
     { path: '/showdatauser', component: <BudgetItems /> },
     { path: '/graphdatauser', component: <Graph /> },
+    { path: '/comparison', component: <Comparison /> },
 
 
  
@@ -166,8 +168,8 @@ function DashboardLayoutBasic(props) {
             },
            
             {
-              segment: 'users',
-              title: 'Users',
+              segment: 'comparison',
+              title: 'Comparison',
               icon: <PersonIcon />,
             },
             {
