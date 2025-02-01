@@ -39,7 +39,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
     formData.append('image', image);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5003/api/category', formData, {
+      const response = await axios.post('http://127.0.0.1:5004/api/category', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -138,7 +138,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
-                            src={`http://127.0.0.1:5003/${category.image}`}
+                            src={`http://127.0.0.1:5004/${category.image}`}
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
                           />
@@ -235,7 +235,7 @@ const CombinedPage = () => {
     setError(null);
 
     try {
-      const response = await axios.get("http://127.0.0.1:5003/api/getcategories");
+      const response = await axios.get("http://127.0.0.1:5004/api/getcategories");
       setCategories(response.data.data);
     } catch (error) {
       setError(error.message);
@@ -254,7 +254,7 @@ const CombinedPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:5003/api/deletecategory/${id}`);
+      const response = await axios.delete(`http://127.0.0.1:5004/api/deletecategory/${id}`);
       if (response.status === 200) {
         setCategories(categories.filter((category) => category._id !== id));
       }
@@ -265,7 +265,7 @@ const CombinedPage = () => {
 
   const handleUpdate = async (updatedCategory) => {
     try {
-      const response = await axios.put(`http://127.0.0.1:5003/api/updatecategory/${updatedCategory._id}`, updatedCategory);
+      const response = await axios.put(`http://127.0.0.1:5004/api/updatecategory/${updatedCategory._id}`, updatedCategory);
       if (response.status === 200) {
         setCategories(categories.map((cat) => (cat._id === updatedCategory._id ? response.data : cat)));
       }

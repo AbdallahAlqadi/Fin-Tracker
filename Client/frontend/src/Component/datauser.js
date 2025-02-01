@@ -123,7 +123,7 @@ const BudgetItems = () => {
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5003/api/getUserBudget', {
+      const response = await axios.get('http://127.0.0.1:5004/api/getUserBudget', {
         headers: {
           Auth: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ const BudgetItems = () => {
 
   const deleteItem = async (CategoriesId) => {
     try {
-      const response = await axios.delete('http://127.0.0.1:5003/api/deleteBudget', {
+      const response = await axios.delete('http://127.0.0.1:5004/api/deleteBudget', {
         headers: {
           Auth: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -170,7 +170,7 @@ const BudgetItems = () => {
 
     try {
       const response = await axios.put(
-        'http://127.0.0.1:5003/api/updateBudget',
+        'http://127.0.0.1:5004/api/updateBudget',
         { CategoriesId: selectedItem.CategoriesId._id, valueitem: updatedValue },
         {
           headers: {
@@ -353,7 +353,7 @@ const BudgetItems = () => {
                     <StyledCard>
                       <ImageContainer>
                         <img
-                          src={`http://127.0.0.1:5003/${item.CategoriesId.image}`}
+                          src={`http://127.0.0.1:5004/${item.CategoriesId.image}`}
                           alt="Category"
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />

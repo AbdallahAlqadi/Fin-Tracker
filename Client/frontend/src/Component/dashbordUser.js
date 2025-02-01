@@ -48,7 +48,7 @@ const DashboardUser = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5003/api/getcategories');
+        const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         setCategories(response.data.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -78,7 +78,7 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5003/api/addBudget',
+        'http://127.0.0.1:5004/api/addBudget',
         {
           CategoriesId: selectedCategory._id,
           valueitem: value,
@@ -159,7 +159,7 @@ const DashboardUser = () => {
                 >
                   {category.image && (
                     <img
-                      src={`http://127.0.0.1:5003/${category.image}`}
+                      src={`http://127.0.0.1:5004/${category.image}`}
                       alt={category.categoryName}
                       style={{
                         width: '70px',
@@ -206,7 +206,7 @@ const DashboardUser = () => {
         <DialogContent style={{ padding: '20px', textAlign: 'center' }}>
           {selectedCategory?.image && (
             <img
-              src={`http://127.0.0.1:5003/${selectedCategory.image}`}
+              src={`http://127.0.0.1:5004/${selectedCategory.image}`}
               alt={selectedCategory.categoryName}
               style={{
                 width: '100px',

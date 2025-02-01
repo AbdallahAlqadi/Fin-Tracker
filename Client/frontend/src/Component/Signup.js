@@ -27,7 +27,7 @@ const Signup = () => {
     }
   
     try {
-      const res = await axios.post('http://127.0.0.1:5003/api/users', {
+      const res = await axios.post('http://127.0.0.1:5004/api/users', {
         username,
         email,
         password,
