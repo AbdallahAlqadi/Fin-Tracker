@@ -448,7 +448,7 @@ const Comparison = () => {
           </Box>
         ) : (
           <>
-            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4, marginTop: 4 }}>
               <svg ref={svgRef} width="800" height="400"></svg>
             </Box>
           </>
