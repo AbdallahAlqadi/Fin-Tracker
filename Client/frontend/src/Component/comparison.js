@@ -350,6 +350,8 @@ const Comparison = () => {
       ? selectedYears.filter(y => y !== year)
       : [...selectedYears, year];
     setSelectedYears(newSelectedYears);
+    setSelectedMonths([]); // Reset selected months when changing years
+    setSelectedDays([]); // Reset selected days when changing years
   };
 
   const handleMonthChange = (month) => {
@@ -357,6 +359,7 @@ const Comparison = () => {
       ? selectedMonths.filter(m => m !== month)
       : [...selectedMonths, month];
     setSelectedMonths(newSelectedMonths);
+    setSelectedDays([]); // Reset selected days when changing months
   };
 
   const handleDayChange = (day) => {
@@ -423,7 +426,7 @@ const Comparison = () => {
               ))}
             </Box>
           )}
-          {dateType === "month" && (
+          {dateType === "month" && selectedYears.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {availableMonths.map((month) => (
                 <FormControlLabel
@@ -434,12 +437,12 @@ const Comparison = () => {
                       onChange={() => handleMonthChange(month)}
                     />
                   }
-                  label={month}
+                  label={`${selectedYears[0]}-${month}`}
                 />
               ))}
             </Box>
           )}
-          {dateType === "day" && (
+          {dateType === "day" && selectedYears.length > 0 && selectedMonths.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {availableDays.map((day) => (
                 <FormControlLabel
@@ -450,7 +453,7 @@ const Comparison = () => {
                       onChange={() => handleDayChange(day)}
                     />
                   }
-                  label={day}
+                  label={`${selectedYears[0]}-${selectedMonths[0]}-${day}`}
                 />
               ))}
             </Box>
