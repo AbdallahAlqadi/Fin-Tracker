@@ -125,8 +125,8 @@ const Comparison = () => {
     const result = {};
     Object.keys(groupedData).forEach((key) => {
       result[key] = {};
-      if (showRevenues) result[key].Revenues = groupedData[key].Revenues;
-      if (showExpenses) result[key].Expenses = groupedData[key].Expenses;
+      if (showRevenues) result[key].Revenues = groupedData[key].Revenues || 0;
+      if (showExpenses) result[key].Expenses = groupedData[key].Expenses || 0;
     });
 
     return result;
