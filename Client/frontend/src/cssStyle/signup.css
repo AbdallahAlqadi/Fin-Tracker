@@ -196,6 +196,14 @@ body {
 }
 
 @media (max-width: 768px) {
+
+    .signup-container {
+        width: 135%;
+margin-left: -16%;
+        height: 100%;
+      
+    }
+
     .signup-box {
         width: 90%;
         padding: 1.5rem;
@@ -211,6 +219,12 @@ body {
 }
 
 @media (max-width: 480px) {
+    .signup-container {
+        width: 135%;
+margin-left: -16%;
+        height: 100%;
+      
+    }
     .signup-box {
         padding: 1.2rem;
     }
