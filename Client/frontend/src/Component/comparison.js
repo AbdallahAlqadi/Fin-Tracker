@@ -1,60 +1,22 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
   Box,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-  FormControlLabel,
-  Checkbox,
+  Typography,
+  CircularProgress,
   RadioGroup,
+  FormControlLabel,
   Radio,
+  Checkbox,
 } from "@mui/material";
 import { styled } from "@mui/system";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
-import * as XLSX from "xlsx";
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  padding: "16px",
-  borderRadius: "12px",
-  border: "1px solid #e0e0e0",
-  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
-  width: "200px",
-  height: "250px",
-  "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-    borderColor: "#007BFF",
-  },
-}));
-
-const ImageContainer = styled("div")({
-  width: "80px",
-  height: "80px",
-  borderRadius: "50%",
-  overflow: "hidden",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-  marginBottom: "12px",
-});
 
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
@@ -77,9 +39,10 @@ const Comparison = () => {
   const [selectedYears, setSelectedYears] = useState([]);
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
-  const [filterType, setFilterType] = useState("Revenues");
   const [dateType, setDateType] = useState("year"); // year, month, day
   const [chartType, setChartType] = useState("bar"); // bar, line
+  const [showRevenues, setShowRevenues] = useState(true);
+  const [showExpenses, setShowExpenses] = useState(true);
   const svgRef = useRef();
 
   useEffect(() => {
@@ -104,7 +67,7 @@ const Comparison = () => {
     }
   };
 
-  const groupByDateAndCategory = (items) => {
+  const groupByDate = (items) => {
     const groupedData = {};
 
     items.forEach((item) => {
@@ -112,7 +75,7 @@ const Comparison = () => {
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // Months are 0-indexed
       const day = date.getDate();
-      const categoryName = item.CategoriesId.categoryName;
+      const categoryType = item.CategoriesId.categoryType;
 
       let key;
       if (dateType === "year") {
@@ -124,14 +87,10 @@ const Comparison = () => {
       }
 
       if (!groupedData[key]) {
-        groupedData[key] = {};
+        groupedData[key] = { Revenues: 0, Expenses: 0 };
       }
 
-      if (!groupedData[key][categoryName]) {
-        groupedData[key][categoryName] = 0;
-      }
-
-      groupedData[key][categoryName] += parseFloat(item.valueitem);
+      groupedData[key][categoryType] += parseFloat(item.valueitem);
     });
 
     return groupedData;
@@ -157,10 +116,17 @@ const Comparison = () => {
       });
     }
 
-    // Filter by type (Revenues or Expenses)
-    filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
+    const groupedData = groupByDate(filteredItems);
 
-    return groupByDateAndCategory(filteredItems);
+    // Filter based on user selection (Revenues, Expenses, or both)
+    const result = {};
+    Object.keys(groupedData).forEach((key) => {
+      result[key] = {};
+      if (showRevenues) result[key].Revenues = groupedData[key].Revenues;
+      if (showExpenses) result[key].Expenses = groupedData[key].Expenses;
+    });
+
+    return result;
   };
 
   const filteredItems = filterItems(budgetItems);
@@ -189,7 +155,9 @@ const Comparison = () => {
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const dates = Object.keys(data);
-    const categories = [...new Set(Object.values(data).flatMap(date => Object.keys(date)))];
+    const categories = [];
+    if (showRevenues) categories.push("Revenues");
+    if (showExpenses) categories.push("Expenses");
 
     const x0 = d3.scaleBand()
       .domain(dates)
@@ -208,7 +176,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(d3.quantize(t => d3.interpolateRainbow(t), categories.length));
+      .range(["#4CAF50", "#F44336"]);
 
     // Add bars
     svg.append("g")
@@ -284,7 +252,9 @@ const Comparison = () => {
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const dates = Object.keys(data);
-    const categories = [...new Set(Object.values(data).flatMap(date => Object.keys(date)))];
+    const categories = [];
+    if (showRevenues) categories.push("Revenues");
+    if (showExpenses) categories.push("Expenses");
 
     const x = d3.scaleBand()
       .domain(dates)
@@ -298,19 +268,19 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(d3.quantize(t => d3.interpolateRainbow(t), categories.length));
+      .range(["#4CAF50", "#F44336"]);
 
     const line = d3.line()
       .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
       .y(d => y(d.value));
 
-    categories.forEach((category, i) => {
+    categories.forEach((category) => {
       const categoryData = dates.map(date => ({ value: data[date][category] || 0 }));
 
       svg.append("path")
         .datum(categoryData)
         .attr("fill", "none")
-        .attr("stroke", color(i))
+        .attr("stroke", color(category))
         .attr("stroke-width", 2)
         .attr("d", line);
 
@@ -322,7 +292,7 @@ const Comparison = () => {
         .attr("cx", (d, i) => x(dates[i]) + x.bandwidth() / 2)
         .attr("cy", d => y(d.value))
         .attr("r", 5)
-        .attr("fill", color(i))
+        .attr("fill", color(category))
         .on("mouseover", function (event, d) {
           d3.select(this).attr("r", 8);
           svg.append("text")
@@ -357,7 +327,7 @@ const Comparison = () => {
         .attr("y", i * 20)
         .attr("width", 15)
         .attr("height", 15)
-        .attr("fill", color(i));
+        .attr("fill", color(category));
 
       legend.append("text")
         .attr("x", 20)
@@ -395,13 +365,6 @@ const Comparison = () => {
       <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
           <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Type</InputLabel>
-            <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <MenuItem value="Revenues">Revenues</MenuItem>
-              <MenuItem value="Expenses">Expenses</MenuItem>
-            </StyledSelect>
-          </FormControl>
-          <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
             <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
               <MenuItem value="year">Year</MenuItem>
@@ -417,6 +380,24 @@ const Comparison = () => {
             <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
             <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
           </RadioGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showRevenues}
+                onChange={(e) => setShowRevenues(e.target.checked)}
+              />
+            }
+            label="Show Revenues"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showExpenses}
+                onChange={(e) => setShowExpenses(e.target.checked)}
+              />
+            }
+            label="Show Expenses"
+          />
         </Box>
 
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
