@@ -112,6 +112,11 @@ function DashboardLayoutBasic(props) {
       icon: <ShoppingCartIcon />,
     },
     {
+      segment: 'comparison',
+      title: 'Comparison',
+      icon: <PersonIcon />,
+    },
+    {
       segment: 'fedback',  //هون بحط path
       title: 'Fedback',
       icon: <ShoppingCartIcon />,
@@ -180,6 +185,7 @@ function DashboardLayoutBasic(props) {
               title: 'Comparison',
               icon: <PersonIcon />,
             },
+            
             {
               segment: 'LogOut',
               title: '',
