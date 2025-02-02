@@ -36,9 +36,9 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 const Comparison = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [selectedMonths, setSelectedMonths] = useState([]);
+  const [selectedDays, setSelectedDays] = useState([]);
   const [dateType, setDateType] = useState("year"); // year, month, day
   const [chartType, setChartType] = useState("bar"); // bar, line
   const [showRevenues, setShowRevenues] = useState(true);
@@ -99,23 +99,23 @@ const Comparison = () => {
   const filterItems = (items) => {
     let filteredItems = items;
 
-    if (dateType === "year" && selectedYear) {
+    if (dateType === "year" && selectedYears.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
-        return year === selectedYear;
+        return selectedYears.includes(year);
       });
-    } else if (dateType === "month" && selectedYear && selectedMonth) {
+    } else if (dateType === "month" && selectedYears.length > 0 && selectedMonths.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
         const month = new Date(item.date).getMonth() + 1;
-        return year === selectedYear && month === selectedMonth;
+        return selectedYears.includes(year) && selectedMonths.includes(month);
       });
-    } else if (dateType === "day" && selectedYear && selectedMonth && selectedDay) {
+    } else if (dateType === "day" && selectedYears.length > 0 && selectedMonths.length > 0 && selectedDays.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
         const month = new Date(item.date).getMonth() + 1;
         const day = new Date(item.date).getDate();
-        return year === selectedYear && month === selectedMonth && day === selectedDay;
+        return selectedYears.includes(year) && selectedMonths.includes(month) && selectedDays.includes(day);
       });
     }
 
@@ -342,8 +342,29 @@ const Comparison = () => {
   };
 
   const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
-  const availableMonths = selectedYear ? [...new Set(budgetItems.filter(item => new Date(item.date).getFullYear() === selectedYear).map(item => new Date(item.date).getMonth() + 1))] : [];
-  const availableDays = selectedYear && selectedMonth ? [...new Set(budgetItems.filter(item => new Date(item.date).getFullYear() === selectedYear && new Date(item.date).getMonth() + 1 === selectedMonth).map(item => new Date(item.date).getDate()))] : [];
+  const availableMonths = selectedYears.length > 0 ? [...new Set(budgetItems.filter(item => selectedYears.includes(new Date(item.date).getFullYear())).map(item => new Date(item.date).getMonth() + 1))] : [];
+  const availableDays = selectedYears.length > 0 && selectedMonths.length > 0 ? [...new Set(budgetItems.filter(item => selectedYears.includes(new Date(item.date).getFullYear()) && selectedMonths.includes(new Date(item.date).getMonth() + 1)).map(item => new Date(item.date).getDate()))] : [];
+
+  const handleYearChange = (year) => {
+    const newSelectedYears = selectedYears.includes(year)
+      ? selectedYears.filter(y => y !== year)
+      : [...selectedYears, year];
+    setSelectedYears(newSelectedYears);
+  };
+
+  const handleMonthChange = (month) => {
+    const newSelectedMonths = selectedMonths.includes(month)
+      ? selectedMonths.filter(m => m !== month)
+      : [...selectedMonths, month];
+    setSelectedMonths(newSelectedMonths);
+  };
+
+  const handleDayChange = (day) => {
+    const newSelectedDays = selectedDays.includes(day)
+      ? selectedDays.filter(d => d !== day)
+      : [...selectedDays, day];
+    setSelectedDays(newSelectedDays);
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -393,8 +414,8 @@ const Comparison = () => {
                   key={year}
                   control={
                     <Checkbox
-                      checked={selectedYear === year}
-                      onChange={() => setSelectedYear(year)}
+                      checked={selectedYears.includes(year)}
+                      onChange={() => handleYearChange(year)}
                     />
                   }
                   label={year}
@@ -409,8 +430,8 @@ const Comparison = () => {
                   key={month}
                   control={
                     <Checkbox
-                      checked={selectedMonth === month}
-                      onChange={() => setSelectedMonth(month)}
+                      checked={selectedMonths.includes(month)}
+                      onChange={() => handleMonthChange(month)}
                     />
                   }
                   label={month}
@@ -425,8 +446,8 @@ const Comparison = () => {
                   key={day}
                   control={
                     <Checkbox
-                      checked={selectedDay === day}
-                      onChange={() => setSelectedDay(day)}
+                      checked={selectedDays.includes(day)}
+                      onChange={() => handleDayChange(day)}
                     />
                   }
                   label={day}
