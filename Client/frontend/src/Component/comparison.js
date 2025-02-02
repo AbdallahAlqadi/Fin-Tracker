@@ -147,7 +147,7 @@ const Comparison = () => {
   const drawBarChart = (data) => {
     const width = 800;
     const height = 400;
-    const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+    const margin = { top: 50, right: 150, bottom: 60, left: 60 }; // Increased right margin for legend
 
     d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
 
@@ -179,7 +179,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#4CAF50", "#F44336"]);
+      .range(["#FFD700", "#9370DB"]); // Gold and Purple
 
     // Add bars
     svg.append("g")
@@ -214,7 +214,12 @@ const Comparison = () => {
     // Add x-axis
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(d3.axisBottom(x0));
+      .call(d3.axisBottom(x0))
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", ".15em")
+      .attr("transform", "rotate(-45)");
 
     // Add y-axis
     svg.append("g")
@@ -222,7 +227,7 @@ const Comparison = () => {
 
     // Add legend
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right - 100},${margin.top})`);
+      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`); // Adjusted position
 
     categories.forEach((category, i) => {
       legend.append("rect")
@@ -239,12 +244,21 @@ const Comparison = () => {
         .style("font-size", "12px")
         .attr("alignment-baseline", "middle");
     });
+
+    // Add chart title
+    svg.append("text")
+      .attr("x", (width - margin.left - margin.right) / 2)
+      .attr("y", -margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .text("Budget Comparison");
   };
 
   const drawLineChart = (data) => {
     const width = 800;
     const height = 400;
-    const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+    const margin = { top: 50, right: 150, bottom: 60, left: 60 }; // Increased right margin for legend
 
     d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
 
@@ -271,7 +285,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#4CAF50", "#F44336"]);
+      .range(["#FFD700", "#9370DB"]); // Gold and Purple
 
     const line = d3.line()
       .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
@@ -314,7 +328,12 @@ const Comparison = () => {
     // Add x-axis
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", ".15em")
+      .attr("transform", "rotate(-45)");
 
     // Add y-axis
     svg.append("g")
@@ -322,7 +341,7 @@ const Comparison = () => {
 
     // Add legend
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right - 100},${margin.top})`);
+      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`); // Adjusted position
 
     categories.forEach((category, i) => {
       legend.append("rect")
@@ -339,6 +358,15 @@ const Comparison = () => {
         .style("font-size", "12px")
         .attr("alignment-baseline", "middle");
     });
+
+    // Add chart title
+    svg.append("text")
+      .attr("x", (width - margin.left - margin.right) / 2)
+      .attr("y", -margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .text("Budget Comparison");
   };
 
   const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
