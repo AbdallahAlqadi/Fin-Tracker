@@ -44,6 +44,7 @@ const Comparison = () => {
   const [showRevenues, setShowRevenues] = useState(true);
   const [showExpenses, setShowExpenses] = useState(true);
   const svgRef = useRef();
+  const tooltipRef = useRef();
 
   useEffect(() => {
     fetchBudget();
@@ -147,7 +148,7 @@ const Comparison = () => {
   const drawBarChart = (data) => {
     const width = 800;
     const height = 400;
-    const margin = { top: 50, right: 150, bottom: 60, left: 60 }; // Increased right margin for legend
+    const margin = { top: 50, right: 150, bottom: 60, left: 60 };
 
     d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
 
@@ -199,16 +200,15 @@ const Comparison = () => {
       .attr("fill", d => color(d.category))
       .on("mouseover", function (event, d) {
         d3.select(this).attr("opacity", 0.7);
-        svg.append("text")
-          .attr("class", "bar-value")
-          .attr("x", x0(dates[0]) + x1(d.category) + x1.bandwidth() / 2)
-          .attr("y", y(d.value) - 5)
-          .attr("text-anchor", "middle")
-          .text(d.value);
+        d3.select(tooltipRef.current)
+          .style("opacity", 1)
+          .html(`${d.category}: ${d.value}`)
+          .style("left", `${event.pageX + 5}px`)
+          .style("top", `${event.pageY - 28}px`);
       })
       .on("mouseout", function () {
         d3.select(this).attr("opacity", 1);
-        svg.selectAll(".bar-value").remove();
+        d3.select(tooltipRef.current).style("opacity", 0);
       });
 
     // Add x-axis
@@ -227,7 +227,7 @@ const Comparison = () => {
 
     // Add legend
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`); // Adjusted position
+      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
 
     categories.forEach((category, i) => {
       legend.append("rect")
@@ -258,7 +258,7 @@ const Comparison = () => {
   const drawLineChart = (data) => {
     const width = 800;
     const height = 400;
-    const margin = { top: 50, right: 150, bottom: 60, left: 60 }; // Increased right margin for legend
+    const margin = { top: 50, right: 150, bottom: 60, left: 60 };
 
     d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
 
@@ -312,16 +312,15 @@ const Comparison = () => {
         .attr("fill", color(category))
         .on("mouseover", function (event, d) {
           d3.select(this).attr("r", 8);
-          svg.append("text")
-            .attr("class", "line-value")
-            .attr("x", x(dates[0]) + x.bandwidth() / 2)
-            .attr("y", y(d.value) - 10)
-            .attr("text-anchor", "middle")
-            .text(d.value);
+          d3.select(tooltipRef.current)
+            .style("opacity", 1)
+            .html(`${category}: ${d.value}`)
+            .style("left", `${event.pageX + 5}px`)
+            .style("top", `${event.pageY - 28}px`);
         })
         .on("mouseout", function () {
           d3.select(this).attr("r", 5);
-          svg.selectAll(".line-value").remove();
+          d3.select(tooltipRef.current).style("opacity", 0);
         });
     });
 
@@ -341,7 +340,7 @@ const Comparison = () => {
 
     // Add legend
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`); // Adjusted position
+      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
 
     categories.forEach((category, i) => {
       legend.append("rect")
@@ -503,6 +502,19 @@ const Comparison = () => {
             <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4, marginTop: 4 }}>
               <svg ref={svgRef} width="800" height="400"></svg>
             </Box>
+            <div
+              ref={tooltipRef}
+              style={{
+                position: "absolute",
+                background: "white",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                padding: "5px",
+                pointerEvents: "none",
+                opacity: 0,
+                transition: "opacity 0.3s",
+              }}
+            ></div>
           </>
         )}
       </Box>
