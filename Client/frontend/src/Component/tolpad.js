@@ -11,13 +11,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { PageContainer } from '@toolpad/core/PageContainer';
-import PersonIcon from '@mui/icons-material/Person';
 import CategoryForm from '../Component/dashbordAdmin';
 import DashboardUser from '../Component/dashbordUser';
 import BudgetItems from '../Component/datauser';
 import Graph from '../Component/graphdatauser';
 import Comparison from '../Component/comparison';
 import FeedbackForm from '../Component/FeedbackForm';
+import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
+import AddToDriveIcon from '@mui/icons-material/AddToDrive';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
+import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 
 const demoTheme = createTheme({
   palette: {
@@ -99,22 +102,22 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'dashboarduser',  //هون بحط path
       title: 'DashbordUser',
-      icon: <ShoppingCartIcon />,
+      icon: <DashboardCustomizeIcon />,
     },
     {
       segment: 'showdatauser',  //هون بحط path
       title: 'ShowDataUser',
-      icon: <ShoppingCartIcon />,
+      icon: <AddToDriveIcon />,
     },
     {
       segment: 'graphdatauser',  //هون بحط path
       title: 'Graph',
-      icon: <ShoppingCartIcon />,
+      icon: <DataSaverOffIcon />,
     },
     {
       segment: 'comparison',
       title: 'Comparison',
-      icon: <PersonIcon />,
+      icon: <SignalCellularAltIcon />,
     },
     {
       segment: 'fedback',  //هون بحط path
@@ -167,23 +170,23 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'dashboarduser',  //هون بحط path
               title: 'DashbordUser',
-              icon: <ShoppingCartIcon />,
+              icon: <DashboardCustomizeIcon />,
             },
             {
               segment: 'showdatauser',  //هون بحط path
               title: 'ShowDataUser',
-              icon: <ShoppingCartIcon />,
+              icon: <AddToDriveIcon />,
             },
             {
               segment: 'graphdatauser',  //هون بحط path
               title: 'Graph',
-              icon: <ShoppingCartIcon />,
+              icon: <DataSaverOffIcon />,
             },
            
             {
               segment: 'comparison',
               title: 'Comparison',
-              icon: <PersonIcon />,
+              icon: <SignalCellularAltIcon />,
             },
             
             {
