@@ -60,6 +60,7 @@ const Comparison = () => {
           'Content-Type': 'application/json',
         },
       });
+      
       setBudgetItems(response.data.products || []);
       setLoading(false);
     } catch (error) {

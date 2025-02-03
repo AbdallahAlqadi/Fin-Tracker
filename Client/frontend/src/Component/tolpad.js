@@ -157,6 +157,8 @@ function DashboardLayoutBasic(props) {
           },
         });
 
+        sessionStorage.setItem('username',res.data.user)
+
         setUser(res.data.user);
 
         if (res.data.roul === 'admin') {

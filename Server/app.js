@@ -6,7 +6,7 @@ const connectDB = require('./config/db');
 const userRoutes = require('./Routes/userRoutes');
 const categoryRoutes = require('./Routes/categoryRoutes');
 const PersonalBudgetRoutes= require('./Routes/PersonalBudgetRoutes');
-
+const fedbackRoutes= require('./Routes/fedbackRoutes');
 
 
 dotenv.config();
@@ -18,6 +18,7 @@ app.use('/api', userRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api', categoryRoutes);
 app.use('/api', PersonalBudgetRoutes);
+app.use('/api', fedbackRoutes);
 
 
 module.exports = app;
