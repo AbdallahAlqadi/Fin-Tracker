@@ -22,6 +22,8 @@ import AddToDriveIcon from '@mui/icons-material/AddToDrive';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 import FedbackUser from '../Component/fedbackuser';
+import ChatIcon from '@mui/icons-material/Chat';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 
 const demoTheme = createTheme({
   palette: {
@@ -125,7 +127,7 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'fedback',  //هون بحط path
       title: 'Fedback',
-      icon: <ShoppingCartIcon />,
+      icon: <ChatIcon />,
     },
     {
       segment: 'LogOut',
@@ -196,7 +198,7 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'fedbackuser',
               title: 'FedbakUser',
-              icon: <SignalCellularAltIcon />,
+              icon: <ChatBubbleIcon />,
             },
             
             {
