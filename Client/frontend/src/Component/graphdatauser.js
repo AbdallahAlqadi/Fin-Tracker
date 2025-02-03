@@ -74,6 +74,8 @@ const Graph = () => {
   const [filterDate, setFilterDate] = useState(new Date());
   const [filterType, setFilterType] = useState("Revenues"); // Default to "Revenues"
   const [dateType, setDateType] = useState("month");
+  const [currency, setCurrency] = useState("JOD"); // Default currency
+  const [exchangeRates, setExchangeRates] = useState({});
   const svgRef = useRef();
 
   // إنشاء مقياس لوني باستخدام أكثر من 40 لونًا مختلفًا
@@ -81,6 +83,7 @@ const Graph = () => {
 
   useEffect(() => {
     fetchBudget();
+    fetchExchangeRates();
   }, []);
 
   const token = sessionStorage.getItem('jwt');
@@ -98,6 +101,15 @@ const Graph = () => {
     } catch (error) {
       console.error("Error fetching budget", error);
       setLoading(false);
+    }
+  };
+
+  const fetchExchangeRates = async () => {
+    try {
+      const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/JOD`);
+      setExchangeRates(response.data.rates);
+    } catch (error) {
+      console.error("Error fetching exchange rates", error);
     }
   };
 
@@ -141,7 +153,7 @@ const Graph = () => {
     const totals = { Revenues: 0, Expenses: 0 };
 
     items.forEach((item) => {
-      const value = parseFloat(item.valueitem);
+      const value = parseFloat(item.valueitem) * (exchangeRates[currency] || 1);
       if (item.CategoriesId.categoryType === "Revenues") {
         totals.Revenues += value;
       } else if (item.CategoriesId.categoryType === "Expenses") {
@@ -176,7 +188,7 @@ const Graph = () => {
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
     const pie = d3.pie()
-      .value(d => parseFloat(d.valueitem))
+      .value(d => parseFloat(d.valueitem) * (exchangeRates[currency] || 1))
       .sort(null);
 
     const arc = d3.arc()
@@ -205,7 +217,8 @@ const Graph = () => {
         return {
           Category: item.CategoriesId.categoryName,
           Type: item.CategoriesId.categoryType,
-          Value: item.valueitem,
+          Value: (parseFloat(item.valueitem) * (exchangeRates[currency] || 1)).toFixed(2),
+          Currency: currency,
           Date: formattedDate,
         };
       })
@@ -214,6 +227,8 @@ const Graph = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Budget Items");
     XLSX.writeFile(workbook, "filtered_budget_items.xlsx");
   };
+
+  const currencies = Object.keys(exchangeRates);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -242,6 +257,16 @@ const Graph = () => {
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
           </FormControl>
+          <FormControl sx={{ minWidth: 120 }}>
+            <InputLabel>Currency</InputLabel>
+            <StyledSelect value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {currencies.map((curr) => (
+                <MenuItem key={curr} value={curr}>
+                  {curr}
+                </MenuItem>
+              ))}
+            </StyledSelect>
+          </FormControl>
         </Box>
 
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
@@ -251,7 +276,7 @@ const Graph = () => {
                 Total Revenues
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {totals.Revenues.toFixed(2)}
+                {totals.Revenues.toFixed(2)} {currency}
               </Typography>
             </CardContent>
           </Card>
@@ -261,7 +286,7 @@ const Graph = () => {
                 Total Expenses
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {totals.Expenses.toFixed(2)}
+                {totals.Expenses.toFixed(2)} {currency}
               </Typography>
             </CardContent>
           </Card>
@@ -271,7 +296,7 @@ const Graph = () => {
                 Balance
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {balance.toFixed(2)}
+                {balance.toFixed(2)} {currency}
               </Typography>
             </CardContent>
           </Card>
@@ -326,7 +351,7 @@ const Graph = () => {
                         {item.CategoriesId.categoryName}
                       </Typography>
                       <Typography variant="body1" sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}>
-                        {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
+                        {item.CategoriesId.categoryType === "Expenses" ? `-${(item.valueitem * (exchangeRates[currency] || 1)).toFixed(2)}` : (item.valueitem * (exchangeRates[currency] || 1)).toFixed(2)} {currency}
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
