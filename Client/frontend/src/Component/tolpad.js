@@ -21,6 +21,7 @@ import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 import AddToDriveIcon from '@mui/icons-material/AddToDrive';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
+import FedbackUser from '../Component/fedbackuser';
 
 const demoTheme = createTheme({
   palette: {
@@ -89,6 +90,8 @@ function DashboardLayoutBasic(props) {
     { path: '/graphdatauser', component: <Graph /> },
     { path: '/comparison', component: <Comparison /> },
     { path: '/fedback', component: <FeedbackForm /> },
+    { path: '/fedbackuser', component: <FedbackUser /> },
+
 
 
 
@@ -188,6 +191,11 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'comparison',
               title: 'Comparison',
+              icon: <SignalCellularAltIcon />,
+            },
+            {
+              segment: 'fedbackuser',
+              title: 'FedbakUser',
               icon: <SignalCellularAltIcon />,
             },
             
