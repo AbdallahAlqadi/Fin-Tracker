@@ -1,13 +1,72 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import {Grid,Card,CardContent,Typography, CircularProgress,Box,FormControl,InputLabel,Select, MenuItem, TextField,List,ListItem,ListItemText, ListItemIcon,Button,} from "@mui/material";
+import {
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Button,
+} from "@mui/material";
+import { styled } from "@mui/system";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import * as XLSX from "xlsx";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
-import "../cssStyle/graphdatauser.css"; // استيراد ملف CSS
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  padding: "16px",
+  borderRadius: "12px",
+  border: "1px solid #e0e0e0",
+  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
+  width: "200px",
+  height: "250px",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+    borderColor: "#007BFF",
+  },
+}));
+
+const ImageContainer = styled("div")({
+  width: "80px",
+  height: "80px",
+  borderRadius: "50%",
+  overflow: "hidden",
+  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+  marginBottom: "12px",
+});
+
+const StyledSelect = styled(Select)(({ theme }) => ({
+  borderRadius: "8px",
+  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#007BFF",
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#0056b3",
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#007BFF",
+    borderWidth: "2px",
+  },
+}));
 
 const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
@@ -155,11 +214,11 @@ const Graph = () => {
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
-            <Select className="styled-select" value={dateType} onChange={(e) => setDateType(e.target.value)}>
+            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
               <MenuItem value="full">Full Date</MenuItem>
               <MenuItem value="month">Month</MenuItem>
               <MenuItem value="year">Year</MenuItem>
-            </Select>
+            </StyledSelect>
           </FormControl>
           <DatePicker
             label={dateType === "month" ? "Select Month" : dateType === "year" ? "Select Year" : "Select Date"}
@@ -170,10 +229,10 @@ const Graph = () => {
           />
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
-            <Select className="styled-select" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+            <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <MenuItem value="Revenues">Revenues</MenuItem>
               <MenuItem value="Expenses">Expenses</MenuItem>
-            </Select>
+            </StyledSelect>
           </FormControl>
         </Box>
 
@@ -246,14 +305,14 @@ const Graph = () => {
             <Grid container spacing={3} justifyContent="center">
               {filteredItems.map((item, index) => (
                 <Grid item key={index}>
-                  <Card className="styled-card">
-                    <div className="image-container">
+                  <StyledCard>
+                    <ImageContainer>
                       <img
                         src={`http://127.0.0.1:5004/${item.CategoriesId.image}`}
                         alt="Category"
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
-                    </div>
+                    </ImageContainer>
                     <CardContent sx={{ textAlign: "center" }}>
                       <Typography variant="h6" sx={{ fontWeight: "bold", color: "#007BFF" }}>
                         {item.CategoriesId.categoryName}
@@ -265,7 +324,7 @@ const Graph = () => {
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
                       </Typography>
                     </CardContent>
-                  </Card>
+                  </StyledCard>
                 </Grid>
               ))}
             </Grid>
