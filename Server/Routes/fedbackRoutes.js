@@ -4,11 +4,12 @@ const cors=require('cors');
 const routes=express.Router();
 require('dotenv').config();
 
-const {creatFedback}=require('../Controllers/fedbackControllers'); 
+const {creatFedback,getFedback}=require('../Controllers/fedbackControllers'); 
 
 
 routes.post('/fedback',creatFedback);
 
+routes.get('/fedback',getFedback);
 
 
 

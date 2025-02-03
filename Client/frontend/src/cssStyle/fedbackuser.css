@@ -1,0 +1,113 @@
+/* chat-container for the whole chat view */
+.chat-container {
+    position: absolute;
+    top: 68%;
+    left: 60%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    background-color: #f4f7fc;
+    padding: 20px;
+    width: 60%; /* يمكنك تعديل العرض حسب الحاجة */
+border-radius: 40px;
+}
+
+.chat-window {
+    width: 100%;
+    height: 80vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* For each message block */
+.chat-message {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0; /* Prevent shrinking when adding margin-bottom */
+}
+
+.chat-message.left {
+    justify-content: flex-start;
+}
+
+.chat-message.right {
+    justify-content: flex-end;
+}
+
+/* Message bubble */
+.message-bubble {
+    width: 80%;
+    background-color: #f1f1f1;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+    line-height: .1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 10px; /* تم تقليل المساحة الداخلية من 15px إلى 10px */
+    margin-bottom: 50px; /* إضافة مسافة بين الرسائل */
+}
+
+/* Different colors for sent and received messages */
+.chat-message.left .message-bubble {
+    background-color: #e0e0e0;
+}
+
+.chat-message.right .message-bubble {
+    background-color: #0078ff;
+    color: #fff;
+}
+
+/* Message header with user avatar and username */
+.message-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 10px;
+    transition: transform 0.2s ease;
+}
+
+.username {
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    font-size: 19px;
+    color: #e61313;
+}
+
+/* Message text */
+.message-text {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    color: inherit;
+    word-wrap: break-word;
+    flex-grow: 1;
+}
+
+/* Hover effects */
+.chat-message:hover .message-bubble {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.chat-message.right:hover .message-bubble {
+    background-color: #005ecb;
+}
+
+.chat-message:hover .user-avatar {
+    transform: scale(1.1);
+}
