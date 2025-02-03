@@ -89,7 +89,7 @@ const Graph = () => {
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5004/api/getUser Budget', {
+      const response = await axios.get('http://127.0.0.1:5004/api/getUserBudget', {
         headers: {
           Auth: `Bearer ${token}`,
           'Content-Type': 'application/json',
