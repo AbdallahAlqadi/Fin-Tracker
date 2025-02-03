@@ -129,8 +129,10 @@ const Graph = () => {
       });
     }
 
-    // Filter by type (Revenues or Expenses)
-    filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
+    // Filter by type (Revenues, Expenses, or All)
+    if (filterType !== "All") {
+      filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
+    }
 
     return Object.values(groupByCategory(filteredItems));
   };
@@ -197,11 +199,16 @@ const Graph = () => {
   // Export to Excel
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
-      filteredItems.map((item) => ({
-        Category: item.CategoriesId.categoryName,
-        Value: item.valueitem,
-        Percentage: `${((item.valueitem / d3.sum(filteredItems.map(i => i.valueitem))) * 100).toFixed(2)}%`,
-      }))
+      filteredItems.map((item) => {
+        const date = new Date(item.date);
+        const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        return {
+          Category: item.CategoriesId.categoryName,
+          Type: item.CategoriesId.categoryType,
+          Value: item.valueitem,
+          Date: formattedDate,
+        };
+      })
     );
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Budget Items");
@@ -230,6 +237,7 @@ const Graph = () => {
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
             <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <MenuItem value="All">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
