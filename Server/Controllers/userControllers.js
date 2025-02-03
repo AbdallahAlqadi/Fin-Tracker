@@ -82,10 +82,10 @@ exports.veryfyjwt=  async(req,res,next)=>{
         if(!token){
             return res.status(401).json({message:'no token, authorization denird'})
         }
-        console.log('before jwt verify ')
+        // console.log('before jwt verify ')
         const verified=jwt.verify(token,'fdfdfsddsdffeqweqqeqeqeqweq')
         req.user=verified.userId;
-        console.log(req.user)
+        // console.log(req.user)
         
       next();
     }

@@ -11,33 +11,7 @@ exports.getUserBudget = async (req, res) => {
     }
 }
 
-// add product to cart
-// exports.addBudget = async (req, res) => {
-//     const { CategoriesId, valueitem } = req.body;
-//     const userId = req.user;
 
-//     try {
-//         let budget = await Budget.findOne({ userId });
-//         if (!budget) {
-//             budget = new Budget({
-//                 userId,
-//                 products: []
-//             });
-//         }
-//         const budgetIndex = budget.products.findIndex((item) => item.CategoriesId.toString() === CategoriesId);
-//         if (budgetIndex > -1) {
-//             budget.products[budgetIndex].valueitem =+ valueitem;
-//             budget.products[budgetIndex].date = new Date(); // تحديث التاريخ
-//         } else {
-//             // إذا المنتج غير موجود، قم بإضافته مع التاريخ الحالي
-//             budget.products.push({ CategoriesId, valueitem, date: new Date() });
-//         }
-//         await budget.save();
-//         res.status(200).json(budget);
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// }
 
 
 exports.addBudget = async (req, res) => {

@@ -34,7 +34,7 @@ alert('done')
           placeholder="اكتب تعليقك هنا..."
           required
         />
-        <button type="submit">إرسال</button>
+        <button type="submit">submit</button>
       </form>
     </div>
   );
