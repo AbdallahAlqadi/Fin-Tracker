@@ -69,24 +69,28 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialog-paper": {
-    borderRadius: "12px",
+    borderRadius: "16px",
     padding: "24px",
-    background: "#f5f5f5",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+    background: "#ffffff",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+    border: "1px solid #e0e0e0",
   },
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
-  fontSize: "1.5rem",
+  fontSize: "1.75rem",
   fontWeight: "bold",
   color: "#007BFF",
   textAlign: "center",
+  paddingBottom: "16px",
+  borderBottom: "2px solid #007BFF",
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   gap: "16px",
+  padding: "24px 0",
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
@@ -101,6 +105,24 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
     "&.Mui-focused fieldset": {
       borderColor: "#007BFF",
     },
+  },
+}));
+
+const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
+  justifyContent: "space-between",
+  padding: "16px 24px",
+  borderTop: "1px solid #e0e0e0",
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: "8px",
+  fontWeight: "600",
+  padding: "8px 16px",
+  textTransform: "none",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
   },
 }));
 
@@ -418,14 +440,14 @@ const BudgetItems = () => {
               onChange={(e) => setUpdatedValue(e.target.value)}
             />
           </StyledDialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog} color="secondary">
+          <StyledDialogActions>
+            <StyledButton onClick={handleCloseDialog} color="secondary" variant="outlined">
               Cancel
-            </Button>
-            <Button onClick={handleSaveUpdate} color="primary">
+            </StyledButton>
+            <StyledButton onClick={handleSaveUpdate} color="primary" variant="contained">
               Save
-            </Button>
-          </DialogActions>
+            </StyledButton>
+          </StyledDialogActions>
         </StyledDialog>
       </Box>
     </LocalizationProvider>
