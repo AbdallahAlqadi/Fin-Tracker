@@ -26,7 +26,7 @@ alert('done')
 
   return (
     <div className="feedback-form">
-      <h2>شاركنا برأيك</h2>
+      <h2>Share your opinion with us</h2>
       <form onSubmit={handleSubmit}>
         <textarea
           value={feedback}
