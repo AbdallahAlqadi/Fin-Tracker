@@ -309,7 +309,7 @@ const Graph = () => {
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
-                        Date: {new Date(item.date).toLocaleDateString()} {/* Displaying the date */}
+                        Date: {new Date(item.date).toLocaleDateString('en-GB')} {/* Displaying the date in DD/MM/YYYY format */}
                       </Typography>
                     </CardContent>
                   </StyledCard>
