@@ -218,15 +218,12 @@ const BudgetItems = () => {
 
   const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
-      const date = new Date(item.date).toLocaleDateString('en-GB', {
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric'
-      });
-      if (!acc[date]) {
-        acc[date] = [];
+      const date = new Date(item.date);
+      const dateString = date.toISOString().split('T')[0]; // استخدام ISO string لتسهيل المقارنة
+      if (!acc[dateString]) {
+        acc[dateString] = [];
       }
-      acc[date].push(item);
+      acc[dateString].push(item);
       return acc;
     }, {});
 
@@ -395,7 +392,11 @@ const BudgetItems = () => {
           groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
               <Typography variant="h4" gutterBottom sx={{ color: "#333", fontWeight: "bold", marginBottom: "24px" }}>
-                {date}
+                {new Date(date).toLocaleDateString('en-GB', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                })}
               </Typography>
               <Grid container spacing={3} justifyContent="flex-start">
                 {items.map((item, index) => (
