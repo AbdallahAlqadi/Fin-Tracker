@@ -132,7 +132,7 @@ const Graph = () => {
       });
     }
 
-    // Filter by type (Revenues, Expenses, or All)
+    // Filter by type (Revenues or Expenses)
     if (filterType !== "All") {
       filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
     }
@@ -221,7 +221,6 @@ const Graph = () => {
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
             <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <MenuItem value="All">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
@@ -308,6 +307,9 @@ const Graph = () => {
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "#666" }}>
+                        Date: {new Date(item.date).toLocaleDateString()} {/* Displaying the date */}
                       </Typography>
                     </CardContent>
                   </StyledCard>

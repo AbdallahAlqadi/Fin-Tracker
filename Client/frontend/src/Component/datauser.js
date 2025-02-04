@@ -217,14 +217,21 @@ const BudgetItems = () => {
   };
 
   const groupByDate = (items) => {
-    return items.reduce((acc, item) => {
-      const date = new Date(item.date).toLocaleDateString('en-GB'); // تصحيح عرض التاريخ
+    const grouped = items.reduce((acc, item) => {
+      const date = new Date(item.date).toLocaleDateString('en-GB', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+      });
       if (!acc[date]) {
         acc[date] = [];
       }
       acc[date].push(item);
       return acc;
     }, {});
+
+    // Sort the grouped items by date from newest to oldest
+    return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
   };
 
   const filterItems = (items) => {
@@ -283,7 +290,11 @@ const BudgetItems = () => {
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
-      Date: new Date(item.date).toLocaleDateString('en-GB'), // تصحيح عرض التاريخ
+      Date: new Date(item.date).toLocaleDateString('en-GB', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+      }),
       Category: item.CategoriesId.categoryName,
       Type: item.CategoriesId.categoryType,
       Value: item.valueitem,
@@ -381,7 +392,7 @@ const BudgetItems = () => {
             </Typography>
           </Box>
         ) : (
-          Object.entries(groupByDate(filteredItems)).map(([date, items]) => (
+          groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
               <Typography variant="h4" gutterBottom sx={{ color: "#333", fontWeight: "bold", marginBottom: "24px" }}>
                 {date}
