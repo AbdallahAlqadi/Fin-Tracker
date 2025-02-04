@@ -108,17 +108,15 @@ const Comparison = () => {
       });
     } else if (dateType === "month" && selectedYears.length > 0 && selectedMonths.length > 0) {
       filteredItems = filteredItems.filter((item) => {
-        const date = new Date(item.date);
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
+        const year = new Date(item.date).getFullYear();
+        const month = new Date(item.date).getMonth() + 1;
         return selectedYears.includes(year) && selectedMonths.includes(month);
       });
     } else if (dateType === "day" && selectedYears.length > 0 && selectedMonths.length > 0 && selectedDays.length > 0) {
       filteredItems = filteredItems.filter((item) => {
-        const date = new Date(item.date);
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
+        const year = new Date(item.date).getFullYear();
+        const month = new Date(item.date).getMonth() + 1;
+        const day = new Date(item.date).getDate();
         return selectedYears.includes(year) && selectedMonths.includes(month) && selectedDays.includes(day);
       });
     }
