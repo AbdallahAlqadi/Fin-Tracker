@@ -35,12 +35,6 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 }));
 
 const Comparison = () => {
-  // Define the getDaysInMonth function
-  const getDaysInMonth = (year, month) => {
-    const daysInMonth = new Date(year, month, 0).getDate();
-    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  };
-
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYears, setSelectedYears] = useState([]);
@@ -484,7 +478,6 @@ const Comparison = () => {
               ))}
             </Box>
           )}
-
           {dateType === "month" && selectedYears.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {availableMonths.map((month) => (
@@ -501,25 +494,19 @@ const Comparison = () => {
               ))}
             </Box>
           )}
-
           {dateType === "day" && selectedYears.length > 0 && selectedMonths.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
-              {selectedMonths.map((month) => (
-                <Box key={month}>
-                  {/* عرض الأيام بناءً على الشهر الحالي */}
-                  {getDaysInMonth(selectedYears[0], month).map((day) => (
-                    <FormControlLabel
-                      key={day}
-                      control={
-                        <Checkbox
-                          checked={selectedDays.includes(day)}
-                          onChange={() => handleDayChange(day)}
-                        />
-                      }
-                      label={`${selectedYears[0]}-${month}-${day}`}
+              {availableDays.map((day) => (
+                <FormControlLabel
+                  key={day}
+                  control={
+                    <Checkbox
+                      checked={selectedDays.includes(day)}
+                      onChange={() => handleDayChange(day)}
                     />
-                  ))}
-                </Box>
+                  }
+                  label={`${selectedYears[0]}-${selectedMonths[0]}-${day}`}
+                />
               ))}
             </Box>
           )}
