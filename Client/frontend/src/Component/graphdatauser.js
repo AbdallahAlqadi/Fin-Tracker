@@ -72,17 +72,15 @@ const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState(new Date());
-  const [filterType, setFilterType] = useState("Revenues");
+  const [filterType, setFilterType] = useState("Revenues"); // Default to "Revenues"
   const [dateType, setDateType] = useState("month");
-  const [currency, setCurrency] = useState("JOD"); // Default currency set to JOD
-  const [exchangeRates, setExchangeRates] = useState({}); // Store exchange rates
   const svgRef = useRef();
 
+  // إنشاء مقياس لوني باستخدام أكثر من 40 لونًا مختلفًا
   const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
 
   useEffect(() => {
     fetchBudget();
-    fetchExchangeRates(); // Fetch exchange rates on component mount
   }, []);
 
   const token = sessionStorage.getItem('jwt');
@@ -100,15 +98,6 @@ const Graph = () => {
     } catch (error) {
       console.error("Error fetching budget", error);
       setLoading(false);
-    }
-  };
-
-  const fetchExchangeRates = async () => {
-    try {
-      const response = await axios.get('https://api.exchangerate-api.com/v4/latest/JOD'); // Replace with your API endpoint
-      setExchangeRates(response.data.rates);
-    } catch (error) {
-      console.error("Error fetching exchange rates", error);
     }
   };
 
@@ -140,6 +129,7 @@ const Graph = () => {
       });
     }
 
+    // Filter by type (Revenues, Expenses, or All)
     if (filterType !== "All") {
       filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
     }
@@ -162,10 +152,6 @@ const Graph = () => {
     return totals;
   };
 
-  const convertCurrency = (value) => {
-    return value * (exchangeRates[currency] || 1);
-  };
-
   const filteredItems = filterItems(budgetItems);
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
@@ -181,7 +167,7 @@ const Graph = () => {
     const height = 400;
     const radius = Math.min(width, height) / 2 - 50;
 
-    d3.select(svgRef.current).selectAll("*").remove();
+    d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -205,11 +191,12 @@ const Graph = () => {
 
     arcs.append("path")
       .attr("d", arc)
-      .attr("fill", (d, i) => colorScale(i))
+      .attr("fill", (d, i) => colorScale(i)) // استخدام المقياس اللوني الجديد
       .attr("stroke", "#fff")
       .style("stroke-width", "2px");
   };
 
+  // Export to Excel
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredItems.map((item) => {
@@ -218,7 +205,7 @@ const Graph = () => {
         return {
           Category: item.CategoriesId.categoryName,
           Type: item.CategoriesId.categoryType,
-          Value: convertCurrency(item.valueitem).toFixed(2), // Convert value to selected currency
+          Value: item.valueitem,
           Date: formattedDate,
         };
       })
@@ -255,14 +242,6 @@ const Graph = () => {
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
           </FormControl>
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Currency</InputLabel>
-            <StyledSelect value={currency} onChange={(e) => setCurrency(e.target.value)}>
-              {Object.keys(exchangeRates).map((rate) => (
-                <MenuItem key={rate} value={rate}>{rate}</MenuItem>
-              ))}
-            </StyledSelect>
-          </FormControl>
         </Box>
 
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
@@ -272,7 +251,7 @@ const Graph = () => {
                 Total Revenues
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {convertCurrency(totals.Revenues).toFixed(2)} {currency}
+                {totals.Revenues.toFixed(2)}
               </Typography>
             </CardContent>
           </Card>
@@ -282,7 +261,7 @@ const Graph = () => {
                 Total Expenses
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {convertCurrency(totals.Expenses).toFixed(2)} {currency}
+                {totals.Expenses.toFixed(2)}
               </Typography>
             </CardContent>
           </Card>
@@ -292,7 +271,7 @@ const Graph = () => {
                 Balance
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {convertCurrency(balance).toFixed(2)} {currency}
+                {balance.toFixed(2)}
               </Typography>
             </CardContent>
           </Card>
@@ -347,7 +326,7 @@ const Graph = () => {
                         {item.CategoriesId.categoryName}
                       </Typography>
                       <Typography variant="body1" sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}>
-                        {item.CategoriesId.categoryType === "Expenses" ? `-${convertCurrency(item.valueitem).toFixed(2)} ${currency}` : `${convertCurrency(item.valueitem).toFixed(2)} ${currency}`}
+                        {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
