@@ -16,14 +16,12 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Button,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
-import * as XLSX from "xlsx";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -104,10 +102,13 @@ const Graph = () => {
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
       const categoryName = item.CategoriesId.categoryName;
-      if (!acc[categoryName]) {
-        acc[categoryName] = { ...item, valueitem: 0 };
+      const date = new Date(item.date);
+      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // Format date as DD/MM/YYYY
+      const key = `${categoryName}-${formattedDate}`; // Unique key for each category and date combination
+      if (!acc[key]) {
+        acc[key] = { ...item, valueitem: 0 };
       }
-      acc[categoryName].valueitem += parseFloat(item.valueitem);
+      acc[key].valueitem += parseFloat(item.valueitem);
       return acc;
     }, {});
   };
@@ -124,7 +125,9 @@ const Graph = () => {
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
         } else {
-          return selectedDate.toDateString() === itemDate.toDateString();
+          const formattedSelectedDate = `${selectedDate.getDate()}/${selectedDate.getMonth() + 1}/${selectedDate.getFullYear()}`;
+          const formattedItemDate = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
+          return formattedSelectedDate === formattedItemDate;
         }
       });
     }
@@ -196,25 +199,6 @@ const Graph = () => {
       .style("stroke-width", "2px");
   };
 
-  // Export to Excel
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      filteredItems.map((item) => {
-        const date = new Date(item.date);
-        const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-        return {
-          Category: item.CategoriesId.categoryName,
-          Type: item.CategoriesId.categoryType,
-          Value: item.valueitem,
-          Date: formattedDate,
-        };
-      })
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Budget Items");
-    XLSX.writeFile(workbook, "filtered_budget_items.xlsx");
-  };
-
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
@@ -275,12 +259,6 @@ const Graph = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Box>
-
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
-          <Button variant="contained" color="success" onClick={exportToExcel}>
-            Export to Excel
-          </Button>
         </Box>
 
         {loading ? (

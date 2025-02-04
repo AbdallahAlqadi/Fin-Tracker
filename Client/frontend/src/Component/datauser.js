@@ -23,6 +23,7 @@ import CategoryIcon from "@mui/icons-material/Category"; // أيقونة للف�
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // DatePicker component
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns"; // Adapter for date-fns
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Localization provider
+import * as XLSX from "xlsx"; // مكتبة xlsx
 
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
@@ -217,7 +218,7 @@ const BudgetItems = () => {
 
   const groupByDate = (items) => {
     return items.reduce((acc, item) => {
-      const date = new Date(item.date).toLocaleDateString();
+      const date = new Date(item.date).toLocaleDateString('en-GB'); // تصحيح عرض التاريخ
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -280,6 +281,19 @@ const BudgetItems = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
+  const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
+      Date: new Date(item.date).toLocaleDateString('en-GB'), // تصحيح عرض التاريخ
+      Category: item.CategoriesId.categoryName,
+      Type: item.CategoriesId.categoryType,
+      Value: item.valueitem,
+    })));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Budget Items");
+    XLSX.writeFile(wb, "BudgetItems.xlsx");
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
@@ -318,6 +332,9 @@ const BudgetItems = () => {
               ))}
             </StyledSelect>
           </FormControl>
+          <StyledButton onClick={exportToExcel} color="primary" variant="contained">
+            Export to Excel
+          </StyledButton>
         </Box>
 
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
