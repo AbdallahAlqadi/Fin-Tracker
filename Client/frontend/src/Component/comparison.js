@@ -18,6 +18,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
 
+// Styled Select component
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
@@ -34,6 +35,12 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 }));
 
 const Comparison = () => {
+  // Define the getDaysInMonth function
+  const getDaysInMonth = (year, month) => {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  };
+
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYears, setSelectedYears] = useState([]);
@@ -101,6 +108,7 @@ const Comparison = () => {
   const filterItems = (items) => {
     let filteredItems = items;
 
+    // Filter based on selected years, months, and days
     if (dateType === "year" && selectedYears.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
@@ -181,7 +189,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#FFD700", "#9370DB"]); // Gold and Purple
+      .range(["#CD5C5C", "#884ea0"]); // Gold and Purple
 
     // Add bars
     svg.append("g")
@@ -191,7 +199,7 @@ const Comparison = () => {
       .append("g")
       .attr("transform", d => `translate(${x0(d)},0)`)
       .selectAll("rect")
-      .data(d => categories.map(category => ({ category, value: data[d][category] || 0 })))
+      .data(d => categories.map(category => ({ category, value: data[d][category] })))
       .enter()
       .append("rect")
       .attr("x", d => x1(d.category))
@@ -286,7 +294,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#FFD700", "#9370DB"]); // Gold and Purple
+      .range(["#CD5C5C", "#884ea0"]); // Gold and Purple
 
     const line = d3.line()
       .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
@@ -369,10 +377,28 @@ const Comparison = () => {
       .text("Budget Comparison");
   };
 
+  // Get available years, months, and days for filtering
   const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
-  const availableMonths = selectedYears.length > 0 ? [...new Set(budgetItems.filter(item => selectedYears.includes(new Date(item.date).getFullYear())).map(item => new Date(item.date).getMonth() + 1))] : [];
-  const availableDays = selectedYears.length > 0 && selectedMonths.length > 0 ? [...new Set(budgetItems.filter(item => selectedYears.includes(new Date(item.date).getFullYear()) && selectedMonths.includes(new Date(item.date).getMonth() + 1)).map(item => new Date(item.date).getDate()))] : [];
 
+  const availableMonths = selectedYears.length > 0 
+    ? [...new Set(budgetItems
+        .filter(item => selectedYears.includes(new Date(item.date).getFullYear()))
+        .map(item => new Date(item.date).getMonth() + 1)
+      )] 
+    : [];
+  
+  const availableDays = selectedYears.length > 0 && selectedMonths.length > 0 
+    ? [...new Set(budgetItems
+        .filter(item => {
+          const year = new Date(item.date).getFullYear();
+          const month = new Date(item.date).getMonth() + 1;
+          return selectedYears.includes(year) && selectedMonths.includes(month);
+        })
+        .map(item => new Date(item.date).getDate())
+      )] 
+    : [];
+  
+  // Handle year selection
   const handleYearChange = (year) => {
     const newSelectedYears = selectedYears.includes(year)
       ? selectedYears.filter(y => y !== year)
@@ -382,6 +408,7 @@ const Comparison = () => {
     setSelectedDays([]); // Reset selected days when changing years
   };
 
+  // Handle month selection
   const handleMonthChange = (month) => {
     const newSelectedMonths = selectedMonths.includes(month)
       ? selectedMonths.filter(m => m !== month)
@@ -390,12 +417,15 @@ const Comparison = () => {
     setSelectedDays([]); // Reset selected days when changing months
   };
 
+  // Handle day selection
   const handleDayChange = (day) => {
-    const newSelectedDays = selectedDays.includes(day)
-      ? selectedDays.filter(d => d !== day)
-      : [...selectedDays, day];
-    setSelectedDays(newSelectedDays);
+    setSelectedDays(prevSelectedDays => 
+      prevSelectedDays.includes(day)
+        ? prevSelectedDays.filter(d => d !== day)
+        : [...prevSelectedDays, day]
+    );
   };
+  
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -454,6 +484,7 @@ const Comparison = () => {
               ))}
             </Box>
           )}
+
           {dateType === "month" && selectedYears.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {availableMonths.map((month) => (
@@ -470,19 +501,25 @@ const Comparison = () => {
               ))}
             </Box>
           )}
+
           {dateType === "day" && selectedYears.length > 0 && selectedMonths.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
-              {availableDays.map((day) => (
-                <FormControlLabel
-                  key={day}
-                  control={
-                    <Checkbox
-                      checked={selectedDays.includes(day)}
-                      onChange={() => handleDayChange(day)}
+              {selectedMonths.map((month) => (
+                <Box key={month}>
+                  {/* عرض الأيام بناءً على الشهر الحالي */}
+                  {getDaysInMonth(selectedYears[0], month).map((day) => (
+                    <FormControlLabel
+                      key={day}
+                      control={
+                        <Checkbox
+                          checked={selectedDays.includes(day)}
+                          onChange={() => handleDayChange(day)}
+                        />
+                      }
+                      label={`${selectedYears[0]}-${month}-${day}`}
                     />
-                  }
-                  label={`${selectedYears[0]}-${selectedMonths[0]}-${day}`}
-                />
+                  ))}
+                </Box>
               ))}
             </Box>
           )}
