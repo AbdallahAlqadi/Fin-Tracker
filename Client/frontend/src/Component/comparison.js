@@ -17,6 +17,7 @@ import { styled } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
+import '../cssStyle/comparsion.css'
 
 // Styled Select component
 const StyledSelect = styled(Select)(({ theme }) => ({
@@ -415,153 +416,106 @@ const Comparison = () => {
   };
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Date Type</InputLabel>
-            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
-              <MenuItem value="year">Year</MenuItem>
-              <MenuItem value="month">Month</MenuItem>
-              <MenuItem value="day">Day</MenuItem>
-            </StyledSelect>
-          </FormControl>
-          <RadioGroup
-            row
-            value={chartType}
-            onChange={(e) => setChartType(e.target.value)}
-          >
-            <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
-            <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
-          </RadioGroup>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showRevenues}
-                onChange={(e) => setShowRevenues(e.target.checked)}
+    <Box id="main-container">
+      <Box id="controls-container">
+        <FormControl id="date-type-select">
+          <InputLabel>Date Type</InputLabel>
+          <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
+            <MenuItem value="year">Year</MenuItem>
+            <MenuItem value="month">Month</MenuItem>
+            <MenuItem value="day">Day</MenuItem>
+          </StyledSelect>
+        </FormControl>
+        <RadioGroup row value={chartType} onChange={(e) => setChartType(e.target.value)}>
+          <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
+          <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
+        </RadioGroup>
+        <FormControlLabel
+          control={<Checkbox checked={showRevenues} onChange={(e) => setShowRevenues(e.target.checked)} />}
+          label="Show Revenues"
+        />
+        <FormControlLabel
+          control={<Checkbox checked={showExpenses} onChange={(e) => setShowExpenses(e.target.checked)} />}
+          label="Show Expenses"
+        />
+      </Box>
+  
+      <Box id="date-selection-container">
+        {dateType === "year" && (
+          <Box id="year-selection">
+            {availableYears.map((year) => (
+              <FormControlLabel
+                key={year}
+                control={<Checkbox checked={selectedYear.includes(year)} onChange={() => handleYearChange(year)} />}
+                label={year}
               />
-            }
-            label="Show Revenues"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showExpenses}
-                onChange={(e) => setShowExpenses(e.target.checked)}
+            ))}
+          </Box>
+        )}
+  
+        {dateType === "month" && selectedYear.length > 0 && (
+          <Box id="month-selection">
+            {availableMonths.map((month) => (
+              <FormControlLabel
+                key={month}
+                control={<Checkbox checked={selectedMonths.includes(month)} onChange={() => handleMonthChange(month)} />}
+                label={`Month ${month}`}
               />
-            }
-            label="Show Expenses"
-          />
-        </Box>
-
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
-          {dateType === "year" && (
-            <Box sx={{ display: "flex", gap: 2 }}>
-              {availableYears.map((year) => (
-                <FormControlLabel
-                  key={year}
-                  control={
-                    <Checkbox
-                      checked={selectedYear.includes(year)}
-                      onChange={() => handleYearChange(year)}
-                    />
-                  }
-                  label={year}
-                />
-              ))}
-            </Box>
-          )}
-
-          {dateType === "month" && selectedYear.length > 0 && (
-            <Box sx={{ display: "flex", gap: 2 }}>
-              {availableMonths.map((month) => (
-                <FormControlLabel
-                  key={month}
-                  control={
-                    <Checkbox
-                      checked={selectedMonths.includes(month)}
-                      onChange={() => handleMonthChange(month)}
-                    />
-                  }
-                  label={`Month ${month}`}
-                />
-              ))}
-            </Box>
-          )}
-
-{dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
-  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-    {selectedMonths.map((month) => {
-      const year = selectedYear[0]; // نفترض اختيار سنة واحدة فقط
-      const daysInMonth = new Date(year, month, 0).getDate(); // عدد أيام هذا الشهر
-      
-      // تصفية الأيام الخاصة بهذا الشهر فقط
-      const validDays = availableDays.filter(day => {
-        const [dayYear, dayMonth, dayDate] = day.split('-');
-        return parseInt(dayMonth) === month && parseInt(dayYear) === year;
-      });
-
-      // إذا لم يكن هناك أي أيام متاحة، لا تعرض هذا الشهر
-      if (validDays.length === 0) return null;
-
-      return (
-        <Box key={month} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <strong>{`الشهر ${month.toString().padStart(2, '0')} (${year})`}</strong>
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            {validDays.map((day) => {
-              const [dayYear, dayMonth, dayDate] = day.split('-');
+            ))}
+          </Box>
+        )}
+  
+        {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
+          <Box id="day-selection">
+            {selectedMonths.map((month) => {
+              const year = selectedYear[0];
+              const validDays = availableDays.filter((day) => {
+                const [dayYear, dayMonth] = day.split("-");
+                return parseInt(dayMonth) === month && parseInt(dayYear) === year;
+              });
+  
+              if (validDays.length === 0) return null;
+  
               return (
-                <FormControlLabel
-                  key={day}
-                  control={
-                    <Checkbox
-                      checked={selectedDays.includes(day)}
-                      onChange={() => handleDayChange(day)}
-                    />
-                  }
-                  label={`${dayYear}-${dayMonth.padStart(2, '0')}-${dayDate.padStart(2, '0')}`} 
-                />
+                <Box key={month} className="month-days-container">
+                  <strong>{`الشهر ${month.toString().padStart(2, "0")} (${year})`}</strong>
+                  <Box className="days-checkbox-group">
+                    {validDays.map((day) => (
+                      <FormControlLabel
+                        key={day}
+                        control={<Checkbox checked={selectedDays.includes(day)} onChange={() => handleDayChange(day)} />}
+                        label={day}
+                      />
+                    ))}
+                  </Box>
+                </Box>
               );
             })}
           </Box>
-        </Box>
-      );
-    })}
-  </Box>
-)}
-        </Box>
-
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
-            <CircularProgress size={60} />
-          </Box>
-        ) : Object.keys(filteredItems).length === 0 ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
-            <Typography variant="h4" color="textSecondary">
-              No Items
-            </Typography>
-          </Box>
-        ) : (
-          <>
-            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4, marginTop: 4 }}>
-              <svg ref={svgRef} width="800" height="400"></svg>
-            </Box>
-            <div
-              ref={tooltipRef}
-              style={{
-                position: "absolute",
-                background: "white",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                padding: "5px",
-                pointerEvents: "none",
-                opacity: 0,
-                transition: "opacity 0.3s",
-              }}
-            ></div>
-          </>
         )}
       </Box>
-    </LocalizationProvider>
+  
+      {loading ? (
+        <Box id="loading-container">
+          <CircularProgress size={60} />
+        </Box>
+      ) : Object.keys(filteredItems).length === 0 ? (
+        <Box id="no-items-container">
+          <Typography variant="h4" color="textSecondary">
+            No Items
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          <Box id="chart-container">
+            <svg ref={svgRef} width="800" height="400"></svg>
+          </Box>
+          <div id="tooltip" ref={tooltipRef}></div>
+        </>
+      )}
+    </Box>
+  </LocalizationProvider>
+  
   );
 };
 
