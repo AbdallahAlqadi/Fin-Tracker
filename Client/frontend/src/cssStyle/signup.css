@@ -30,7 +30,7 @@ body {
 }
 
 .title {
-    font-size: 2.7rem;
+    font-size: 3.5rem !important;
     font-weight: 830;
     color: white;
     text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2);
@@ -220,9 +220,9 @@ margin-left: -16%;
 
 @media (max-width: 480px) {
     .signup-container {
-        width: 135%;
-margin-left: -16%;
-        height: 100%;
+        width: 90%;
+margin-left: 5%;
+        height: 64%;
       
     }
     .signup-box {
@@ -238,12 +238,14 @@ margin-left: -16%;
     }
 
     .input-group input {
-        padding: 0.5rem;
+        padding: 0.65rem;
+
         font-size: 0.9rem;
     }
 
     .signup-button {
-        padding: 0.5rem;
-        font-size: 0.9rem;
+        padding: 0.7rem;
+        font-size: 1.3rem;
+        width: 60%;
     }
 }

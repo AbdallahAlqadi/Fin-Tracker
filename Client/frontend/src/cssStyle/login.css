@@ -30,7 +30,7 @@ body {
 }
 
 .title {
-  font-size: 3rem;
+  font-size: 3.7rem !important;
   font-weight: 830;
   color: white;
   text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2);
