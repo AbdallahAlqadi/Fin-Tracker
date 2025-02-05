@@ -4,13 +4,13 @@ import {
   Box,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
   Typography,
   CircularProgress,
   RadioGroup,
   FormControlLabel,
   Radio,
+  MenuItem,
+  Select,
   Checkbox
 } from "@mui/material";
 import { styled } from "@mui/system";
@@ -42,7 +42,7 @@ const Comparison = () => {
 
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedYear, setSelectedYear] = useState([]);
   const [selectedMonths, setSelectedMonths] = useState([]); // Changed to array
   const [selectedDays, setSelectedDays] = useState([]);
   const [dateType, setDateType] = useState("year"); // year, month, day
@@ -108,20 +108,20 @@ const Comparison = () => {
     let filteredItems = items;
 
     // Filter based on selected year, month, and days
-    if (dateType === "year" && selectedYear) {
+    if (dateType === "year" && selectedYear.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
-        return year === selectedYear;
+        return selectedYear.includes(year);
       });
-    } else if (dateType === "month" && selectedYear && selectedMonths.length > 0) {
+    } else if (dateType === "month" && selectedYear.length > 0 && selectedMonths.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const date = new Date(item.date);
-        return date.getFullYear() === selectedYear && selectedMonths.includes(date.getMonth() + 1);
+        return selectedYear.includes(date.getFullYear()) && selectedMonths.includes(date.getMonth() + 1);
       });
-    } else if (dateType === "day" && selectedYear && selectedMonths.length > 0 && selectedDays.length > 0) {
+    } else if (dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && selectedDays.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const date = new Date(item.date);
-        return date.getFullYear() === selectedYear && 
+        return selectedYear.includes(date.getFullYear()) && 
                selectedMonths.includes(date.getMonth() + 1) && 
                selectedDays.includes(date.getDate());
       });
@@ -378,26 +378,30 @@ const Comparison = () => {
   // Get available years, months, and days for filtering
   const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
 
-  const availableMonths = selectedYear 
+  const availableMonths = selectedYear.length > 0 
     ? [...new Set(budgetItems
-        .filter(item => new Date(item.date).getFullYear() === selectedYear)
+        .filter(item => selectedYear.includes(new Date(item.date).getFullYear()))
         .map(item => new Date(item.date).getMonth() + 1)
       )] 
     : [];
   
-  const availableDays = selectedYear && selectedMonths.length > 0 
+  const availableDays = selectedYear.length > 0 && selectedMonths.length > 0 
     ? [...new Set(budgetItems
         .filter(item => {
           const date = new Date(item.date);
-          return date.getFullYear() === selectedYear && selectedMonths.includes(date.getMonth() + 1);
+          return selectedYear.includes(date.getFullYear()) && selectedMonths.includes(date.getMonth() + 1);
         })
         .map(item => new Date(item.date).getDate())
       )] 
     : [];
   
   // Handle year selection
-  const handleYearChange = (event) => {
-    setSelectedYear(event.target.value);
+  const handleYearChange = (year) => {
+    setSelectedYear(prev => 
+      prev.includes(year) 
+        ? prev.filter(y => y !== year) 
+        : [...prev, year]
+    );
     setSelectedMonths([]); // Reset selected months when changing year
     setSelectedDays([]); // Reset selected days when changing year
   };
@@ -464,17 +468,23 @@ const Comparison = () => {
 
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
           {dateType === "year" && (
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel>Year</InputLabel>
-              <StyledSelect value={selectedYear} onChange={handleYearChange}>
-                {availableYears.map((year) => (
-                  <MenuItem key={year} value={year}>{year}</MenuItem>
-                ))}
-              </StyledSelect>
-            </FormControl>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              {availableYears.map((year) => (
+                <FormControlLabel
+                  key={year}
+                  control={
+                    <Checkbox
+                      checked={selectedYear.includes(year)}
+                      onChange={() => handleYearChange(year)}
+                    />
+                  }
+                  label={year}
+                />
+              ))}
+            </Box>
           )}
 
-          {dateType === "month" && selectedYear && (
+          {dateType === "month" && selectedYear.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {availableMonths.map((month) => (
                 <FormControlLabel
@@ -491,7 +501,7 @@ const Comparison = () => {
             </Box>
           )}
 
-          {dateType === "day" && selectedYear && selectedMonths.length > 0 && (
+          {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {availableDays.map((day) => (
                 <FormControlLabel
@@ -502,7 +512,7 @@ const Comparison = () => {
                       onChange={() => handleDayChange(day)}
                     />
                   }
-                  label={`${selectedYear}-${selectedMonths.join(', ')}-${day}`}
+                  label={`${selectedYear.join(', ')}-${selectedMonths.join(', ')}-${day}`}
                 />
               ))}
             </Box>
