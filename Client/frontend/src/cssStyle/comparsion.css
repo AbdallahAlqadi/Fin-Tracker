@@ -38,7 +38,8 @@
   .days-checkbox-group {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
+display:grid;
+grid-template-columns: auto auto;    
   }
   
   #loading-container,
