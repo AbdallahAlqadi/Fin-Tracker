@@ -107,7 +107,7 @@ const Comparison = () => {
 
   const filterItems = (items) => {
     let filteredItems = items;
-
+  
     if (dateType === "year" && selectedYear.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
@@ -121,21 +121,22 @@ const Comparison = () => {
     } else if (dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && selectedDays.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const date = new Date(item.date);
+        const dayKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`; // تضمين السنة
         return selectedYear.includes(date.getFullYear()) && 
                selectedMonths.includes(date.getMonth() + 1) && 
-               selectedDays.includes(date.getDate());
+               selectedDays.includes(dayKey);
       });
     }
-
+  
     const groupedData = groupByDate(filteredItems);
-
+  
     const result = {};
     Object.keys(groupedData).forEach((key) => {
       result[key] = {};
       if (showRevenues) result[key].Revenues = groupedData[key].Revenues || 0;
       if (showExpenses) result[key].Expenses = groupedData[key].Expenses || 0;
     });
-
+  
     return result;
   };
 
@@ -374,16 +375,18 @@ const Comparison = () => {
       )] 
     : [];
   
-  const availableDays = selectedYear.length > 0 && selectedMonths.length > 0 
+    const availableDays = selectedYear.length > 0 && selectedMonths.length > 0 
     ? [...new Set(budgetItems
         .filter(item => {
           const date = new Date(item.date);
           return selectedYear.includes(date.getFullYear()) && selectedMonths.includes(date.getMonth() + 1);
         })
-        .map(item => new Date(item.date).getDate())
+        .map(item => {
+          const date = new Date(item.date);
+          return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        })
       )] 
     : [];
-  
   const handleYearChange = (year) => {
     setSelectedYear(prev => 
       prev.includes(year) 
@@ -410,7 +413,6 @@ const Comparison = () => {
         : [...prevSelectedDays, day]
     );
   };
-
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
@@ -487,19 +489,43 @@ const Comparison = () => {
           )}
 
 {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
-  <Box sx={{ display: "flex", gap: 2 }}>
-    {availableDays.map((day) => (
-      <FormControlLabel
-        key={day}
-        control={
-          <Checkbox
-            checked={selectedDays.includes(day)}
-            onChange={() => handleDayChange(day)}
-          />
-        }
-        label={`${selectedYear.join(', ')}-${day < 10 ? '0' + day : day}`} // Format day to be two digits
-      />
-    ))}
+  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    {selectedMonths.map((month) => {
+      const year = selectedYear[0]; // نفترض اختيار سنة واحدة فقط
+      const daysInMonth = new Date(year, month, 0).getDate(); // عدد أيام هذا الشهر
+      
+      // تصفية الأيام الخاصة بهذا الشهر فقط
+      const validDays = availableDays.filter(day => {
+        const [dayYear, dayMonth, dayDate] = day.split('-');
+        return parseInt(dayMonth) === month && parseInt(dayYear) === year;
+      });
+
+      // إذا لم يكن هناك أي أيام متاحة، لا تعرض هذا الشهر
+      if (validDays.length === 0) return null;
+
+      return (
+        <Box key={month} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <strong>{`الشهر ${month.toString().padStart(2, '0')} (${year})`}</strong>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            {validDays.map((day) => {
+              const [dayYear, dayMonth, dayDate] = day.split('-');
+              return (
+                <FormControlLabel
+                  key={day}
+                  control={
+                    <Checkbox
+                      checked={selectedDays.includes(day)}
+                      onChange={() => handleDayChange(day)}
+                    />
+                  }
+                  label={`${dayYear}-${dayMonth.padStart(2, '0')}-${dayDate.padStart(2, '0')}`} 
+                />
+              );
+            })}
+          </Box>
+        </Box>
+      );
+    })}
   </Box>
 )}
         </Box>
