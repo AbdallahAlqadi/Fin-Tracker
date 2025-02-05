@@ -30,16 +30,23 @@
   }
   
   .month-days-container {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    background: #f8f9fa; /* لون خلفية خفيف */
+    border-radius: 10px;
+    margin-bottom: 20px; /* إضافة مسافة أسفل الشهر */
   }
   
+  /* حاوية group الخاصة بالـ checkboxes */
   .days-checkbox-group {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 checkboxes في صف */
     gap: 8px;
-display:grid;
-grid-template-columns: auto auto;    
+    padding: 10px;
+    background: #f0f2f5;
+    border-radius: 10px;
+    margin-top: 10px; /* مسافة بين الشهر و checkbox */
   }
   
   #loading-container,
