@@ -1,14 +1,15 @@
 .feedback-form {
-    max-width: 600px; /* زاد العرض */
+    max-width: 650px; /* زاد العرض */
     margin: 50px auto;
     padding: 30px; /* زاد التباعد الداخلي */
     background: rgba(173, 216, 230, 0.2); /* لون أزرق فاتح شفاف */
     backdrop-filter: blur(10px);
-    border-radius: 18px; /* زيادة التدوير لجعل الشكل أنعم */
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.9);
     text-align: center;
     font-family: 'Poppins', sans-serif;
+    width: 540px;
     border: 1px solid rgba(255, 255, 255, 0.3);
+    height: 400px;
   }
   
   .feedback-form h2 {
@@ -20,7 +21,7 @@
   
   .feedback-form textarea {
     width: 100%;
-    height: 140px; /* زاد الارتفاع */
+    height: 150px; /* زاد الارتفاع */
     padding: 18px; /* زاد التباعد الداخلي */
     border: none;
     border-radius: 12px; /* زاد التدوير */
@@ -39,9 +40,9 @@
   }
   
   .feedback-form button {
-    width: 100%;
+    width: 90%;
     padding: 14px; /* زاد التباعد */
-    margin-top: 20px;
+    margin-top: 55px;
     background: linear-gradient(135deg, #00a6fb, #0096c7);
     border: none;
     border-radius: 10px; /* زيادة التدوير */

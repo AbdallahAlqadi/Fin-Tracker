@@ -1,7 +1,7 @@
 /* Modern Finance-Themed Form Styling */
 .form-container {
-  max-width: 450px; /* زيادة العرض إلى 500px */
-  padding: 30px;
+  max-width: 500px; /* زيادة العرض إلى 500px */
+  padding: 35px;
   background: linear-gradient(145deg, #abcdee, #e0e7f0);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.8);
@@ -57,12 +57,11 @@
 
 /* Common styles for buttons */
 .form-container button {
-  width: 100%;
-  padding: 14px;
+  width: 80%;
+  padding: 18px;
   background: linear-gradient(145deg, #4f46e5, #3730a3);
   color: #ffffff;
   border: none;
-  border-radius: 16px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
