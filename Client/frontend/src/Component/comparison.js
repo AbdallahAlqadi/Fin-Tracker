@@ -35,18 +35,13 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 }));
 
 const Comparison = () => {
-  const getDaysInMonth = (year, month) => {
-    const daysInMonth = new Date(year, month, 0).getDate();
-    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  };
-
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState([]);
-  const [selectedMonths, setSelectedMonths] = useState([]); // Changed to array
+  const [selectedMonths, setSelectedMonths] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
-  const [dateType, setDateType] = useState("year"); // year, month, day
-  const [chartType, setChartType] = useState("bar"); // bar, line
+  const [dateType, setDateType] = useState("year");
+  const [chartType, setChartType] = useState("bar");
   const [showRevenues, setShowRevenues] = useState(true);
   const [showExpenses, setShowExpenses] = useState(true);
   const svgRef = useRef();
@@ -81,7 +76,7 @@ const Comparison = () => {
     items.forEach((item) => {
       const date = new Date(item.date);
       const year = date.getFullYear();
-      const month = date.getMonth() + 1; // Months are 0-indexed
+      const month = date.getMonth() + 1;
       const day = date.getDate();
       const categoryType = item.CategoriesId.categoryType;
 
@@ -101,13 +96,18 @@ const Comparison = () => {
       groupedData[key][categoryType] += parseFloat(item.valueitem);
     });
 
-    return groupedData;
+    const sortedKeys = Object.keys(groupedData).sort((a, b) => new Date(b) - new Date(a));
+    const sortedData = {};
+    sortedKeys.forEach(key => {
+      sortedData[key] = groupedData[key];
+    });
+
+    return sortedData;
   };
 
   const filterItems = (items) => {
     let filteredItems = items;
 
-    // Filter based on selected year, month, and days
     if (dateType === "year" && selectedYear.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
@@ -129,7 +129,6 @@ const Comparison = () => {
 
     const groupedData = groupByDate(filteredItems);
 
-    // Filter based on user selection (Revenues, Expenses, or both)
     const result = {};
     Object.keys(groupedData).forEach((key) => {
       result[key] = {};
@@ -157,7 +156,7 @@ const Comparison = () => {
     const height = 400;
     const margin = { top: 50, right: 150, bottom: 60, left: 60 };
 
-    d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
+    d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -187,9 +186,8 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#CD5C5C", "#884ea0"]); // Gold and Purple
+      .range(["#CD5C5C", "#884ea0"]);
 
-    // Add bars
     svg.append("g")
       .selectAll("g")
       .data(dates)
@@ -218,7 +216,6 @@ const Comparison = () => {
         d3.select(tooltipRef.current).style("opacity", 0);
       });
 
-    // Add x-axis
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
       .call(d3.axisBottom(x0))
@@ -228,11 +225,9 @@ const Comparison = () => {
       .attr("dy", ".15em")
       .attr("transform", "rotate(-45)");
 
-    // Add y-axis
     svg.append("g")
       .call(d3.axisLeft(y));
 
-    // Add legend
     const legend = svg.append("g")
       .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
 
@@ -252,7 +247,6 @@ const Comparison = () => {
         .attr("alignment-baseline", "middle");
     });
 
-    // Add chart title
     svg.append("text")
       .attr("x", (width - margin.left - margin.right) / 2)
       .attr("y", -margin.top / 2)
@@ -267,7 +261,7 @@ const Comparison = () => {
     const height = 400;
     const margin = { top: 50, right: 150, bottom: 60, left: 60 };
 
-    d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
+    d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -292,7 +286,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#CD5C5C", "#884ea0"]); // Gold and Purple
+      .range(["#CD5C5C", "#884ea0"]);
 
     const line = d3.line()
       .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
@@ -331,7 +325,6 @@ const Comparison = () => {
         });
     });
 
-    // Add x-axis
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
       .call(d3.axisBottom(x))
@@ -341,11 +334,9 @@ const Comparison = () => {
       .attr("dy", ".15em")
       .attr("transform", "rotate(-45)");
 
-    // Add y-axis
     svg.append("g")
       .call(d3.axisLeft(y));
 
-    // Add legend
     const legend = svg.append("g")
       .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
 
@@ -365,7 +356,6 @@ const Comparison = () => {
         .attr("alignment-baseline", "middle");
     });
 
-    // Add chart title
     svg.append("text")
       .attr("x", (width - margin.left - margin.right) / 2)
       .attr("y", -margin.top / 2)
@@ -375,7 +365,6 @@ const Comparison = () => {
       .text("Budget Comparison");
   };
 
-  // Get available years, months, and days for filtering
   const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
 
   const availableMonths = selectedYear.length > 0 
@@ -395,28 +384,25 @@ const Comparison = () => {
       )] 
     : [];
   
-  // Handle year selection
   const handleYearChange = (year) => {
     setSelectedYear(prev => 
       prev.includes(year) 
         ? prev.filter(y => y !== year) 
         : [...prev, year]
     );
-    setSelectedMonths([]); // Reset selected months when changing year
-    setSelectedDays([]); // Reset selected days when changing year
+    setSelectedMonths([]); 
+    setSelectedDays([]); 
   };
 
-  // Handle month selection
   const handleMonthChange = (month) => {
     setSelectedMonths(prev => 
       prev.includes(month) 
         ? prev.filter(m => m !== month) 
         : [...prev, month]
     );
-    setSelectedDays([]); // Reset selected days when changing month
+    setSelectedDays([]); 
   };
 
-  // Handle day selection
   const handleDayChange = (day) => {
     setSelectedDays(prevSelectedDays => 
       prevSelectedDays.includes(day)
@@ -424,7 +410,6 @@ const Comparison = () => {
         : [...prevSelectedDays, day]
     );
   };
-  
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -501,22 +486,22 @@ const Comparison = () => {
             </Box>
           )}
 
-          {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
-            <Box sx={{ display: "flex", gap: 2 }}>
-              {availableDays.map((day) => (
-                <FormControlLabel
-                  key={day}
-                  control={
-                    <Checkbox
-                      checked={selectedDays.includes(day)}
-                      onChange={() => handleDayChange(day)}
-                    />
-                  }
-                  label={`${selectedYear.join(', ')}-${selectedMonths.join(', ')}-${day}`}
-                />
-              ))}
-            </Box>
-          )}
+{dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
+  <Box sx={{ display: "flex", gap: 2 }}>
+    {availableDays.map((day) => (
+      <FormControlLabel
+        key={day}
+        control={
+          <Checkbox
+            checked={selectedDays.includes(day)}
+            onChange={() => handleDayChange(day)}
+          />
+        }
+        label={`${selectedYear.join(', ')}-${day < 10 ? '0' + day : day}`} // Format day to be two digits
+      />
+    ))}
+  </Box>
+)}
         </Box>
 
         {loading ? (
