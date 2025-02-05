@@ -231,6 +231,19 @@ const BudgetItems = () => {
     return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
   };
 
+  const groupSimilarItems = (items) => {
+    const grouped = items.reduce((acc, item) => {
+      const key = `${item.CategoriesId.categoryName}-${new Date(item.date).toISOString().split('T')[0]}-${item.CategoriesId.categoryType}`;
+      if (!acc[key]) {
+        acc[key] = { ...item, valueitem: 0 };
+      }
+      acc[key].valueitem += parseFloat(item.valueitem);
+      return acc;
+    }, {});
+  
+    return Object.values(grouped);
+  };
+
   const filterItems = (items) => {
     let filteredItems = items;
 
@@ -282,11 +295,12 @@ const BudgetItems = () => {
     : [...new Set(budgetItems.filter((item) => item.CategoriesId.categoryType === filterType).map((item) => item.CategoriesId.categoryName))];
 
   const filteredItems = filterItems(budgetItems);
-  const totals = calculateTotals(filteredItems);
+  const groupedItems = groupSimilarItems(filteredItems); // استخدام groupSimilarItems
+  const totals = calculateTotals(groupedItems);
   const balance = totals.Revenues - totals.Expenses;
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
+    const ws = XLSX.utils.json_to_sheet(groupedItems.map(item => ({
       Date: new Date(item.date).toLocaleDateString('en-GB', {
         month: '2-digit',
         day: '2-digit',
@@ -382,14 +396,14 @@ const BudgetItems = () => {
           <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <CircularProgress size={60} />
           </Box>
-        ) : filteredItems.length === 0 ? (
+        ) : groupedItems.length === 0 ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
-          groupByDate(filteredItems).map(([date, items]) => (
+          groupByDate(groupedItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
               <Typography variant="h4" gutterBottom sx={{ color: "#333", fontWeight: "bold", marginBottom: "24px" }}>
                 {new Date(date).toLocaleDateString('en-GB', {
