@@ -1,0 +1,123 @@
+/* container الأساسي */
+#container {
+    padding: 4rem;
+    background: #f5f5f5;
+    min-height: 100vh;
+  }
+  
+  /* خيارات الفلترة */
+  #filters {
+    margin-bottom: 4rem;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+  }
+  
+  #date-type, #filter-type, #date-picker {
+    min-width: 120px;
+  }
+  
+  /* البطاقات */
+  #cards-container {
+    margin-bottom: 4rem;
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+  }
+  
+  #revenues-card {
+    min-width: 200px;
+    text-align: center;
+    background: #4caf50;
+    color: #fff;
+  }
+  
+  #expenses-card {
+    min-width: 200px;
+    text-align: center;
+    background: #f44336;
+    color: #fff;
+  }
+  
+  #balance-card {
+    min-width: 200px;
+    text-align: center;
+    color: #fff;
+  }
+  
+  .positive-balance {
+    background: #4caf50;
+  }
+  
+  .negative-balance {
+    background: #f44336;
+  }
+  
+  /* صندوق التحميل */
+  #loading-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+  }
+  
+  /* حالة عدم وجود عناصر */
+  #no-items-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    color: #999;
+  }
+  
+  /* الحاوية الخاصة بالمخطط */
+  #chart-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4rem;
+  }
+  
+  #chart-list {
+    margin-left: 20px;
+    width: 300px;
+  }
+  
+  .chart-color-box {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* شبكة العناصر */
+  #items-grid {
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* البطاقات داخل الشبكة */
+  .category-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .card-content {
+    text-align: center;
+  }
+  
+  .category-name {
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  .revenue-text {
+    color: #4caf50;
+  }
+  
+  .expense-text {
+    color: #f44336;
+  }
+  
+  .percentage-text, .date-text {
+    color: #666;
+  }
+  
