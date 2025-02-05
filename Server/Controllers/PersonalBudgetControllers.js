@@ -1,6 +1,7 @@
 const Budget = require('../models/PersonalBudget ');
 const Category = require('../models/categoryData');
 
+
 // get all products
 exports.getUserBudget = async (req, res) => {
     try {                                                          //populate  :هاي يلي بتخليني اوصل للبيانات الموجوده في الداتابيز ل model ثانيه
