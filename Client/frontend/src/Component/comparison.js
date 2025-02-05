@@ -188,7 +188,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#CD5C5C", "#884ea0"]);
+      .range(["#59ff00", "#ff0000"]);
 
     svg.append("g")
       .selectAll("g")
