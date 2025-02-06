@@ -38,14 +38,16 @@ const CategoryCard = styled('div')(({ theme, type }) => ({
   },
 }));
 
-const DashboardUser  = () => {
+const DashboardUser = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
-  const [errorMessage, setErrorMessage] = useState(''); // State for error message
+  const [errorMessage, setErrorMessage] = useState('');
+  const [scale, setScale] = useState(1);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,7 +80,7 @@ const DashboardUser  = () => {
     setOpen(false);
     setSelectedCategory(null);
     setValue('');
-    setErrorMessage(''); // Clear error message on close
+    setErrorMessage('');
   };
 
   const handleSubmit = async () => {
@@ -105,7 +107,7 @@ const DashboardUser  = () => {
       handleClose();
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        setErrorMessage('لقد اضفت هذا العنصر بالفعل اليوم.'); // Set error message
+        setErrorMessage('لقد اضفت هذا العنصر بالفعل اليوم.');
       } else {
         console.error('Error submitting value:', error);
       }
@@ -115,7 +117,7 @@ const DashboardUser  = () => {
   const handleLoadMore = (type) => {
     setVisibleItems((prev) => ({
       ...prev,
-      [type]: prev[type] + 12, // Increase visible items by 12
+      [type]: prev[type] + 12,
     }));
   };
 
@@ -132,22 +134,28 @@ const DashboardUser  = () => {
   const getCategoryIcon = (type) => {
     return type === 'Expense' ? '💸' : '💰';
   };
-
   return (
-    <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif', backgroundColor: '#F5F7FA' }}>
-      <h1
-        style={{
-          textAlign: 'center',
-          marginBottom: '40px',
-          fontSize: '42px',
-          fontWeight: '700',
-          color: '#2c3e50',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
-          fontFamily: '"Poppins", sans-serif',
-        }}
-      >
-        Categories
-      </h1>
+    <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif', backgroundColor: '#F5F7FA', minHeight: '100vh' }}>
+  <h1
+      style={{
+        textAlign: "center",
+        fontSize: "50px",
+        fontWeight: "800",
+        textTransform: "uppercase",
+        background: "linear-gradient(to right,rgb(92, 212, 245),rgb(117, 171, 236))",
+        WebkitBackgroundClip: "text",
+        color: "transparent",
+        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
+        letterSpacing: "2px",
+        transition: "transform 0.3s ease-in-out",
+        transform: `scale(${scale})`,
+        cursor: "pointer",
+      }}
+      onMouseEnter={() => setScale(1.1)}
+      onMouseLeave={() => setScale(1)}
+    >
+      ⚔️ Categories ⚔️
+    </h1>
 
       {Object.keys(groupedCategories).length === 0 ? (
         <p style={{ textAlign: 'center', color: '#666', fontSize: '18px' }}>No categories found.</p>
@@ -156,20 +164,20 @@ const DashboardUser  = () => {
           <div key={type} style={{ marginBottom: '40px' }}>
             <h2
               style={{
-                backgroundColor: type === 'Expense' ? '#FFF0F0' : '#F0F8FF',
-                color: type === 'Expense' ? '#FF6B6B' : '#4A90E2',
+                backgroundColor: type === 'Expense' ? '#FF6B6B' : '#04a1ec',
+                color: '#FFFFFF',
                 padding: '15px 20px',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                fontSize: '24px',
+                fontSize: '28px', // Increased font size
                 fontWeight: '600',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                 marginBottom: '20px',
               }}
             >
-              {getCategoryIcon(type)} {type}
+              {getCategoryIcon(type)} {type === 'Expense' ? 'Expenses' : type}
             </h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
               {groupedCategories[type].slice(0, visibleItems[type]).map((category) => (
@@ -191,7 +199,7 @@ const DashboardUser  = () => {
                       }}
                     />
                   )}
-                  <h3 style={{ fontSize: '16px', color: type === 'Expense' ? '#FF6B6B' : '#4A90E2', fontWeight: '500' }}>
+                  <h3 style={{ fontSize: '20px', color: type === 'Expense' ? '#FF6B6B' : '#4A90E2', fontWeight: '600' }}>
                     {category.categoryName}
                   </h3>
                 </CategoryCard>
@@ -202,7 +210,7 @@ const DashboardUser  = () => {
                 <Button
                   onClick={() => handleLoadMore(type)}
                   style={{
-                    backgroundColor: '#4A90E2',
+                    backgroundColor: '#e40000',
                     color: '#FFFFFF',
                     padding: '10px 20px',
                     borderRadius: '8px',
@@ -233,8 +241,8 @@ const DashboardUser  = () => {
       >
         <DialogTitle
           style={{
-            backgroundColor: selectedCategory?.categoryType === 'Expense' ? '#FFF0F0' : '#F0F8FF',
-            color: selectedCategory?.categoryType === 'Expense' ? '#FF6B6B' : '#4A90E2',
+            backgroundColor: selectedCategory?.categoryType === 'Expense' ? '#FF6B6B' : '#4A90E2',
+            color: '#FFFFFF',
             padding: '20px',
             textAlign: 'center',
             fontSize: '24px',
@@ -281,7 +289,7 @@ const DashboardUser  = () => {
             style={{ marginBottom: '20px' }}
           />
           {errorMessage && (
-            <p style={{ color: '#FF6B6B', textAlign: 'center' }}>{errorMessage}</p> // Display error message
+            <p style={{ color: '#FF6B6B', textAlign: 'center' }}>{errorMessage}</p>
           )}
         </DialogContent>
         <DialogActions style={{ padding: '20px', justifyContent: 'center' }}>
@@ -326,4 +334,4 @@ const DashboardUser  = () => {
   );
 };
 
-export default DashboardUser ;
+export default DashboardUser;
