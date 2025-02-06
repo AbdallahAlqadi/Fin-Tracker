@@ -41,40 +41,9 @@ exports.addBudget = async (req, res) => {
 
 
 // Update budget item
-// exports.updateBudget = async (req, res) => {
-//     const { CategoriesId, valueitem } = req.body;
-//     const userId = req.user;
-
-//     try {
-//         const budget = await Budget.findOne({ userId });
-//         if (!budget) {
-//             return res.status(404).json({ error: 'Budget not found' });
-//         }
-
-//         const budgetIndex = budget.products.findIndex((item) => item.CategoriesId.toString() === CategoriesId);
-//         if (budgetIndex > -1) {
-//             budget.products[budgetIndex].valueitem = valueitem;
-//             budget.products[budgetIndex].date = new Date(); // تحديث التاريخ
-//             await budget.save();
-//             res.status(200).json(budget);
-//         } else {
-//             res.status(404).json({ error: 'Category not found in budget' });
-//         }
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// }
 exports.updateBudget = async (req, res) => {
     const { CategoriesId, valueitem } = req.body;
     const userId = req.user;
-
-    if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized: User ID is missing' });
-    }
-
-    if (!CategoriesId || !valueitem) {
-        return res.status(400).json({ error: 'CategoriesId and valueitem are required' });
-    }
 
     try {
         const budget = await Budget.findOne({ userId });
@@ -82,24 +51,18 @@ exports.updateBudget = async (req, res) => {
             return res.status(404).json({ error: 'Budget not found' });
         }
 
-        if (!budget.products || !Array.isArray(budget.products)) {
-            return res.status(400).json({ error: 'Invalid budget structure' });
-        }
-
         const budgetIndex = budget.products.findIndex((item) => item.CategoriesId.toString() === CategoriesId);
         if (budgetIndex > -1) {
             budget.products[budgetIndex].valueitem = valueitem;
             await budget.save();
-            return res.status(200).json(budget);
+            res.status(200).json(budget);
         } else {
-            return res.status(404).json({ error: 'Category not found in budget' });
+            res.status(404).json({ error: 'Category not found in budget' });
         }
     } catch (error) {
-        console.error('Error updating budget:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message });
     }
-};
-
+}
 
 
 
