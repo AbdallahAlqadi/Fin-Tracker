@@ -19,12 +19,13 @@ import {
   InputLabel,
 } from "@mui/material";
 import { styled } from "@mui/system";
-import CategoryIcon from "@mui/icons-material/Category"; // أيقونة للفئة
-import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // DatePicker component
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns"; // Adapter for date-fns
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Localization provider
-import * as XLSX from "xlsx"; // مكتبة xlsx
+import CategoryIcon from "@mui/icons-material/Category";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import * as XLSX from "xlsx";
 
+// Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
@@ -34,8 +35,8 @@ const StyledCard = styled(Card)(({ theme }) => ({
   border: "1px solid #e0e0e0",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
-  width: "400px", // عرض ثابت للبطاقة
-  height: "150px", // ارتفاع ثابت للبطاقة
+  width: "400px",
+  height: "150px",
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -44,13 +45,13 @@ const StyledCard = styled(Card)(({ theme }) => ({
 }));
 
 const ImageContainer = styled("div")({
-  flex: "0 0 100px", // حجم ثابت لحاوية الصورة
+  flex: "0 0 100px",
   marginRight: "16px",
   borderRadius: "50%",
   overflow: "hidden",
   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-  width: "100px", // عرض ثابت للصورة
-  height: "100px", // ارتفاع ثابت للصورة
+  width: "100px",
+  height: "100px",
 });
 
 const StyledSelect = styled(Select)(({ theme }) => ({
@@ -133,10 +134,10 @@ const BudgetItems = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [updatedValue, setUpdatedValue] = useState("");
-  const [filterDate, setFilterDate] = useState(new Date()); // تاريخ محدد (الشهر الحالي)
-  const [filterType, setFilterType] = useState("all"); // all, Revenues, Expenses
-  const [filterItem, setFilterItem] = useState("all"); // all, item1, item2, ...
-  const [dateType, setDateType] = useState("month"); // full, month, year (الشهر الحالي بشكل افتراضي)
+  const [filterDate, setFilterDate] = useState(new Date());
+  const [filterType, setFilterType] = useState("all");
+  const [filterItem, setFilterItem] = useState("all");
+  const [dateType, setDateType] = useState("month");
 
   useEffect(() => {
     fetchBudget();
@@ -160,17 +161,17 @@ const BudgetItems = () => {
     }
   };
 
-  const deleteItem = async (CategoriesId) => {
+  const deleteItem = async (item) => {
     try {
       const response = await axios.delete('http://127.0.0.1:5004/api/deleteBudget', {
         headers: {
           Auth: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        data: { CategoriesId: CategoriesId._id }
+        data: { CategoriesId: item.CategoriesId._id }
       });
       console.log("Item deleted successfully", response.data);
-      setBudgetItems((prevItems) => prevItems.filter(item => item.CategoriesId._id !== CategoriesId._id));
+      setBudgetItems((prevItems) => prevItems.filter(budgetItem => budgetItem.CategoriesId._id !== item.CategoriesId._id || budgetItem.date !== item.date));
     } catch (error) {
       console.error("Error deleting budget", error.response?.data || error.message);
     }
@@ -194,7 +195,10 @@ const BudgetItems = () => {
     try {
       const response = await axios.put(
         'http://127.0.0.1:5004/api/updateBudget',
-        { CategoriesId: selectedItem.CategoriesId._id, valueitem: updatedValue },
+        {
+          CategoriesId: selectedItem.CategoriesId._id,
+          valueitem: updatedValue,
+        },
         {
           headers: {
             Auth: `Bearer ${token}`,
@@ -202,15 +206,20 @@ const BudgetItems = () => {
           },
         }
       );
-      console.log("Item updated successfully", response.data);
-      setBudgetItems((prevItems) =>
-        prevItems.map((item) =>
-          item.CategoriesId._id === selectedItem.CategoriesId._id
-            ? { ...item, valueitem: updatedValue }
-            : item
-        )
-      );
-      handleCloseDialog();
+
+      if (response.status === 200) {
+        console.log("Item updated successfully", response.data);
+        setBudgetItems((prevItems) =>
+          prevItems.map((item) =>
+            item.CategoriesId._id === selectedItem.CategoriesId._id && item.date === selectedItem.date
+              ? { ...item, valueitem: updatedValue } // Update the value only
+              : item
+          )
+        );
+        handleCloseDialog();
+      } else {
+        console.error("Failed to update item", response.data);
+      }
     } catch (error) {
       console.error("Error updating budget", error.response?.data || error.message);
     }
@@ -219,7 +228,7 @@ const BudgetItems = () => {
   const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
       const date = new Date(item.date);
-      const dateString = date.toISOString().split('T')[0]; // استخدام ISO string لتسهيل المقارنة
+      const dateString = date.toISOString().split('T')[0];
       if (!acc[dateString]) {
         acc[dateString] = [];
       }
@@ -227,32 +236,12 @@ const BudgetItems = () => {
       return acc;
     }, {});
 
-    // Sort the grouped items by date from newest to oldest
     return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
-  };
-
-  const groupSimilarItems = (items) => {
-    // إعادة العناصر كما هي دون تجميع
-    return items;
-  };
-
-  const groupSimilarItemsForExport = (items) => {
-    const grouped = items.reduce((acc, item) => {
-      const key = `${item.CategoriesId.categoryName}-${new Date(item.date).toISOString().split('T')[0]}-${item.CategoriesId.categoryType}`;
-      if (!acc[key]) {
-        acc[key] = { ...item, valueitem: 0 };
-      }
-      acc[key].valueitem += parseFloat(item.valueitem);
-      return acc;
-    }, {});
-  
-    return Object.values(grouped);
   };
 
   const filterItems = (items) => {
     let filteredItems = items;
 
-    // Filter by date
     if (filterDate) {
       const selectedDate = new Date(filterDate);
       filteredItems = filteredItems.filter((item) => {
@@ -267,12 +256,10 @@ const BudgetItems = () => {
       });
     }
 
-    // Filter by type
     if (filterType !== "all") {
       filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
     }
 
-    // Filter by item
     if (filterItem !== "all") {
       filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryName === filterItem);
     }
@@ -300,15 +287,11 @@ const BudgetItems = () => {
     : [...new Set(budgetItems.filter((item) => item.CategoriesId.categoryType === filterType).map((item) => item.CategoriesId.categoryName))];
 
   const filteredItems = filterItems(budgetItems);
-  const groupedItems = groupSimilarItems(filteredItems); // استخدام الدالة المعدلة لعرض العناصر دون تجميع  
-  const totals = calculateTotals(groupedItems); // Calculate totals here
+  const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
   const exportToExcel = () => {
-    const groupedItemsForExport = groupSimilarItemsForExport(filteredItems); // استخدام الدالة الجديدة للتجميع
-    
-    // إعداد البيانات للتصدير
-    const dataToExport = groupedItemsForExport.map(item => ({
+    const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
       Date: new Date(item.date).toLocaleDateString('en-GB', {
         month: '2-digit',
         day: '2-digit',
@@ -316,31 +299,8 @@ const BudgetItems = () => {
       }),
       Category: item.CategoriesId.categoryName,
       Type: item.CategoriesId.categoryType,
-      Value: parseFloat(item.valueitem).toFixed(2), // تنسيق الرقم
-    }));
-
-    // إضافة عنوان
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    
-    // إضافة عنوان في الصف الأول
-    const title = [["Budget Items Report"]];
-    XLSX.utils.sheet_add_aoa(ws, title, { origin: "A1" });
-
-    // إضافة تنسيق للأعمدة
-    ws['!cols'] = [
-      { wpx: 100 }, // عرض عمود التاريخ
-      { wpx: 200 }, // عرض عمود الفئة
-      { wpx: 100 }, // عرض عمود النوع
-      { wpx: 100 }, // عرض عمود القيمة
-    ];
-
-    // إضافة ملخص في الأسفل
-    const summary = [
-      ["Total Revenues", totals.Revenues.toFixed(2)],
-      ["Total Expenses", totals.Expenses.toFixed(2)],
-      ["Balance", (totals.Revenues - totals.Expenses).toFixed(2)],
-    ];
-    XLSX.utils.sheet_add_aoa(ws, summary, { origin: -1 }); // إضافة الملخص في نهاية ورقة العمل
+      Value: item.valueitem,
+    })));
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Budget Items");
@@ -427,14 +387,14 @@ const BudgetItems = () => {
           <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <CircularProgress size={60} />
           </Box>
-        ) : groupedItems.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
-          groupByDate(groupedItems).map(([date, items]) => (
+          groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
               <Typography variant="h4" gutterBottom sx={{ color: "#333", fontWeight: "bold", marginBottom: "24px" }}>
                 {new Date(date).toLocaleDateString('en-GB', {
@@ -459,23 +419,23 @@ const BudgetItems = () => {
                           variant="h6"
                           gutterBottom
                           sx={{
-                            color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336", // أخضر إذا كانت Revenues، أحمر إذا كانت Expenses
+                            color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
                             fontWeight: "600",
                           }}
                         >
                           {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <CategoryIcon sx={{ color: "#007BFF" }} /> {/* أيقونة الفئة */}
+                          <CategoryIcon sx={{ color: "#007BFF" }} />
                           <Typography variant="h5" sx={{ color: "#007BFF", fontWeight: "bold" }}>
-                            {item.CategoriesId.categoryName} {/* اسم العنصر */}
+                            {item.CategoriesId.categoryName}
                           </Typography>
                         </Box>
                         <Box display="flex" justifyContent="flex-end" gap={1} sx={{ marginTop: 2 }}>
                           <Button
                             variant="contained"
                             color="error"
-                            onClick={() => deleteItem(item.CategoriesId)}
+                            onClick={() => deleteItem(item)}
                             sx={{ textTransform: "none", fontWeight: "600" }}
                           >
                             Delete
