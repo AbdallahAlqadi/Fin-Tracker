@@ -168,15 +168,20 @@ const BudgetItems = () => {
           Auth: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        data: { CategoriesId: item.CategoriesId._id }
+        data: { 
+          CategoriesId: item.CategoriesId._id,
+          date: item.date // تأكد من إرسال التاريخ
+        }
       });
       console.log("Item deleted successfully", response.data);
-      setBudgetItems((prevItems) => prevItems.filter(budgetItem => budgetItem.CategoriesId._id !== item.CategoriesId._id || budgetItem.date !== item.date));
+      setBudgetItems((prevItems) => prevItems.filter(budgetItem => 
+        budgetItem.CategoriesId._id !== item.CategoriesId._id || budgetItem.date !== item.date
+      ));
     } catch (error) {
       console.error("Error deleting budget", error.response?.data || error.message);
     }
   };
-
+  
   const handleUpdateClick = (item) => {
     setSelectedItem(item);
     setUpdatedValue(item.valueitem);
@@ -234,7 +239,7 @@ const BudgetItems = () => {
       console.error("خطأ في تحديث الميزانية", error.response?.data || error.message);
     }
   };
-  const groupByDate = (items) => {
+   const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
       const date = new Date(item.date);
       const dateString = date.toISOString().split('T')[0];
