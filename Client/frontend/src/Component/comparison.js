@@ -122,7 +122,7 @@ const Comparison = () => {
     } else if (dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && selectedDays.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const date = new Date(item.date);
-        const dayKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`; // تضمين السنة
+        const dayKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
         return selectedYear.includes(date.getFullYear()) && 
                selectedMonths.includes(date.getMonth() + 1) && 
                selectedDays.includes(dayKey);
@@ -188,7 +188,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#59ff00", "#ff0000"]);
+      .range(["#4CAF50", "#F44336"]); // استخدام ألوان أكثر جاذبية
 
     const bars = svg.append("g")
       .selectAll("g")
@@ -231,10 +231,15 @@ const Comparison = () => {
       .style("text-anchor", "end")
       .attr("dx", "-.8em")
       .attr("dy", ".15em")
-      .attr("transform", "rotate(-45)");
+      .attr("transform", "rotate(-45)")
+      .style("font-size", "12px")
+      .style("fill", "#333"); // تحسين لون النص
 
     svg.append("g")
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y))
+      .selectAll("text")
+      .style("font-size", "12px")
+      .style("fill", "#333"); // تحسين لون النص
 
     const legend = svg.append("g")
       .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
@@ -259,8 +264,9 @@ const Comparison = () => {
       .attr("x", (width - margin.left - margin.right) / 2)
       .attr("y", -margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "20px") // زيادة حجم الخط
       .style("font-weight", "bold")
+      .style("fill", "#333") // تحسين لون النص
       .text("Budget Comparison");
   };
 
@@ -294,7 +300,7 @@ const Comparison = () => {
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#CD5C5C", "#884ea0"]);
+      .range(["#CD5C5C", "#884ea0"]); // استخدام ألوان أكثر جاذبية
 
     const line = d3.line()
       .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
@@ -355,10 +361,15 @@ const Comparison = () => {
       .style("text-anchor", "end")
       .attr("dx", "-.8em")
       .attr("dy", ".15em")
-      .attr("transform", "rotate(-45)");
+      .attr("transform", "rotate(-45)")
+      .style("font-size", "12px")
+      .style("fill", "#333"); // تحسين لون النص
 
     svg.append("g")
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y))
+      .selectAll("text")
+      .style("font-size", "12px")
+      .style("fill", "#333"); // تحسين لون النص
 
     const legend = svg.append("g")
       .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
@@ -383,8 +394,9 @@ const Comparison = () => {
       .attr("x", (width - margin.left - margin.right) / 2)
       .attr("y", -margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "20px") // زيادة حجم الخط
       .style("font-weight", "bold")
+      .style("fill", "#333") // تحسين لون النص
       .text("Budget Comparison");
   };
 
@@ -439,9 +451,9 @@ const Comparison = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box id="main-container">
-        <Box id="controls-container">
-          <FormControl id="date-type-select">
+      <Box id="main-container" sx={{ padding: 2, backgroundColor: "#f9f9f9", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)" }}>
+        <Box id="controls-container" sx={{ marginBottom: 2 }}>
+          <FormControl id="date-type-select" sx={{ marginRight: 2 }}>
             <InputLabel>Date Type</InputLabel>
             <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
               <MenuItem value="year">Year</MenuItem>
@@ -463,7 +475,7 @@ const Comparison = () => {
           />
         </Box>
   
-        <Box id="date-selection-container">
+        <Box id="date-selection-container" sx={{ marginBottom: 2 }}>
           {dateType === "year" && (
             <Box id="year-selection">
               {availableYears.map((year) => (
