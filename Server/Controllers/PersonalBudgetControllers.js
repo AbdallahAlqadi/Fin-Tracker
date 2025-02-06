@@ -68,22 +68,35 @@ exports.updateBudget = async (req, res) => {
     const { CategoriesId, valueitem } = req.body;
     const userId = req.user;
 
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized: User ID is missing' });
+    }
+
+    if (!CategoriesId || !valueitem) {
+        return res.status(400).json({ error: 'CategoriesId and valueitem are required' });
+    }
+
     try {
         const budget = await Budget.findOne({ userId });
         if (!budget) {
             return res.status(404).json({ error: 'Budget not found' });
         }
 
+        if (!budget.products || !Array.isArray(budget.products)) {
+            return res.status(400).json({ error: 'Invalid budget structure' });
+        }
+
         const budgetIndex = budget.products.findIndex((item) => item.CategoriesId.toString() === CategoriesId);
         if (budgetIndex > -1) {
-            budget.products[budgetIndex].valueitem = valueitem; // Update the value only
+            budget.products[budgetIndex].valueitem = valueitem;
             await budget.save();
-            res.status(200).json(budget);
+            return res.status(200).json(budget);
         } else {
-            res.status(404).json({ error: 'Category not found in budget' });
+            return res.status(404).json({ error: 'Category not found in budget' });
         }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error updating budget:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 };
 

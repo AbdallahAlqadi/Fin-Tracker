@@ -191,13 +191,20 @@ const BudgetItems = () => {
 
   const handleSaveUpdate = async () => {
     if (!selectedItem) return;
-
+  
+    const numericValue = parseFloat(updatedValue);
+    if (isNaN(numericValue)) {
+      alert("الرجاء إدخال رقم صالح للقيمة.");
+      return;
+    }
+  
     try {
       const response = await axios.put(
         'http://127.0.0.1:5004/api/updateBudget',
         {
           CategoriesId: selectedItem.CategoriesId._id,
-          valueitem: updatedValue,
+          date: selectedItem.date, // تأكد من إرسال التاريخ
+          valueitem: numericValue, // إرسال القيمة المحدثة كرقم
         },
         {
           headers: {
@@ -206,25 +213,27 @@ const BudgetItems = () => {
           },
         }
       );
-
+  
       if (response.status === 200) {
-        console.log("Item updated successfully", response.data);
+        console.log("تم تحديث العنصر بنجاح", response.data);
+  
+        // تحديث العنصر الصحيح فقط داخل state
         setBudgetItems((prevItems) =>
           prevItems.map((item) =>
             item.CategoriesId._id === selectedItem.CategoriesId._id && item.date === selectedItem.date
-              ? { ...item, valueitem: updatedValue } // Update the value only
+              ? { ...item, valueitem: numericValue } // تحديث العنصر
               : item
           )
         );
+  
         handleCloseDialog();
       } else {
-        console.error("Failed to update item", response.data);
+        console.error("فشل تحديث العنصر", response.data);
       }
     } catch (error) {
-      console.error("Error updating budget", error.response?.data || error.message);
+      console.error("خطأ في تحديث الميزانية", error.response?.data || error.message);
     }
   };
-
   const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
       const date = new Date(item.date);
