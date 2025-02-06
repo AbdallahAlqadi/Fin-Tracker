@@ -38,20 +38,20 @@ const CategoryCard = styled('div')(({ theme, type }) => ({
   },
 }));
 
-const DashboardUser = () => {
+const DashboardUser  = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
+  const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         setCategories(response.data.data);
-        // Initialize visible items for each category type
         const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
             acc[category.categoryType] = 12; // Show first 12 items by default
@@ -78,6 +78,7 @@ const DashboardUser = () => {
     setOpen(false);
     setSelectedCategory(null);
     setValue('');
+    setErrorMessage(''); // Clear error message on close
   };
 
   const handleSubmit = async () => {
@@ -103,7 +104,11 @@ const DashboardUser = () => {
       console.log('Response:', response.data);
       handleClose();
     } catch (error) {
-      console.error('Error submitting value:', error);
+      if (error.response && error.response.status === 400) {
+        setErrorMessage('لقد اضفت هذا العنصر بالفعل اليوم.'); // Set error message
+      } else {
+        console.error('Error submitting value:', error);
+      }
     }
   };
 
@@ -275,6 +280,9 @@ const DashboardUser = () => {
             onChange={(e) => setValue(e.target.value)}
             style={{ marginBottom: '20px' }}
           />
+          {errorMessage && (
+            <p style={{ color: '#FF6B6B', textAlign: 'center' }}>{errorMessage}</p> // Display error message
+          )}
         </DialogContent>
         <DialogActions style={{ padding: '20px', justifyContent: 'center' }}>
           <Button
@@ -318,4 +326,4 @@ const DashboardUser = () => {
   );
 };
 
-export default DashboardUser;
+export default DashboardUser ;
