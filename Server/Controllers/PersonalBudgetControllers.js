@@ -14,13 +14,15 @@ exports.getUserBudget = async (req, res) => {
 
 
 
-
 exports.addBudget = async (req, res) => {
     const { CategoriesId, valueitem } = req.body;
     const userId = req.user;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // تصفير الوقت لضمان المقارنة حسب اليوم فقط
 
     try {
         let budget = await Budget.findOne({ userId });
+
         if (!budget) {
             budget = new Budget({
                 userId,
@@ -28,7 +30,17 @@ exports.addBudget = async (req, res) => {
             });
         }
 
-        // دائمًا قم بإضافة عنصر جديد بدلاً من تعديل العنصر الحالي
+        // التحقق مما إذا كان العنصر موجودًا بالفعل في نفس اليوم
+        const isDuplicate = budget.products.some(item => 
+            item.CategoriesId.toString() === CategoriesId && 
+            new Date(item.date).setHours(0, 0, 0, 0) === today.getTime()
+        );
+
+        if (isDuplicate) {
+            return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في اليوم.' });
+        }
+
+        // إضافة العنصر إذا لم يكن مكررًا
         budget.products.push({ CategoriesId, valueitem, date: new Date() });
 
         await budget.save();
@@ -36,7 +48,8 @@ exports.addBudget = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
+};
+
 
 
 
