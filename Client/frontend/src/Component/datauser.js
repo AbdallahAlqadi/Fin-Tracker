@@ -232,6 +232,11 @@ const BudgetItems = () => {
   };
 
   const groupSimilarItems = (items) => {
+    // إعادة العناصر كما هي دون تجميع
+    return items;
+  };
+
+  const groupSimilarItemsForExport = (items) => {
     const grouped = items.reduce((acc, item) => {
       const key = `${item.CategoriesId.categoryName}-${new Date(item.date).toISOString().split('T')[0]}-${item.CategoriesId.categoryType}`;
       if (!acc[key]) {
@@ -295,12 +300,15 @@ const BudgetItems = () => {
     : [...new Set(budgetItems.filter((item) => item.CategoriesId.categoryType === filterType).map((item) => item.CategoriesId.categoryName))];
 
   const filteredItems = filterItems(budgetItems);
-  const groupedItems = groupSimilarItems(filteredItems); // استخدام groupSimilarItems
-  const totals = calculateTotals(groupedItems);
+  const groupedItems = groupSimilarItems(filteredItems); // استخدام الدالة المعدلة لعرض العناصر دون تجميع  
+  const totals = calculateTotals(groupedItems); // Calculate totals here
   const balance = totals.Revenues - totals.Expenses;
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(groupedItems.map(item => ({
+    const groupedItemsForExport = groupSimilarItemsForExport(filteredItems); // استخدام الدالة الجديدة للتجميع
+    
+    // إعداد البيانات للتصدير
+    const dataToExport = groupedItemsForExport.map(item => ({
       Date: new Date(item.date).toLocaleDateString('en-GB', {
         month: '2-digit',
         day: '2-digit',
@@ -308,8 +316,31 @@ const BudgetItems = () => {
       }),
       Category: item.CategoriesId.categoryName,
       Type: item.CategoriesId.categoryType,
-      Value: item.valueitem,
-    })));
+      Value: parseFloat(item.valueitem).toFixed(2), // تنسيق الرقم
+    }));
+
+    // إضافة عنوان
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    
+    // إضافة عنوان في الصف الأول
+    const title = [["Budget Items Report"]];
+    XLSX.utils.sheet_add_aoa(ws, title, { origin: "A1" });
+
+    // إضافة تنسيق للأعمدة
+    ws['!cols'] = [
+      { wpx: 100 }, // عرض عمود التاريخ
+      { wpx: 200 }, // عرض عمود الفئة
+      { wpx: 100 }, // عرض عمود النوع
+      { wpx: 100 }, // عرض عمود القيمة
+    ];
+
+    // إضافة ملخص في الأسفل
+    const summary = [
+      ["Total Revenues", totals.Revenues.toFixed(2)],
+      ["Total Expenses", totals.Expenses.toFixed(2)],
+      ["Balance", (totals.Revenues - totals.Expenses).toFixed(2)],
+    ];
+    XLSX.utils.sheet_add_aoa(ws, summary, { origin: -1 }); // إضافة الملخص في نهاية ورقة العمل
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Budget Items");
