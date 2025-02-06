@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { createTheme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -24,6 +23,8 @@ import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 import FedbackUser from '../Component/fedbackuser';
 import ChatIcon from '@mui/icons-material/Chat';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
+import HomePage from '../Component/Homepage'
+
 
 const demoTheme = createTheme({
   palette: {
@@ -93,6 +94,7 @@ function DashboardLayoutBasic(props) {
     { path: '/comparison', component: <Comparison /> },
     { path: '/fedback', component: <FeedbackForm /> },
     { path: '/fedbackuser', component: <FedbackUser /> },
+    { path: '/homepage', component: <HomePage /> },
 
 
 
@@ -149,7 +151,7 @@ function DashboardLayoutBasic(props) {
   ]);
 
   //default page
-  const router = useDemoRouter('/dashboard');
+  const router = useDemoRouter('/homepage');
 
   useEffect(() => {
     const token = sessionStorage.getItem('jwt');

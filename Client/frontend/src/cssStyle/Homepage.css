@@ -1,0 +1,164 @@
+/* الصفحة الرئيسية - تحسين التصميم بألوان زرقاء فاتحة وتأثيرات احترافية */
+.homepage-container {
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    background: linear-gradient(to right, #87CEFA, #B0E0E6); /* أزرق فاتح */
+    color: #333;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* العنوان الرئيسي */
+.title {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: white;
+}
+
+/* شبكة الميزات - عرض 4 بطاقات في الصف الواحد */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 أعمدة في كل صف */
+    gap: 20px;
+    margin: 30px auto;
+    max-width: 1200px; /* تحديد عرض أقصى للشبكة */
+    padding: 10px;
+}
+
+/* تصميم احترافي لبطاقات الميزات */
+.feature-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+}
+
+/* تأثير عند التحويم */
+.feature-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 140, 186, 0.4);
+}
+
+/* استجابة التصميم للشاشات الصغيرة */
+@media (max-width: 1024px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr); /* بطاقتين في الصف عند تصغير الشاشة */
+    }
+}
+
+@media (max-width: 600px) {
+    .features-grid {
+        grid-template-columns: repeat(1, 1fr); /* بطاقة واحدة في كل صف للهواتف */
+    }
+}
+
+
+/* تأثير إضاءة متحرك */
+.feature-card::after {
+    content: "";
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 80%);
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+}
+
+.feature-card:hover::after {
+    opacity: 1;
+}
+
+/* العناوين داخل البطاقات */
+.feature-card h2 {
+    font-size: 1.5rem;
+    color: #005f99;
+    margin-bottom: 10px;
+}
+
+/* النصوص داخل البطاقات */
+.feature-card p {
+    font-size: 1rem;
+    color: #333;
+    opacity: 0.9;
+}
+
+/* الرسم البياني */
+.chart-container {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 30px auto;
+    max-width: 800px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.chart-title {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: #005f99;
+}
+
+/* أزرار تغيير الرسم البياني */
+.chart-buttons {
+    margin-bottom: 15px;
+}
+
+.chart-button {
+    background: #008CBA;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    margin: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* تأثير نبضات ضوئية على الأزرار */
+.chart-button::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.chart-button:hover::before {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.chart-button:hover {
+    background: #0077a3;
+    transform: scale(1.1);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+}
