@@ -190,7 +190,7 @@ const Comparison = () => {
       .domain(categories)
       .range(["#59ff00", "#ff0000"]);
 
-    svg.append("g")
+    const bars = svg.append("g")
       .selectAll("g")
       .data(dates)
       .enter()
@@ -201,9 +201,9 @@ const Comparison = () => {
       .enter()
       .append("rect")
       .attr("x", d => x1(d.category))
-      .attr("y", d => y(d.value))
+      .attr("y", height - margin.top - margin.bottom) // Start from the bottom
       .attr("width", x1.bandwidth())
-      .attr("height", d => height - margin.top - margin.bottom - y(d.value))
+      .attr("height", 0) // Start with height 0
       .attr("fill", d => color(d.category))
       .on("mouseover", function (event, d) {
         d3.select(this).attr("opacity", 0.7);
@@ -217,6 +217,12 @@ const Comparison = () => {
         d3.select(this).attr("opacity", 1);
         d3.select(tooltipRef.current).style("opacity", 0);
       });
+
+    // Animate the bars
+    bars.transition()
+      .duration(800)
+      .attr("y", d => y(d.value))
+      .attr("height", d => height - margin.top - margin.bottom - y(d.value));
 
     svg.append("g")
       .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
@@ -297,12 +303,21 @@ const Comparison = () => {
     categories.forEach((category) => {
       const categoryData = dates.map(date => ({ value: data[date][category] || 0 }));
 
-      svg.append("path")
+      // Draw the line
+      const path = svg.append("path")
         .datum(categoryData)
         .attr("fill", "none")
         .attr("stroke", color(category))
         .attr("stroke-width", 2)
         .attr("d", line);
+
+      // Animate the line
+      const totalLength = path.node().getTotalLength();
+      path.attr("stroke-dasharray", totalLength)
+        .attr("stroke-dashoffset", totalLength)
+        .transition()
+        .duration(800)
+        .attr("stroke-dashoffset", 0);
 
       svg.selectAll(`.dot-${category}`)
         .data(categoryData)
@@ -325,6 +340,12 @@ const Comparison = () => {
           d3.select(this).attr("r", 5);
           d3.select(tooltipRef.current).style("opacity", 0);
         });
+
+      // Animate the dots
+      svg.selectAll(`.dot-${category}`)
+        .transition()
+        .duration(800)
+        .attr("cy", d => y(d.value));
     });
 
     svg.append("g")
@@ -376,7 +397,7 @@ const Comparison = () => {
       )] 
     : [];
   
-    const availableDays = selectedYear.length > 0 && selectedMonths.length > 0 
+  const availableDays = selectedYear.length > 0 && selectedMonths.length > 0 
     ? [...new Set(budgetItems
         .filter(item => {
           const date = new Date(item.date);
@@ -388,6 +409,7 @@ const Comparison = () => {
         })
       )] 
     : [];
+  
   const handleYearChange = (year) => {
     setSelectedYear(prev => 
       prev.includes(year) 
@@ -414,108 +436,108 @@ const Comparison = () => {
         : [...prevSelectedDays, day]
     );
   };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-    <Box id="main-container">
-      <Box id="controls-container">
-        <FormControl id="date-type-select">
-          <InputLabel>Date Type</InputLabel>
-          <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
-            <MenuItem value="year">Year</MenuItem>
-            <MenuItem value="month">Month</MenuItem>
-            <MenuItem value="day">Day</MenuItem>
-          </StyledSelect>
-        </FormControl>
-        <RadioGroup row value={chartType} onChange={(e) => setChartType(e.target.value)}>
-          <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
-          <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
-        </RadioGroup>
-        <FormControlLabel
-          control={<Checkbox checked={showRevenues} onChange={(e) => setShowRevenues(e.target.checked)} />}
-          label="Show Revenues"
-        />
-        <FormControlLabel
-          control={<Checkbox checked={showExpenses} onChange={(e) => setShowExpenses(e.target.checked)} />}
-          label="Show Expenses"
-        />
-      </Box>
+      <Box id="main-container">
+        <Box id="controls-container">
+          <FormControl id="date-type-select">
+            <InputLabel>Date Type</InputLabel>
+            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
+              <MenuItem value="year">Year</MenuItem>
+              <MenuItem value="month">Month</MenuItem>
+              <MenuItem value="day">Day</MenuItem>
+            </StyledSelect>
+          </FormControl>
+          <RadioGroup row value={chartType} onChange={(e) => setChartType(e.target.value)}>
+            <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
+            <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
+          </RadioGroup>
+          <FormControlLabel
+            control={<Checkbox checked={showRevenues} onChange={(e) => setShowRevenues(e.target.checked)} />}
+            label="Show Revenues"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={showExpenses} onChange={(e) => setShowExpenses(e.target.checked)} />}
+            label="Show Expenses"
+          />
+        </Box>
   
-      <Box id="date-selection-container">
-        {dateType === "year" && (
-          <Box id="year-selection">
-            {availableYears.map((year) => (
-              <FormControlLabel
-                key={year}
-                control={<Checkbox checked={selectedYear.includes(year)} onChange={() => handleYearChange(year)} />}
-                label={year}
-              />
-            ))}
-          </Box>
-        )}
+        <Box id="date-selection-container">
+          {dateType === "year" && (
+            <Box id="year-selection">
+              {availableYears.map((year) => (
+                <FormControlLabel
+                  key={year}
+                  control={<Checkbox checked={selectedYear.includes(year)} onChange={() => handleYearChange(year)} />}
+                  label={year}
+                />
+              ))}
+            </Box>
+          )}
   
-        {dateType === "month" && selectedYear.length > 0 && (
-          <Box id="month-selection">
-            {availableMonths.map((month) => (
-              <FormControlLabel
-                key={month}
-                control={<Checkbox checked={selectedMonths.includes(month)} onChange={() => handleMonthChange(month)} />}
-                label={`Month ${month}`}
-              />
-            ))}
-          </Box>
-        )}
+          {dateType === "month" && selectedYear.length > 0 && (
+            <Box id="month-selection">
+              {availableMonths.map((month) => (
+                <FormControlLabel
+                  key={month}
+                  control={<Checkbox checked={selectedMonths.includes(month)} onChange={() => handleMonthChange(month)} />}
+                  label={`Month ${month}`}
+                />
+              ))}
+            </Box>
+          )}
   
-        {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
-          <Box id="day-selection">
-            {selectedMonths.map((month) => {
-              const year = selectedYear[0];
-              const validDays = availableDays.filter((day) => {
-                const [dayYear, dayMonth] = day.split("-");
-                return parseInt(dayMonth) === month && parseInt(dayYear) === year;
-              });
+          {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
+            <Box id="day-selection">
+              {selectedMonths.map((month) => {
+                const year = selectedYear[0];
+                const validDays = availableDays.filter((day) => {
+                  const [dayYear, dayMonth] = day.split("-");
+                  return parseInt(dayMonth) === month && parseInt(dayYear) === year;
+                });
   
-              if (validDays.length === 0) return null;
+                if (validDays.length === 0) return null;
   
-              return (
-                <Box key={month} className="month-days-container">
-                  <strong>{`الشهر ${month.toString().padStart(2, "0")} (${year})`}</strong>
-                  <Box className="days-checkbox-group">
-                    {validDays.map((day) => (
-                      <FormControlLabel
-                        key={day}
-                        control={<Checkbox checked={selectedDays.includes(day)} onChange={() => handleDayChange(day)} />}
-                        label={day}
-                      />
-                    ))}
+                return (
+                  <Box key={month} className="month-days-container">
+                    <strong>{`الشهر ${month.toString().padStart(2, "0")} (${year})`}</strong>
+                    <Box className="days-checkbox-group">
+                      {validDays.map((day) => (
+                        <FormControlLabel
+                          key={day}
+                          control={<Checkbox checked={selectedDays.includes(day)} onChange={() => handleDayChange(day)} />}
+                          label={day}
+                        />
+                      ))}
+                    </Box>
                   </Box>
-                </Box>
-              );
-            })}
+                );
+              })}
+            </Box>
+          )}
+        </Box>
+  
+        {loading ? (
+          <Box id="loading-container">
+            <CircularProgress size={60} />
           </Box>
+        ) : Object.keys(filteredItems).length === 0 ? (
+          <Box id="no-items-container">
+            <Typography variant="h4" color="textSecondary">
+              No Items
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Box id="chart-container">
+              <svg ref={svgRef} width="800" height="400"></svg>
+            </Box>
+            <div id="tooltip" ref={tooltipRef}></div>
+          </>
         )}
       </Box>
-  
-      {loading ? (
-        <Box id="loading-container">
-          <CircularProgress size={60} />
-        </Box>
-      ) : Object.keys(filteredItems).length === 0 ? (
-        <Box id="no-items-container">
-          <Typography variant="h4" color="textSecondary">
-            No Items
-          </Typography>
-        </Box>
-      ) : (
-        <>
-          <Box id="chart-container">
-            <svg ref={svgRef} width="800" height="400"></svg>
-          </Box>
-          <div id="tooltip" ref={tooltipRef}></div>
-        </>
-      )}
-    </Box>
-  </LocalizationProvider>
-  
+    </LocalizationProvider>
   );
 };
 
