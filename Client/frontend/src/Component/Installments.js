@@ -86,7 +86,7 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
         </div>
         <div className="input-group">
           <label>Payment Frequency:</label>
-          <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+          <select className="custom-select" value={frequency} onChange={(e) => setFrequency(e.target.value)}>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
@@ -175,24 +175,51 @@ const InstallmentCalculator = () => {
   };
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(installments.map((installment, index) => ({
+    const worksheetData = installments.map((installment, index) => ({
       'Installment #': index + 1,
-      Date: installment.date,
-      Amount: installment.amount.toFixed(2),
-    })));
+      'Date': installment.date,
+      'Amount': installment.amount.toFixed(2),
+    }));
+
+    // Add total row
+    worksheetData.push({
+      'Installment #': 'Total',
+      'Date': '',
+      'Amount': totalAmount.toFixed(2),
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData, { header: ['Installment #', 'Date', 'Amount'] });
+
+    // Apply some styling
+    const wscols = [
+      { wch: 15 }, // Installment # column width
+      { wch: 15 }, // Date column width
+      { wch: 15 }, // Amount column width
+    ];
+    worksheet['!cols'] = wscols;
+
+    // Add bold font to the header
+    const headerStyle = { font: { bold: true } };
+    for (let col = 0; col < 3; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+      worksheet[cellRef].s = headerStyle;
+    }
+
+    // Add bold font to the total row
+    const totalRowRef = XLSX.utils.encode_cell({ r: worksheetData.length, c: 2 });
+    if (!worksheet[totalRowRef].s) worksheet[totalRowRef].s = {};
+    worksheet[totalRowRef].s = headerStyle;
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Installments');
-
-    const totalRow = [{ 'Installment #': 'Total Amount', Amount: totalAmount.toFixed(2) }];
-    const totalWorksheet = XLSX.utils.json_to_sheet(totalRow, { header: ['Installment #', 'Amount'] });
-    XLSX.utils.book_append_sheet(workbook, totalWorksheet, 'Total');
 
     XLSX.writeFile(workbook, 'installments.xlsx');
   };
 
   return (
     <div className="calculator-container">
-      <h1>Installment Calculator</h1>
+      <h1 style={{fontFamily:'-moz-initial'}}>Installment Calculator</h1>
       <div className="content-container">
         <button className="open-dialog-button" onClick={() => setShowDialog(true)}>Open Calculator</button>
         {showDialog && (
