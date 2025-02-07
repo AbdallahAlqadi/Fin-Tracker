@@ -163,24 +163,29 @@ const BudgetItems = () => {
 
   const deleteItem = async (item) => {
     try {
-      const response = await axios.delete('http://127.0.0.1:5004/api/deleteBudget', {
-        headers: {
-          Auth: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        data: { 
-          CategoriesId: item.CategoriesId._id,
-          date: item.date // تأكد من إرسال التاريخ
+        const response = await axios.delete('http://127.0.0.1:5004/api/deleteBudget', {
+            headers: {
+                Auth: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            data: { 
+                CategoriesId: item.CategoriesId._id,
+                date: new Date(item.date).toISOString() // تأكد من إرسال `date` بتنسيق صحيح
+            }
+        });
+
+        if (response.status === 200) {
+            console.log("Item deleted successfully", response.data);
+            setBudgetItems((prevItems) => prevItems.filter(budgetItem => 
+                budgetItem.CategoriesId._id !== item.CategoriesId._id || budgetItem.date !== item.date
+            ));
+        } else {
+            console.error("Failed to delete item", response.data);
         }
-      });
-      console.log("Item deleted successfully", response.data);
-      setBudgetItems((prevItems) => prevItems.filter(budgetItem => 
-        budgetItem.CategoriesId._id !== item.CategoriesId._id || budgetItem.date !== item.date
-      ));
     } catch (error) {
-      console.error("Error deleting budget", error.response?.data || error.message);
+        console.error("Error deleting budget", error.response?.data || error.message);
     }
-  };
+};
   
   const handleUpdateClick = (item) => {
     setSelectedItem(item);
@@ -208,8 +213,8 @@ const BudgetItems = () => {
         'http://127.0.0.1:5004/api/updateBudget',
         {
           CategoriesId: selectedItem.CategoriesId._id,
-          date: selectedItem.date, // تأكد من إرسال التاريخ
-          valueitem: numericValue, // إرسال القيمة المحدثة كرقم
+          date: selectedItem.date,
+          valueitem: numericValue,
         },
         {
           headers: {
@@ -221,16 +226,13 @@ const BudgetItems = () => {
   
       if (response.status === 200) {
         console.log("تم تحديث العنصر بنجاح", response.data);
-  
-        // تحديث العنصر الصحيح فقط داخل state
         setBudgetItems((prevItems) =>
           prevItems.map((item) =>
             item.CategoriesId._id === selectedItem.CategoriesId._id && item.date === selectedItem.date
-              ? { ...item, valueitem: numericValue } // تحديث العنصر
+              ? { ...item, valueitem: numericValue }
               : item
           )
         );
-  
         handleCloseDialog();
       } else {
         console.error("فشل تحديث العنصر", response.data);
@@ -239,7 +241,8 @@ const BudgetItems = () => {
       console.error("خطأ في تحديث الميزانية", error.response?.data || error.message);
     }
   };
-   const groupByDate = (items) => {
+
+  const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
       const date = new Date(item.date);
       const dateString = date.toISOString().split('T')[0];

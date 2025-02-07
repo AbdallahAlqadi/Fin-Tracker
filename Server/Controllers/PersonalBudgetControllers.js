@@ -55,7 +55,7 @@ exports.addBudget = async (req, res) => {
 
 // Update budget item
 exports.updateBudget = async (req, res) => {
-    const { CategoriesId, valueitem } = req.body;
+    const { CategoriesId, valueitem, date } = req.body;
     const userId = req.user;
 
     try {
@@ -64,7 +64,10 @@ exports.updateBudget = async (req, res) => {
             return res.status(404).json({ error: 'Budget not found' });
         }
 
-        const budgetIndex = budget.products.findIndex((item) => item.CategoriesId.toString() === CategoriesId);
+        const budgetIndex = budget.products.findIndex((item) => 
+            item.CategoriesId.toString() === CategoriesId && new Date(item.date).toISOString() === new Date(date).toISOString()
+        );
+
         if (budgetIndex > -1) {
             budget.products[budgetIndex].valueitem = valueitem;
             await budget.save();
@@ -75,13 +78,13 @@ exports.updateBudget = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
+};
 
 
 
 // Delete budget item
 exports.deleteBudget = async (req, res) => {
-    const { CategoriesId } = req.body; // تأكد أنه يأخذ من body
+    const { CategoriesId, date } = req.body;
     const userId = req.user;
 
     try {
@@ -90,7 +93,10 @@ exports.deleteBudget = async (req, res) => {
             return res.status(404).json({ error: 'Budget not found' });
         }
 
-        const budgetIndex = budget.products.findIndex((item) => item.CategoriesId.toString() === CategoriesId);
+        const budgetIndex = budget.products.findIndex((item) => 
+            item.CategoriesId.toString() === CategoriesId && new Date(item.date).toISOString() === new Date(date).toISOString()
+        );
+
         if (budgetIndex > -1) {
             budget.products.splice(budgetIndex, 1);
             await budget.save();
