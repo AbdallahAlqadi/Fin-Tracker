@@ -37,8 +37,9 @@ const StyledCard = styled(Card)(({ theme }) => ({
   border: "1px solid #e0e0e0",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
-  width: "400px",
-  height: "150px",
+  width: "120%", // Make the card full width
+  maxWidth: "430px", // Set a max width
+  height: "auto", // Allow height to adjust based on content
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
