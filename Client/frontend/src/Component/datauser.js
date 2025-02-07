@@ -17,9 +17,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  LinearProgress,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import CategoryIcon from "@mui/icons-material/Category";
+import DownloadIcon from "@mui/icons-material/Download"; // Import download icon
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -132,6 +134,17 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+const ExportButton = styled(StyledButton)(({ theme }) => ({
+  backgroundColor: "#4CAF50", // Green color
+  color: "#fff",
+  "&:hover": {
+    backgroundColor: "#45a049", // Darker green on hover
+  },
+  display: "flex",
+  alignItems: "center",
+  gap: "8px", // Space between icon and text
+}));
+
 const BudgetItems = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -142,6 +155,8 @@ const BudgetItems = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterItem, setFilterItem] = useState("all");
   const [dateType, setDateType] = useState("month");
+  const [exportLoading, setExportLoading] = useState(false); // Loading state for export
+  const [exportProgress, setExportProgress] = useState(0); // Progress for export
 
   useEffect(() => {
     fetchBudget();
@@ -311,7 +326,11 @@ const BudgetItems = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
+    setExportLoading(true); // Set loading state to true
+    setExportProgress(0); // Reset progress
+
+    // Create a worksheet from the filtered items
     const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
       Date: new Date(item.date).toLocaleDateString('en-GB', {
         month: '2-digit',
@@ -323,9 +342,81 @@ const BudgetItems = () => {
       Value: item.valueitem,
     })));
 
+    // Add totals to the worksheet
+    const totalsRow = [
+      { Date: "Totals", Category: "Revenues", Type: "", Value: totals.Revenues.toFixed(2) },
+      { Date: "Totals", Category: "Expenses", Type: "", Value: totals.Expenses.toFixed(2) },
+      { Date: "Totals", Category: "Balance", Type: "", Value: balance.toFixed(2) },
+    ];
+
+    // Append totals to the worksheet
+    XLSX.utils.sheet_add_json(ws, totalsRow, { skipHeader: true, origin: -1 });
+
+    // Set column widths
+    ws['!cols'] = [
+      { wpx: 100 }, // Date column width
+      { wpx: 200 }, // Category column width
+      { wpx: 100 }, // Type column width
+      { wpx: 100 }, // Value column width
+    ];
+
+    // Apply cell styles
+    const headerCellStyle = {
+      font: { bold: true },
+      fill: { fgColor: { rgb: "FFFF00" } }, // Yellow background for header
+      border: {
+        top: { style: "thin", color: { rgb: "000000" } },
+        bottom: { style: "thin", color: { rgb: "000000" } },
+        left: { style: "thin", color: { rgb: "000000" } },
+        right: { style: "thin", color: { rgb: "000000" } },
+      },
+      alignment: { horizontal: "center" }, // Center text
+    };
+
+    // Apply styles to header
+    const headers = ["Date", "Category", "Type", "Value"];
+    headers.forEach((header, index) => {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: index })];
+      if (cell) {
+        cell.s = headerCellStyle; // Apply header style
+      }
+    });
+
+    // Apply styles to total rows
+    totalsRow.forEach((_, index) => {
+      const rowIndex = filteredItems.length + index + 1; // Adjust for total rows
+      const cell = ws[XLSX.utils.encode_cell({ r: rowIndex, c: 3 })]; // Value column
+      if (cell) {
+        cell.s = {
+          font: { bold: true },
+          fill: { fgColor: { rgb: "FFFF00" } }, // Yellow background for totals
+          border: {
+            top: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } },
+          },
+          alignment: { horizontal: "center" }, // Center text
+        };
+      }
+    });
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Budget Items");
-    XLSX.writeFile(wb, "BudgetItems.xlsx");
+
+    // Simulate file writing with progress
+    for (let i = 0; i <= 100; i += 10) {
+      setTimeout(() => {
+        setExportProgress(i);
+      }, i * 50); // Simulate progress
+    }
+
+    // Write the file
+    setTimeout(() => {
+      XLSX.writeFile(wb, "BudgetItems.xlsx");
+      setExportLoading(false); // Reset loading state
+      setExportProgress(0); // Reset progress
+    }, 1000); // Simulate delay for file writing
   };
 
   return (
@@ -366,10 +457,13 @@ const BudgetItems = () => {
               ))}
             </StyledSelect>
           </FormControl>
-          <StyledButton onClick={exportToExcel} color="primary" variant="contained">
-            Export to Excel
-          </StyledButton>
+          <ExportButton onClick={exportToExcel} variant="contained" disabled={exportLoading}>
+            {exportLoading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+            {exportLoading ? "Exporting..." : "Export to Excel"}
+          </ExportButton>
         </Box>
+
+        {exportLoading && <LinearProgress variant="determinate" value={exportProgress} sx={{ marginBottom: 2 }} />}
 
         <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
           <Card sx={{ minWidth: 200, textAlign: "center", background: "#4CAF50", color: "#fff" }}>
@@ -491,6 +585,19 @@ const BudgetItems = () => {
               fullWidth
               value={updatedValue}
               onChange={(e) => setUpdatedValue(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "#007BFF",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#0056b3",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#007BFF",
+                  },
+                },
+              }}
             />
           </StyledDialogContent>
           <StyledDialogActions>
