@@ -17,7 +17,7 @@ import { styled } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
-import '../cssStyle/comparsion.css'
+import '../cssStyle/comparsion.css';
 
 // Styled Select component
 const StyledSelect = styled(Select)(({ theme }) => ({
@@ -190,6 +190,15 @@ const Comparison = () => {
       .domain(categories)
       .range(["#4CAF50", "#F44336"]); // استخدام ألوان أكثر جاذبية
 
+    // إضافة تأثير الظل
+    svg.append("defs").append("filter")
+      .attr("id", "shadow")
+      .append("feDropShadow")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("stdDeviation", 3)
+      .attr("flood-color", "rgba(0, 0, 0, 0.5)");
+
     const bars = svg.append("g")
       .selectAll("g")
       .data(dates)
@@ -205,6 +214,7 @@ const Comparison = () => {
       .attr("width", x1.bandwidth())
       .attr("height", 0) // Start with height 0
       .attr("fill", d => color(d.category))
+      .attr("filter", "url(#shadow)") // إضافة تأثير الظل
       .on("mouseover", function (event, d) {
         d3.select(this).attr("opacity", 0.7);
         d3.select(tooltipRef.current)
@@ -451,7 +461,7 @@ const Comparison = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box id="main-container" sx={{ padding: 2, backgroundColor: "#f9f9f9", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)" }}>
+      <Box id="main-container" sx={{ padding: 3, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)", transition: "all 0.3s ease" }}>
         <Box id="controls-container" sx={{ marginBottom: 2 }}>
           <FormControl id="date-type-select" sx={{ marginRight: 2 }}>
             <InputLabel>Date Type</InputLabel>
@@ -545,7 +555,7 @@ const Comparison = () => {
             <Box id="chart-container">
               <svg ref={svgRef} width="800" height="400"></svg>
             </Box>
-            <div id="tooltip" ref={tooltipRef}></div>
+            <div id="tooltip" ref={tooltipRef} style={{ position: 'absolute', opacity: 0, background: '#fff', border: '1px solid #ccc', padding: '5px', borderRadius: '5px', pointerEvents: 'none' }}></div>
           </>
         )}
       </Box>
