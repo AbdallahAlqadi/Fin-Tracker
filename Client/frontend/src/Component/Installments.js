@@ -106,17 +106,17 @@ const InstallmentTable = ({ installments, total }) => (
     <table>
       <thead>
         <tr>
-          <th>Installment #</th>
-          <th>Date</th>
-          <th>Amount</th>
+          <th style={{ textAlign: 'left' }}>Installment #</th>
+          <th style={{ textAlign: 'left' }}>Date</th>
+          <th style={{ textAlign: 'left' }}>Amount</th>
         </tr>
       </thead>
       <tbody>
         {installments.map((installment, index) => (
           <tr key={index}>
-            <td>{index + 1}</td>
-            <td>{installment.date}</td>
-            <td>{installment.amount.toFixed(2)}</td>
+            <td style={{ textAlign: 'left' }}>{index + 1}</td>
+            <td style={{ textAlign: 'left' }}>{installment.date}</td>
+            <td style={{ textAlign: 'left' }}>{installment.amount.toFixed(2)}</td>
           </tr>
         ))}
       </tbody>
