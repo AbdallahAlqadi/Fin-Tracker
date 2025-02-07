@@ -126,6 +126,10 @@ const StyledButton = styled(Button)(({ theme }) => ({
     transform: "translateY(-2px)",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
   },
+  "&:active": {
+    transform: "translateY(1px)",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
 }));
 
 const BudgetItems = () => {
@@ -170,7 +174,7 @@ const BudgetItems = () => {
             },
             data: { 
                 CategoriesId: item.CategoriesId._id,
-                date: new Date(item.date).toISOString() // تأكد من إرسال `date` بتنسيق صحيح
+                date: new Date(item.date).toISOString()
             }
         });
 
@@ -449,22 +453,20 @@ const BudgetItems = () => {
                           </Typography>
                         </Box>
                         <Box display="flex" justifyContent="flex-end" gap={1} sx={{ marginTop: 2 }}>
-                          <Button
+                          <StyledButton
                             variant="contained"
                             color="error"
                             onClick={() => deleteItem(item)}
-                            sx={{ textTransform: "none", fontWeight: "600" }}
                           >
                             Delete
-                          </Button>
-                          <Button
+                          </StyledButton>
+                          <StyledButton
                             variant="contained"
                             color="primary"
                             onClick={() => handleUpdateClick(item)}
-                            sx={{ textTransform: "none", fontWeight: "600" }}
                           >
                             Update
-                          </Button>
+                          </StyledButton>
                         </Box>
                       </CardContent>
                     </StyledCard>
