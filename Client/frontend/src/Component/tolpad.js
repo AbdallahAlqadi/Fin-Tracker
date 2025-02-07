@@ -24,6 +24,7 @@ import FedbackUser from '../Component/fedbackuser';
 import ChatIcon from '@mui/icons-material/Chat';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage'
+import InstallmentCalculator from '../Component/Installments'
 
 
 const demoTheme = createTheme({
@@ -95,6 +96,8 @@ function DashboardLayoutBasic(props) {
     { path: '/fedback', component: <FeedbackForm /> },
     { path: '/fedbackuser', component: <FedbackUser /> },
     { path: '/homepage', component: <HomePage /> },
+    { path: '/installment', component: <InstallmentCalculator /> },
+
 
 
 
@@ -129,6 +132,12 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'fedback',  //هون بحط path
       title: 'Fedback',
+      icon: <ChatIcon />,
+    },
+
+    {
+      segment: 'installment',  //هون بحط path
+      title: 'installment',
       icon: <ChatIcon />,
     },
     {
