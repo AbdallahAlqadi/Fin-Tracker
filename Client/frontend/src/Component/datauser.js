@@ -337,16 +337,16 @@ const BudgetItems = () => {
         day: '2-digit',
         year: 'numeric'
       }),
-      Category: item.CategoriesId.categoryName,
+      Item: item.CategoriesId.categoryName, // Change "Category" to "Item"
       Type: item.CategoriesId.categoryType,
       Value: item.valueitem,
     })));
 
     // Add totals to the worksheet
     const totalsRow = [
-      { Date: "Totals", Category: "Revenues", Type: "", Value: totals.Revenues.toFixed(2) },
-      { Date: "Totals", Category: "Expenses", Type: "", Value: totals.Expenses.toFixed(2) },
-      { Date: "Totals", Category: "Balance", Type: "", Value: balance.toFixed(2) },
+      { Date: "Totals", Item: "Revenues", Type: "", Value: totals.Revenues.toFixed(2) },
+      { Date: "Totals", Item: "Expenses", Type: "", Value: totals.Expenses.toFixed(2) },
+      { Date: "Totals", Item: "Balance", Type: "", Value: balance.toFixed(2) },
     ];
 
     // Append totals to the worksheet
@@ -355,7 +355,7 @@ const BudgetItems = () => {
     // Set column widths
     ws['!cols'] = [
       { wpx: 100 }, // Date column width
-      { wpx: 200 }, // Category column width
+      { wpx: 200 }, // Item column width
       { wpx: 100 }, // Type column width
       { wpx: 100 }, // Value column width
     ];
@@ -374,7 +374,7 @@ const BudgetItems = () => {
     };
 
     // Apply styles to header
-    const headers = ["Date", "Category", "Type", "Value"];
+    const headers = ["Date", "Item", "Type", "Value"]; // Change "Category" to "Item"
     headers.forEach((header, index) => {
       const cell = ws[XLSX.utils.encode_cell({ r: 0, c: index })];
       if (cell) {
