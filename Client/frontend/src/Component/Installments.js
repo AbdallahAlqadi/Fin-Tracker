@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import '../cssStyle/installment.css';
 import * as XLSX from 'xlsx';
 
-const InstallmentForm = ({ onCalculate }) => {
+const InstallmentForm = ({ onCalculate, onClose }) => {
   const [totalAmount, setTotalAmount] = useState('');
   const [endDate, setEndDate] = useState('');
   const [installmentAmount, setInstallmentAmount] = useState('');
@@ -37,10 +37,7 @@ const InstallmentForm = ({ onCalculate }) => {
       return;
     }
 
-    // Calculate the number of installments required
     const numberOfInstallments = Math.ceil(total / installment);
-
-    // Calculate the final date based on the number of installments
     const calculatedEndDate = new Date(startDate);
     if (frequency === 'monthly') {
       calculatedEndDate.setMonth(calculatedEndDate.getMonth() + numberOfInstallments);
@@ -51,50 +48,54 @@ const InstallmentForm = ({ onCalculate }) => {
       calculatedEndDate.setDate(calculatedEndDate.getDate() + daysInterval * numberOfInstallments);
     }
 
-    // Check that the calculated end date does not exceed the specified end date
     if (calculatedEndDate > endDateObj) {
       setError('The number of installments is not enough to cover the total amount in the specified period.');
       return;
     }
 
     onCalculate({ total, installment, frequency, endDateObj });
+    onClose(); // Close the dialog after calculation
   };
 
   const getDaysInterval = (type) => {
     switch (type) {
       case 'daily': return 1;
       case 'weekly': return 7;
-      case 'monthly': return 30; // Handled separately
-      case 'yearly': return 365; // Handled separately
+      case 'monthly': return 30;
+      case 'yearly': return 365;
       default: return 30;
     }
   };
 
   return (
-    <div className="form-container">
-      {error && <p className="error-text">{error}</p>}
-      <div className="input-group">
-        <label>Total Amount:</label>
-        <input type="number" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} />
+    <div className="dialog-box">
+      <div className="dialog-content">
+        <h2>Installment Calculator</h2>
+        {error && <p className="error-text">{error}</p>}
+        <div className="input-group">
+          <label>Total Amount:</label>
+          <input type="number" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label>End Date:</label>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label>Installment Amount:</label>
+          <input type="number" value={installmentAmount} onChange={(e) => setInstallmentAmount(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label>Payment Frequency:</label>
+          <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+        <button className="calculate-button" onClick={handleSubmit}>Calculate Installments</button>
+        <button className="close-button" onClick={onClose}>Close</button>
       </div>
-      <div className="input-group">
-        <label>End Date:</label>
-        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-      </div>
-      <div className="input-group">
-        <label>Installment Amount:</label>
-        <input type="number" value={installmentAmount} onChange={(e) => setInstallmentAmount(e.target.value)} />
-      </div>
-      <div className="input-group">
-        <label>Payment Frequency:</label>
-        <select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-        </select>
-      </div>
-      <button className="calculate-button" onClick={handleSubmit}>Calculate Installments</button>
     </div>
   );
 };
@@ -127,6 +128,7 @@ const InstallmentTable = ({ installments, total }) => (
 const InstallmentCalculator = () => {
   const [installments, setInstallments] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [showDialog, setShowDialog] = useState(false);
 
   const calculateInstallments = ({ total, installment, frequency, endDateObj }) => {
     let remainingAmount = total;
@@ -136,19 +138,18 @@ const InstallmentCalculator = () => {
     while (currentDate <= endDateObj && remainingAmount > 0) {
       const amount = Math.min(installment, remainingAmount);
       installmentDates.push({
-        date: formatDate(currentDate), // Use a function to format the date
+        date: formatDate(currentDate),
         amount: amount,
       });
       remainingAmount -= amount;
 
-      // Update the date based on the frequency type
       if (frequency === 'monthly') {
-        currentDate.setMonth(currentDate.getMonth() + 1); // Add a month
+        currentDate.setMonth(currentDate.getMonth() + 1);
       } else if (frequency === 'yearly') {
-        currentDate.setFullYear(currentDate.getFullYear() + 1); // Add a year
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
       } else {
         const daysInterval = getDaysInterval(frequency);
-        currentDate.setDate(currentDate.getDate() + daysInterval); // Add days
+        currentDate.setDate(currentDate.getDate() + daysInterval);
       }
     }
 
@@ -156,10 +157,9 @@ const InstallmentCalculator = () => {
     setTotalAmount(total);
   };
 
-  // Function to format the date correctly (day/month/year)
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months start from 0
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -168,8 +168,8 @@ const InstallmentCalculator = () => {
     switch (type) {
       case 'daily': return 1;
       case 'weekly': return 7;
-      case 'monthly': return 30; // Handled separately
-      case 'yearly': return 365; // Handled separately
+      case 'monthly': return 30;
+      case 'yearly': return 365;
       default: return 30;
     }
   };
@@ -183,7 +183,6 @@ const InstallmentCalculator = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Installments');
 
-    // Add the total amount to the worksheet
     const totalRow = [{ 'Installment #': 'Total Amount', Amount: totalAmount.toFixed(2) }];
     const totalWorksheet = XLSX.utils.json_to_sheet(totalRow, { header: ['Installment #', 'Amount'] });
     XLSX.utils.book_append_sheet(workbook, totalWorksheet, 'Total');
@@ -195,7 +194,13 @@ const InstallmentCalculator = () => {
     <div className="calculator-container">
       <h1>Installment Calculator</h1>
       <div className="content-container">
-        <InstallmentForm onCalculate={calculateInstallments} />
+        <button className="open-dialog-button" onClick={() => setShowDialog(true)}>Open Calculator</button>
+        {showDialog && (
+          <InstallmentForm
+            onCalculate={calculateInstallments}
+            onClose={() => setShowDialog(false)}
+          />
+        )}
         {installments.length > 0 && (
           <>
             <InstallmentTable installments={installments} total={totalAmount} />

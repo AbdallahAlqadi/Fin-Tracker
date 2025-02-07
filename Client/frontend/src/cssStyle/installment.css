@@ -1,97 +1,147 @@
 .calculator-container {
-    width: 800px;
-    margin: 40px auto;
-    padding: 30px;
-    background: #fff;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    text-align: center;
-  }
-  
-  h1 {
-    color: #007BFF;
-  }
-  
-  .form-container {
-    margin-bottom: 20px;
-  }
-  
-  .input-group {
-    margin: 10px 0;
-  }
-  
-  .input-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  
-  .input-group input,
-  .input-group select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-  }
-  
-  .calculate-button {
-    width: 100%;
-    padding: 12px;
-    background: #007BFF;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    border: none;
-  }
-  
-  .calculate-button:hover {
-    background: #0056b3;
-  }
-  
-  .error-text {
-    color: red;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  
-  .table-container {
-    margin-top: 30px;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-  
-  table th, table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-  }
-  
-  table th {
-    background: #f2f2f2;
-    font-weight: bold;
-  }
-  
-  table tr:nth-child(even) {
-    background: #f9f9f9;
-  }
-  
+  width: 800px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  text-align: center;
+}
 
-  .export-button {
-    background-color: green; /* اللون الأخضر */
-    color: white; /* لون النص أبيض */
-    border: none; /* إزالة الحدود */
-    padding: 10px 20px; /* إضافة حشوة */
-    font-size: 16px; /* حجم الخط */
-    cursor: pointer; /* تغيير المؤشر عند المرور فوق الزر */
-    border-radius: 5px; /* زوايا دائرية */
-    transition: background-color 0.3s; /* تأثير الانتقال */
+.calculate-button {
+  background-color: #016bdd; /* لون أزرق */
+  color: white; /* لون النص */
+  font-size: 18px; /* حجم النص */
+  font-weight: bold; /* سمك الخط */
+  padding: 12px 24px; /* الهوامش الداخلية */
+  border: none; /* إزالة الحدود */
+  border-radius: 8px; /* تدوير الحواف */
+  cursor: pointer; /* تغيير المؤشر عند التمرير */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* ظل خفيف */
+  transition: all 0.3s ease-in-out; /* تأثير سلس */
+  width: 390px;
+}
+
+.calculate-button:hover {
+  background-color: #0056b3; /* لون أزرق أغمق عند التحويم */
+  transform: scale(1.05); /* تكبير بسيط */
+}
+
+.calculate-button:active {
+  transform: scale(0.95); /* تأثير ضغط عند النقر */
+}
+
+
+.open-dialog-button {
+  width: 100%;
+  padding: 12px;
+  background: #007BFF;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border: none;
+  margin-bottom: 20px;
+}
+
+.open-dialog-button:hover {
+  background: #0056b3;
+}
+
+.dialog-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+}
+
+.dialog-content {
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  padding: 30px;
+  border-radius: 15px;
+  width: 450px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
   }
-  
-  .export-button:hover {
-    background-color: darkgreen; /* لون أغمق عند المرور فوق الزر */
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
+}
+
+.close-button {
+  width: 100%;
+  padding: 12px;
+  background: #aa0b0b;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border: none;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.close-button:hover {
+  background: #ff0b0b;
+}
+
+.error-text {
+  color: red;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.table-container {
+  margin-top: 30px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+table th {
+  background: #f2f2f2;
+  font-weight: bold;
+}
+
+table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.export-button {
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  margin-top: 20px;
+}
+
+.export-button:hover {
+  background-color: darkgreen;
+}
