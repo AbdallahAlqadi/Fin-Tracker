@@ -190,7 +190,7 @@ const DashboardUser = () => {
 
       {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: '#666', mt: 2 }}>
-          No categories found.
+          No Item found.
         </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
