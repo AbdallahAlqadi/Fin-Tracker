@@ -24,6 +24,26 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
+// تعريف مكوّن لتنسيق الصورة بحيث تكون بأبعاد ثابتة وتغطي الحاوية
+const StyledImage = styled("img")({
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+});
+
+// تعديل ImageContainer ليحتوي على خصائص Flex-center لضمان تمركز الصورة
+const ImageContainer = styled("div")({
+  width: "80px",
+  height: "80px",
+  borderRadius: "50%",
+  overflow: "hidden",
+  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+  marginBottom: "12px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+});
+
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -41,15 +61,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
     borderColor: "#007BFF",
   },
 }));
-
-const ImageContainer = styled("div")({
-  width: "80px",
-  height: "80px",
-  borderRadius: "50%",
-  overflow: "hidden",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-  marginBottom: "12px",
-});
 
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
@@ -173,8 +184,8 @@ const Graph = () => {
 
   const drawPieChart = (data) => {
     // تعديل الأبعاد لتكبير الرسم البياني
-    const width = 700; // تم تغيير العرض من 600 إلى 800
-    const height = 500; // تم تغيير الارتفاع من 400 إلى 600
+    const width = 700;
+    const height = 500;
     const radius = Math.min(width, height) / 2 - 50;
 
     // إزالة المحتوى السابق داخل الـ SVG
@@ -411,12 +422,11 @@ const Graph = () => {
                 <Grid item key={index}>
                   <StyledCard>
                     <ImageContainer>
-                      <img
+                      <StyledImage
                         src={`http://127.0.0.1:5004/${
                           item.CategoriesId?.image || "fallback-image.png"
                         }`}
                         alt="Category"
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     </ImageContainer>
                     <CardContent sx={{ textAlign: "center" }}>
