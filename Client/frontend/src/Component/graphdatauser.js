@@ -172,8 +172,9 @@ const Graph = () => {
   }, [filteredItems]);
 
   const drawPieChart = (data) => {
-    const width = 600;
-    const height = 400;
+    // تعديل الأبعاد لتكبير الرسم البياني
+    const width = 700; // تم تغيير العرض من 600 إلى 800
+    const height = 500; // تم تغيير الارتفاع من 400 إلى 600
     const radius = Math.min(width, height) / 2 - 50;
 
     // إزالة المحتوى السابق داخل الـ SVG
@@ -383,7 +384,7 @@ const Graph = () => {
           <>
             <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
               <svg ref={svgRef}></svg>
-              <List sx={{ marginLeft: "20px", width: "300px" }}>
+              <List sx={{ marginLeft: "20px", width: "300px", marginTop: "120px" }}>
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
@@ -397,8 +398,7 @@ const Graph = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                        (item.valueitem /
-                          d3.sum(filteredItems.map((i) => i.valueitem))) *
+                        (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
                         100
                       ).toFixed(2)}%)`}
                     />
@@ -426,8 +426,7 @@ const Graph = () => {
                       <Typography
                         variant="body1"
                         sx={{
-                          color:
-                            item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
+                          color: item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
                         }}
                       >
                         {item.CategoriesId?.categoryType === "Expenses"
@@ -437,10 +436,7 @@ const Graph = () => {
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {item.CategoriesId?.categoryType &&
                         totals[item.CategoriesId.categoryType]
-                          ? (
-                              (item.valueitem / totals[item.CategoriesId.categoryType]) *
-                              100
-                            ).toFixed(2)
+                          ? ((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)
                           : "0.00"}
                         %
                       </Typography>
