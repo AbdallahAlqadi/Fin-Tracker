@@ -4,7 +4,7 @@ const cors=require('cors');
 const routes=express.Router();
 require('dotenv').config();
 
-const {creatUser, userLogin,home,veryfyjwt,updateUser}=require('../Controllers/userControllers'); 
+const {creatUser, userLogin,home,veryfyjwt}=require('../Controllers/userControllers'); 
 
 
 routes.post('/users',creatUser);
