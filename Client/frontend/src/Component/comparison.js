@@ -11,13 +11,13 @@ import {
   Radio,
   MenuItem,
   Select,
-  Checkbox
+  Checkbox,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
-import '../cssStyle/comparsion.css';
+import "../cssStyle/comparsion.css";
 
 // مكون Select مُخصص
 const StyledSelect = styled(Select)(({ theme }) => ({
@@ -52,18 +52,17 @@ const Comparison = () => {
     fetchBudget();
   }, []);
 
-  const token = sessionStorage.getItem('jwt');
+  const token = sessionStorage.getItem("jwt");
 
   // جلب البيانات من الخادم
   const fetchBudget = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5004/api/getUserBudget', {
+      const response = await axios.get("http://127.0.0.1:5004/api/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
-      
       setBudgetItems(response.data.products || []);
       setLoading(false);
     } catch (error) {
@@ -72,10 +71,12 @@ const Comparison = () => {
     }
   };
 
-  // تجميع البيانات بحسب التاريخ
+  // تجميع البيانات بحسب التاريخ مع التحقق من وجود بيانات CategoriesId
   const groupByDate = (items) => {
     const groupedData = {};
     items.forEach((item) => {
+      // إذا كانت بيانات التصنيف غير موجودة، نتخطى العنصر
+      if (!item.CategoriesId || !item.CategoriesId.categoryType) return;
       const date = new Date(item.date);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
@@ -94,9 +95,12 @@ const Comparison = () => {
       }
       groupedData[key][categoryType] += parseFloat(item.valueitem);
     });
-    const sortedKeys = Object.keys(groupedData).sort((a, b) => new Date(b) - new Date(a));
+    // ترتيب المفاتيح بحيث يكون الأحدث أولاً
+    const sortedKeys = Object.keys(groupedData).sort(
+      (a, b) => new Date(b) - new Date(a)
+    );
     const sortedData = {};
-    sortedKeys.forEach(key => {
+    sortedKeys.forEach((key) => {
       sortedData[key] = groupedData[key];
     });
     return sortedData;
@@ -104,7 +108,11 @@ const Comparison = () => {
 
   // تصفية البيانات بناءً على اختيارات المستخدم للتاريخ
   const filterItems = (items) => {
-    let filteredItems = items;
+    // تصفية العناصر التي تحتوي على بيانات التصنيف فقط
+    let filteredItems = items.filter(
+      (item) => item.CategoriesId && item.CategoriesId.categoryType
+    );
+
     if (dateType === "year" && selectedYear.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
@@ -113,15 +121,25 @@ const Comparison = () => {
     } else if (dateType === "month" && selectedYear.length > 0 && selectedMonths.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const date = new Date(item.date);
-        return selectedYear.includes(date.getFullYear()) && selectedMonths.includes(date.getMonth() + 1);
+        return (
+          selectedYear.includes(date.getFullYear()) &&
+          selectedMonths.includes(date.getMonth() + 1)
+        );
       });
-    } else if (dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && selectedDays.length > 0) {
+    } else if (
+      dateType === "day" &&
+      selectedYear.length > 0 &&
+      selectedMonths.length > 0 &&
+      selectedDays.length > 0
+    ) {
       filteredItems = filteredItems.filter((item) => {
         const date = new Date(item.date);
         const dayKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-        return selectedYear.includes(date.getFullYear()) && 
-               selectedMonths.includes(date.getMonth() + 1) && 
-               selectedDays.includes(dayKey);
+        return (
+          selectedYear.includes(date.getFullYear()) &&
+          selectedMonths.includes(date.getMonth() + 1) &&
+          selectedDays.includes(dayKey)
+        );
       });
     }
     const groupedData = groupByDate(filteredItems);
@@ -144,12 +162,14 @@ const Comparison = () => {
       } else if (chartType === "line") {
         drawLineChart(filteredItems);
       }
+    } else {
+      // في حالة عدم وجود بيانات يتم مسح محتويات الـ SVG
+      d3.select(svgRef.current).selectAll("*").remove();
     }
   }, [filteredItems, chartType, showRevenues, showExpenses]);
 
   // دالة رسم الرسم البياني الشريطي (Bar Chart)
   const drawBarChart = (data) => {
-    // تقليل حجم الرسم: العرض 900 والارتفاع 500
     const width = 900;
     const height = 500;
     const margin = { top: 80, right: 100, bottom: 90, left: 80 };
@@ -191,8 +211,8 @@ const Comparison = () => {
 
     // تحديد ألوان محددة لكل نوع
     const colorMapping = {
-      Revenues: "#2ecc71",   // أخضر
-      Expenses: "#e74c3c"    // أحمر
+      Revenues: "#2ecc71", // أخضر
+      Expenses: "#e74c3c", // أحمر
     };
 
     const x0 = d3.scaleBand()
@@ -214,7 +234,7 @@ const Comparison = () => {
     // استخدام ألوان محددة لكل تصنيف
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(categories.map(cat => colorMapping[cat]));
+      .range(categories.map((cat) => colorMapping[cat]));
 
     // تأثير ظل حديث للأعمدة
     const filter = defs.append("filter")
@@ -319,8 +339,8 @@ const Comparison = () => {
       .style("font-weight", "bold")
       .text("Budget Comparison");
 
-    // إضافة وتنسيق وسيلة الإيضاح (Legend) فوق الرسم على الجهة اليسرى مع مسافة إضافية
-    const legendGap = 20; // المسافة بين الرسم والوسيلة الإيضاحية
+    // إضافة وتنسيق وسيلة الإيضاح (Legend)
+    const legendGap = 20;
     const legend = svg.append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top - 60 - legendGap})`);
 
@@ -354,7 +374,6 @@ const Comparison = () => {
 
   // دالة رسم الرسم البياني الخطي (Line Chart)
   const drawLineChart = (data) => {
-    // تقليل حجم الرسم: العرض 900 والارتفاع 500
     const width = 900;
     const height = 500;
     const margin = { top: 80, right: 100, bottom: 90, left: 80 };
@@ -395,7 +414,7 @@ const Comparison = () => {
     // تحديد ألوان محددة لكل نوع
     const colorMapping = {
       Revenues: "#2ecc71",
-      Expenses: "#e74c3c"
+      Expenses: "#e74c3c",
     };
 
     const x = d3.scalePoint()
@@ -403,7 +422,9 @@ const Comparison = () => {
       .range([0, chartWidth])
       .padding(0.5);
 
-    const maxVal = d3.max(Object.values(data), d => d3.max(categories.map(cat => d[cat] || 0)));
+    const maxVal = d3.max(Object.values(data), d =>
+      d3.max(categories.map(cat => d[cat] || 0))
+    );
     const y = d3.scaleLinear()
       .domain([0, maxVal])
       .nice()
@@ -446,8 +467,11 @@ const Comparison = () => {
       .y(d => y(d.value))
       .curve(d3.curveMonotoneX);
 
-    categories.forEach(category => {
-      const categoryData = dates.map(date => ({ date, value: data[date][category] || 0 }));
+    categories.forEach((category) => {
+      const categoryData = dates.map(date => ({
+        date,
+        value: data[date][category] || 0,
+      }));
       const path = chartGroup.append("path")
         .datum(categoryData)
         .attr("fill", "none")
@@ -527,8 +551,8 @@ const Comparison = () => {
       .style("font-weight", "bold")
       .text("Budget Comparison");
 
-    // إضافة وتنسيق وسيلة الإيضاح (Legend) فوق الرسم على الجهة اليسرى مع مسافة إضافية
-    const legendGap = 20; // المسافة بين الرسم والوسيلة الإيضاحية
+    // إضافة وتنسيق وسيلة الإيضاح (Legend)
+    const legendGap = 20;
     const legend = svg.append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top - 60 - legendGap})`);
 
@@ -561,134 +585,202 @@ const Comparison = () => {
   };
 
   // المتغيرات الخاصة بالتواريخ المتاحة حسب البيانات
-  const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
+  const availableYears = [
+    ...new Set(budgetItems.map((item) => new Date(item.date).getFullYear()))
+  ];
 
-  const availableMonths = selectedYear.length > 0 
-    ? [...new Set(budgetItems
-        .filter(item => selectedYear.includes(new Date(item.date).getFullYear()))
-        .map(item => new Date(item.date).getMonth() + 1)
-      )] 
-    : [];
-  
-  const availableDays = selectedYear.length > 0 && selectedMonths.length > 0 
-    ? [...new Set(budgetItems
-        .filter(item => {
-          const date = new Date(item.date);
-          return selectedYear.includes(date.getFullYear()) && selectedMonths.includes(date.getMonth() + 1);
-        })
-        .map(item => {
-          const date = new Date(item.date);
-          return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-        })
-      )] 
-    : [];
-  
+  const availableMonths =
+    selectedYear.length > 0
+      ? [
+          ...new Set(
+            budgetItems
+              .filter(
+                (item) =>
+                  selectedYear.includes(new Date(item.date).getFullYear())
+              )
+              .map((item) => new Date(item.date).getMonth() + 1)
+          ),
+        ]
+      : [];
+
+  const availableDays =
+    selectedYear.length > 0 && selectedMonths.length > 0
+      ? [
+          ...new Set(
+            budgetItems
+              .filter((item) => {
+                const date = new Date(item.date);
+                return (
+                  selectedYear.includes(date.getFullYear()) &&
+                  selectedMonths.includes(date.getMonth() + 1)
+                );
+              })
+              .map((item) => {
+                const date = new Date(item.date);
+                return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+              })
+          ),
+        ]
+      : [];
+
   const handleYearChange = (year) => {
-    setSelectedYear(prev => 
-      prev.includes(year) 
-        ? prev.filter(y => y !== year) 
-        : [...prev, year]
+    setSelectedYear((prev) =>
+      prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]
     );
-    setSelectedMonths([]); 
+    setSelectedMonths([]);
     setSelectedDays([]);
   };
 
   const handleMonthChange = (month) => {
-    setSelectedMonths(prev => 
-      prev.includes(month) 
-        ? prev.filter(m => m !== month) 
-        : [...prev, month]
+    setSelectedMonths((prev) =>
+      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month]
     );
     setSelectedDays([]);
   };
 
   const handleDayChange = (day) => {
-    setSelectedDays(prevSelectedDays => 
+    setSelectedDays((prevSelectedDays) =>
       prevSelectedDays.includes(day)
-        ? prevSelectedDays.filter(d => d !== day)
+        ? prevSelectedDays.filter((d) => d !== day)
         : [...prevSelectedDays, day]
     );
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box id="main-container" sx={{ padding: 3, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)", transition: "all 0.3s ease" }}>
+      <Box
+        id="main-container"
+        sx={{
+          padding: 3,
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+          transition: "all 0.3s ease",
+        }}
+      >
         <Box id="controls-container" sx={{ marginBottom: 2 }}>
           <FormControl id="date-type-select" sx={{ marginRight: 2 }}>
             <InputLabel>Date Type</InputLabel>
-            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
+            <StyledSelect
+              value={dateType}
+              onChange={(e) => setDateType(e.target.value)}
+            >
               <MenuItem value="year">Year</MenuItem>
               <MenuItem value="month">Month</MenuItem>
               <MenuItem value="day">Day</MenuItem>
             </StyledSelect>
           </FormControl>
-          <RadioGroup row value={chartType} onChange={(e) => setChartType(e.target.value)}>
-            <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
-            <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
+          <RadioGroup
+            row
+            value={chartType}
+            onChange={(e) => setChartType(e.target.value)}
+          >
+            <FormControlLabel
+              value="bar"
+              control={<Radio />}
+              label="Bar Chart"
+            />
+            <FormControlLabel
+              value="line"
+              control={<Radio />}
+              label="Line Chart"
+            />
           </RadioGroup>
           <FormControlLabel
-            control={<Checkbox checked={showRevenues} onChange={(e) => setShowRevenues(e.target.checked)} />}
+            control={
+              <Checkbox
+                checked={showRevenues}
+                onChange={(e) => setShowRevenues(e.target.checked)}
+              />
+            }
             label="Show Revenues"
           />
           <FormControlLabel
-            control={<Checkbox checked={showExpenses} onChange={(e) => setShowExpenses(e.target.checked)} />}
+            control={
+              <Checkbox
+                checked={showExpenses}
+                onChange={(e) => setShowExpenses(e.target.checked)}
+              />
+            }
             label="Show Expenses"
           />
         </Box>
-  
+
         <Box id="date-selection-container" sx={{ marginBottom: 2 }}>
           {dateType === "year" && (
             <Box id="year-selection">
               {availableYears.map((year) => (
                 <FormControlLabel
                   key={year}
-                  control={<Checkbox checked={selectedYear.includes(year)} onChange={() => handleYearChange(year)} />}
+                  control={
+                    <Checkbox
+                      checked={selectedYear.includes(year)}
+                      onChange={() => handleYearChange(year)}
+                    />
+                  }
                   label={year}
                 />
               ))}
             </Box>
           )}
-  
+
           {dateType === "month" && selectedYear.length > 0 && (
             <Box id="month-selection">
               {availableMonths.map((month) => (
                 <FormControlLabel
                   key={month}
-                  control={<Checkbox checked={selectedMonths.includes(month)} onChange={() => handleMonthChange(month)} />}
+                  control={
+                    <Checkbox
+                      checked={selectedMonths.includes(month)}
+                      onChange={() => handleMonthChange(month)}
+                    />
+                  }
                   label={`Month ${month}`}
                 />
               ))}
             </Box>
           )}
-  
-          {dateType === "day" && selectedYear.length > 0 && selectedMonths.length > 0 && (
-            <Box id="day-selection">
-              {selectedMonths.map((month) => {
-                const year = selectedYear[0];
-                const validDays = availableDays.filter((day) => {
-                  const [dayYear, dayMonth] = day.split("-");
-                  return parseInt(dayMonth) === month && parseInt(dayYear) === year;
-                });
-                if (validDays.length === 0) return null;
-                return (
-                  <Box key={month} className="month-days-container">
-                    <strong>{`الشهر ${month.toString().padStart(2, "0")} (${year})`}</strong>
-                    <Box className="days-checkbox-group">
-                      {validDays.map((day) => (
-                        <FormControlLabel
-                          key={day}
-                          control={<Checkbox checked={selectedDays.includes(day)} onChange={() => handleDayChange(day)} />}
-                          label={day}
-                        />
-                      ))}
+
+          {dateType === "day" &&
+            selectedYear.length > 0 &&
+            selectedMonths.length > 0 && (
+              <Box id="day-selection">
+                {selectedMonths.map((month) => {
+                  const year = selectedYear[0];
+                  const validDays = availableDays.filter((day) => {
+                    const [dayYear, dayMonth] = day.split("-");
+                    return (
+                      parseInt(dayMonth) === month &&
+                      parseInt(dayYear) === year
+                    );
+                  });
+                  if (validDays.length === 0) return null;
+                  return (
+                    <Box key={month} className="month-days-container">
+                      <strong>{`الشهر ${month
+                        .toString()
+                        .padStart(2, "0")} (${year})`}</strong>
+                      <Box className="days-checkbox-group">
+                        {validDays.map((day) => (
+                          <FormControlLabel
+                            key={day}
+                            control={
+                              <Checkbox
+                                checked={selectedDays.includes(day)}
+                                onChange={() => handleDayChange(day)}
+                              />
+                            }
+                            label={day}
+                          />
+                        ))}
+                      </Box>
                     </Box>
-                  </Box>
-                );
-              })}
-            </Box>
-          )}
+                  );
+                })}
+              </Box>
+            )}
         </Box>
-  
+
         {loading ? (
           <Box id="loading-container">
             <CircularProgress size={60} />
@@ -704,7 +796,19 @@ const Comparison = () => {
             <Box id="chart-container">
               <svg ref={svgRef} width="900" height="500"></svg>
             </Box>
-            <div id="tooltip" ref={tooltipRef} style={{ position: 'absolute', opacity: 0, background: '#fff', border: '1px solid #ccc', padding: '5px', borderRadius: '5px', pointerEvents: 'none' }}></div>
+            <div
+              id="tooltip"
+              ref={tooltipRef}
+              style={{
+                position: "absolute",
+                opacity: 0,
+                background: "#fff",
+                border: "1px solid #ccc",
+                padding: "5px",
+                borderRadius: "5px",
+                pointerEvents: "none",
+              }}
+            ></div>
           </>
         )}
       </Box>

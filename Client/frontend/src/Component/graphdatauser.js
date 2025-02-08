@@ -99,9 +99,10 @@ const Graph = () => {
     }
   };
 
+  // تجميع العناصر حسب التصنيف والتاريخ مع التأكد من وجود البيانات
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
-      const categoryName = item.CategoriesId.categoryName;
+      const categoryName = item.CategoriesId?.categoryName || "Unknown";
       const date = new Date(item.date);
       const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // تنسيق التاريخ بصيغة DD/MM/YYYY
       const key = `${categoryName}-${formattedDate}`; // مفتاح فريد لكل مجموعة من التصنيف والتاريخ
@@ -138,7 +139,7 @@ const Graph = () => {
     // التصفية حسب النوع (إيرادات أو مصروفات)
     if (filterType !== "All") {
       filteredItems = filteredItems.filter(
-        (item) => item.CategoriesId.categoryType === filterType
+        (item) => item.CategoriesId?.categoryType === filterType
       );
     }
 
@@ -150,9 +151,9 @@ const Graph = () => {
 
     items.forEach((item) => {
       const value = parseFloat(item.valueitem);
-      if (item.CategoriesId.categoryType === "Revenues") {
+      if (item.CategoriesId?.categoryType === "Revenues") {
         totals.Revenues += value;
-      } else if (item.CategoriesId.categoryType === "Expenses") {
+      } else if (item.CategoriesId?.categoryType === "Expenses") {
         totals.Expenses += value;
       }
     });
@@ -242,7 +243,7 @@ const Graph = () => {
           .style("opacity", 0.9);
         tooltip
           .html(
-            `${d.data.CategoriesId.categoryName}: ${parseFloat(
+            `${d.data.CategoriesId?.categoryName || "Unknown"}: ${parseFloat(
               d.data.valueitem
             ).toFixed(2)}`
           )
@@ -301,8 +302,20 @@ const Graph = () => {
             </StyledSelect>
           </FormControl>
           <DatePicker
-            label={dateType === "month" ? "Select Month" : dateType === "year" ? "Select Year" : "Select Date"}
-            views={dateType === "month" ? ["year", "month"] : dateType === "year" ? ["year"] : ["year", "month", "day"]}
+            label={
+              dateType === "month"
+                ? "Select Month"
+                : dateType === "year"
+                ? "Select Year"
+                : "Select Date"
+            }
+            views={
+              dateType === "month"
+                ? ["year", "month"]
+                : dateType === "year"
+                ? ["year"]
+                : ["year", "month", "day"]
+            }
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
             renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
@@ -337,7 +350,14 @@ const Graph = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: balance >= 0 ? "#4CAF50" : "#F44336", color: "#fff" }}>
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background: balance >= 0 ? "#4CAF50" : "#F44336",
+              color: "#fff",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Balance
@@ -367,11 +387,18 @@ const Graph = () => {
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
-                      <Box sx={{ width: "20px", height: "20px", backgroundColor: colorScale(index) }} />
+                      <Box
+                        sx={{
+                          width: "20px",
+                          height: "20px",
+                          backgroundColor: colorScale(index),
+                        }}
+                      />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`${item.CategoriesId.categoryName} (${(
-                        (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
+                      primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
+                        (item.valueitem /
+                          d3.sum(filteredItems.map((i) => i.valueitem))) *
                         100
                       ).toFixed(2)}%)`}
                     />
@@ -385,20 +412,37 @@ const Graph = () => {
                   <StyledCard>
                     <ImageContainer>
                       <img
-                        src={`http://127.0.0.1:5004/${item.CategoriesId.image}`}
+                        src={`http://127.0.0.1:5004/${
+                          item.CategoriesId?.image || "fallback-image.png"
+                        }`}
                         alt="Category"
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     </ImageContainer>
                     <CardContent sx={{ textAlign: "center" }}>
                       <Typography variant="h6" sx={{ fontWeight: "bold", color: "#007BFF" }}>
-                        {item.CategoriesId.categoryName}
+                        {item.CategoriesId?.categoryName || "Unknown"}
                       </Typography>
-                      <Typography variant="body1" sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}>
-                        {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color:
+                            item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
+                        }}
+                      >
+                        {item.CategoriesId?.categoryType === "Expenses"
+                          ? `-${item.valueitem}`
+                          : item.valueitem}
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
-                        {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
+                        {item.CategoriesId?.categoryType &&
+                        totals[item.CategoriesId.categoryType]
+                          ? (
+                              (item.valueitem / totals[item.CategoriesId.categoryType]) *
+                              100
+                            ).toFixed(2)
+                          : "0.00"}
+                        %
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         Date: {new Date(item.date).toLocaleDateString("en-GB")}

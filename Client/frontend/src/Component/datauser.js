@@ -203,6 +203,7 @@ const BudgetItems = () => {
           "Content-Type": "application/json",
         },
       });
+      // نحتفظ بالعناصر حتى وإن كانت ناقصة، لكن سيتم تجاهلها لاحقًا إذا لم يكن لها نوع معرف
       setBudgetItems(response.data.products || []);
       setLoading(false);
     } catch (error) {
@@ -212,6 +213,11 @@ const BudgetItems = () => {
   };
 
   const deleteItem = async (item) => {
+    if (!item.CategoriesId) {
+      // إذا كانت البيانات ناقصة، نقوم بإزالة العنصر من الحالة مباشرةً
+      setBudgetItems((prevItems) => prevItems.filter((budgetItem) => budgetItem !== item));
+      return;
+    }
     try {
       const response = await axios.delete("http://127.0.0.1:5004/api/deleteBudget", {
         headers: {
@@ -229,7 +235,7 @@ const BudgetItems = () => {
         setBudgetItems((prevItems) =>
           prevItems.filter(
             (budgetItem) =>
-              budgetItem.CategoriesId._id !== item.CategoriesId._id ||
+              budgetItem.CategoriesId?._id !== item.CategoriesId?._id ||
               budgetItem.date !== item.date
           )
         );
@@ -254,7 +260,7 @@ const BudgetItems = () => {
   };
 
   const handleSaveUpdate = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem || !selectedItem.CategoriesId) return;
 
     const numericValue = parseFloat(updatedValue);
     if (isNaN(numericValue)) {
@@ -282,7 +288,7 @@ const BudgetItems = () => {
         console.log("تم تحديث العنصر بنجاح", response.data);
         setBudgetItems((prevItems) =>
           prevItems.map((item) =>
-            item.CategoriesId._id === selectedItem.CategoriesId._id && item.date === selectedItem.date
+            item.CategoriesId?._id === selectedItem.CategoriesId._id && item.date === selectedItem.date
               ? { ...item, valueitem: numericValue }
               : item
           )
@@ -310,8 +316,12 @@ const BudgetItems = () => {
     return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
   };
 
+  // دالة التصفية المحدثة: يتم تجاهل العناصر التي ليس لها نوع معرف
   const filterItems = (items) => {
-    let filteredItems = items;
+    // تجاهل العناصر التي ليس لها بيانات CategoriesId أو التي يكون فيها categoryType غير معرف
+    let filteredItems = items.filter(
+      (item) => item.CategoriesId && item.CategoriesId.categoryType
+    );
 
     if (filterDate) {
       const selectedDate = new Date(filterDate);
@@ -336,13 +346,13 @@ const BudgetItems = () => {
 
     if (filterType !== "all") {
       filteredItems = filteredItems.filter(
-        (item) => item.CategoriesId.categoryType === filterType
+        (item) => item.CategoriesId?.categoryType === filterType
       );
     }
 
     if (filterItem !== "all") {
       filteredItems = filteredItems.filter(
-        (item) => item.CategoriesId.categoryName === filterItem
+        (item) => item.CategoriesId?.categoryName === filterItem
       );
     }
 
@@ -354,9 +364,9 @@ const BudgetItems = () => {
 
     items.forEach((item) => {
       const value = parseFloat(item.valueitem);
-      if (item.CategoriesId.categoryType === "Revenues") {
+      if (item.CategoriesId?.categoryType === "Revenues") {
         totals.Revenues += value;
-      } else if (item.CategoriesId.categoryType === "Expenses") {
+      } else if (item.CategoriesId?.categoryType === "Expenses") {
         totals.Expenses += value;
       }
     });
@@ -364,17 +374,25 @@ const BudgetItems = () => {
     return totals;
   };
 
+  // تحديث uniqueItems لتصفية العناصر التي تحتوي على بيانات صحيحة
   const uniqueItems =
     filterType === "all"
-      ? [...new Set(budgetItems.map((item) => item.CategoriesId.categoryName))]
+      ? [
+          ...new Set(
+            budgetItems
+              .filter((item) => item.CategoriesId && item.CategoriesId.categoryName)
+              .map((item) => item.CategoriesId.categoryName)
+          ),
+        ]
       : [
           ...new Set(
             budgetItems
-              .filter((item) => item.CategoriesId.categoryType === filterType)
-              .map((item) => item.CategoriesId.categoryName)
+              .filter((item) => item.CategoriesId?.categoryType === filterType)
+              .map((item) => item.CategoriesId?.categoryName)
           ),
         ];
 
+  // يمكن أيضاً تصفية العناصر التي ليس لها CategoriesId إذا أردت عدم عرضها
   const filteredItems = filterItems(budgetItems);
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
@@ -390,8 +408,8 @@ const BudgetItems = () => {
           day: "2-digit",
           year: "numeric",
         }),
-        Item: item.CategoriesId.categoryName,
-        Type: item.CategoriesId.categoryType,
+        Item: item.CategoriesId?.categoryName || "Unknown",
+        Type: item.CategoriesId?.categoryType || "",
         Value: item.valueitem,
       }))
     );
@@ -674,7 +692,11 @@ const BudgetItems = () => {
                     <StyledCard>
                       <ImageContainer>
                         <img
-                          src={`http://127.0.0.1:5004/${item.CategoriesId.image}`}
+                          src={
+                            item.CategoriesId
+                              ? `http://127.0.0.1:5004/${item.CategoriesId.image}`
+                              : "fallback-image.png"
+                          }
                           alt="Category"
                           style={{
                             width: "100%",
@@ -697,13 +719,13 @@ const BudgetItems = () => {
                           gutterBottom
                           sx={{
                             color:
-                              item.CategoriesId.categoryType === "Revenues"
+                              item.CategoriesId?.categoryType === "Revenues"
                                 ? "#4CAF50"
                                 : "#F44336",
                             fontWeight: "600",
                           }}
                         >
-                          {item.CategoriesId.categoryType === "Expenses"
+                          {item.CategoriesId?.categoryType === "Expenses"
                             ? `-${item.valueitem}`
                             : item.valueitem}
                         </Typography>
@@ -713,7 +735,7 @@ const BudgetItems = () => {
                             variant="h5"
                             sx={{ color: "#007BFF", fontWeight: "bold" }}
                           >
-                            {item.CategoriesId.categoryName}
+                            {item.CategoriesId?.categoryName || "Unknown"}
                           </Typography>
                         </Box>
                         <Box
@@ -753,7 +775,7 @@ const BudgetItems = () => {
           </DialogHeader>
           <StyledDialogContent>
             <Typography variant="h6" sx={{ marginBottom: 2 }}>
-              Item Name: {selectedItem?.CategoriesId?.categoryName}
+              Item Name: {selectedItem?.CategoriesId?.categoryName || "Unknown"}
             </Typography>
             <StyledTextField
               autoFocus

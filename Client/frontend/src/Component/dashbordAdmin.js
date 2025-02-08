@@ -1,3 +1,4 @@
+// CombinedPage.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/dashbord.css';
@@ -100,6 +101,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -116,6 +118,37 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
       result.push(array.slice(i, i + size));
     }
     return result;
+  };
+
+  const handleUpdateImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+        return;
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('يرجى تحميل صورة بصيغة JPEG أو PNG أو GIF فقط');
+        return;
+      }
+      setNewImage(file);
+    }
+  };
+
+  const handleUpdateSubmit = (e) => {
+    e.preventDefault();
+    // إنشاء FormData يتضمن _id وبيانات التعديل والصورة الجديدة (إن وُجدت)
+    const formData = new FormData();
+    formData.append('_id', selectedCategory._id);
+    formData.append('categoryName', selectedCategory.categoryName);
+    formData.append('categoryType', selectedCategory.categoryType);
+    if (newImage) {
+      formData.append('image', newImage);
+    }
+    onUpdate(formData);
+    setNewImage(null);
+    setIsModalOpen(false);
   };
 
   return (
@@ -172,39 +205,51 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
           <div className="modal-content">
             <button className="modal-close-button" onClick={() => setIsModalOpen(false)}>×</button>
             <h2 className="modal-title">Edit Category</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                onUpdate(selectedCategory);
-                setIsModalOpen(false);
-              }}
-            >
-              <input
-                type="text"
-                value={selectedCategory.categoryName}
-                onChange={(e) =>
-                  setSelectedCategory({
-                    ...selectedCategory,
-                    categoryName: e.target.value,
-                  })
-                }
-                placeholder="Category Name"
-                className="modal-input"
-              />
-              <select
-                value={selectedCategory.categoryType || ""}
-                onChange={(e) =>
-                  setSelectedCategory({
-                    ...selectedCategory,
-                    categoryType: e.target.value,
-                  })
-                }
-                className="modal-select"
-              >
-                <option value="">Select Type</option>
-                <option value="Revenues">Revenues</option>
-                <option value="Expenses">Expenses</option>
-              </select>
+            <form onSubmit={handleUpdateSubmit}>
+              <div className="input-group">
+                <label htmlFor="updateCategoryName">Category Name:</label>
+                <input
+                  type="text"
+                  id="updateCategoryName"
+                  value={selectedCategory.categoryName}
+                  onChange={(e) =>
+                    setSelectedCategory({
+                      ...selectedCategory,
+                      categoryName: e.target.value,
+                    })
+                  }
+                  placeholder="Category Name"
+                  className="modal-input"
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="updateCategoryType">Category Type:</label>
+                <select
+                  id="updateCategoryType"
+                  value={selectedCategory.categoryType || ""}
+                  onChange={(e) =>
+                    setSelectedCategory({
+                      ...selectedCategory,
+                      categoryType: e.target.value,
+                    })
+                  }
+                  className="modal-select"
+                  required
+                >
+                  <option value="">Select Type</option>
+                  <option value="Revenues">Revenues</option>
+                  <option value="Expenses">Expenses</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label htmlFor="updateImage">Update Image (optional):</label>
+                <input
+                  type="file"
+                  id="updateImage"
+                  onChange={handleUpdateImageChange}
+                />
+              </div>
               <div className="modal-buttons">
                 <button type="submit" className="save-button">
                   Save
@@ -262,19 +307,25 @@ const CombinedPage = () => {
     }
   };
 
-  const handleUpdate = async (updatedCategory) => {
+  const handleUpdate = async (formData) => {
     try {
+      const id = formData.get('_id');
       const response = await axios.put(
-        `http://127.0.0.1:5004/api/updatecategory/${updatedCategory._id}`,
-        updatedCategory
+        `http://127.0.0.1:5004/api/updatecategory/${id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       );
       if (response.status === 200) {
         setCategories(categories.map((cat) =>
-          cat._id === updatedCategory._id ? response.data : cat
+          cat._id === id ? response.data : cat
         ));
       }
     } catch (error) {
-      alert(error.message);
+      alert('Error updating category: ' + (error.response?.data?.message || error.message));
     }
   };
 
