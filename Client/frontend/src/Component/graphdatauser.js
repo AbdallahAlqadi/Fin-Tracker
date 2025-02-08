@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   Grid,
@@ -22,6 +22,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
+import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
@@ -73,6 +74,9 @@ const Graph = () => {
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
 
+  // إنشاء مقياس لوني باستخدام أكثر من 40 لونًا مختلفًا
+  const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
+
   useEffect(() => {
     fetchBudget();
   }, []);
@@ -95,13 +99,12 @@ const Graph = () => {
     }
   };
 
-  // دالة لتجميع العناصر حسب الفئة والتاريخ
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
       const categoryName = item.CategoriesId.categoryName;
       const date = new Date(item.date);
-      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-      const key = `${categoryName}-${formattedDate}`;
+      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // تنسيق التاريخ بصيغة DD/MM/YYYY
+      const key = `${categoryName}-${formattedDate}`; // مفتاح فريد لكل مجموعة من التصنيف والتاريخ
       if (!acc[key]) {
         acc[key] = { ...item, valueitem: 0 };
       }
@@ -110,7 +113,6 @@ const Graph = () => {
     }, {});
   };
 
-  // دالة لتصفية العناصر بناءً على التاريخ والنوع
   const filterItems = (items) => {
     let filteredItems = items;
 
@@ -143,7 +145,6 @@ const Graph = () => {
     return Object.values(groupByCategory(filteredItems));
   };
 
-  // دالة لحساب المجاميع الكلية للإيرادات والمصروفات
   const calculateTotals = (items) => {
     const totals = { Revenues: 0, Expenses: 0 };
 
@@ -163,25 +164,11 @@ const Graph = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
-  // استخدام useMemo لحساب الفئات الفريدة من البيانات
-  const uniqueCategories = useMemo(() => {
-    const categories = filteredItems.map((item) => item.CategoriesId.categoryName);
-    return Array.from(new Set(categories));
-  }, [filteredItems]);
-
-  // إنشاء مقياس ألوان يربط كل فئة بلون مميز باستخدام دالة interpolateRainbow
-  const colorScale = useMemo(() => {
-    return d3
-      .scaleOrdinal()
-      .domain(uniqueCategories)
-      .range(d3.quantize(d3.interpolateRainbow, uniqueCategories.length));
-  }, [uniqueCategories]);
-
   useEffect(() => {
     if (filteredItems.length > 0) {
       drawPieChart(filteredItems);
     }
-  }, [filteredItems, colorScale]);
+  }, [filteredItems]);
 
   const drawPieChart = (data) => {
     const width = 600;
@@ -191,7 +178,7 @@ const Graph = () => {
     // إزالة المحتوى السابق داخل الـ SVG
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // إنشاء التلميح (tooltip) إذا لم يكن موجوداً مسبقاً
+    // إنشاء تلميح (tooltip) إذا لم يكن موجودًا مسبقاً
     let tooltip = d3.select("#tooltip");
     if (tooltip.empty()) {
       tooltip = d3
@@ -242,8 +229,7 @@ const Graph = () => {
     arcs
       .append("path")
       .attr("d", arc)
-      // استخدام اسم الفئة للحصول على اللون المميز من المقياس
-      .attr("fill", (d) => colorScale(d.data.CategoriesId.categoryName))
+      .attr("fill", (d, i) => colorScale(i))
       .attr("stroke", "#fff")
       .style("stroke-width", "2px")
       .each(function (d) {
@@ -315,20 +301,8 @@ const Graph = () => {
             </StyledSelect>
           </FormControl>
           <DatePicker
-            label={
-              dateType === "month"
-                ? "Select Month"
-                : dateType === "year"
-                ? "Select Year"
-                : "Select Date"
-            }
-            views={
-              dateType === "month"
-                ? ["year", "month"]
-                : dateType === "year"
-                ? ["year"]
-                : ["year", "month", "day"]
-            }
+            label={dateType === "month" ? "Select Month" : dateType === "year" ? "Select Year" : "Select Date"}
+            views={dateType === "month" ? ["year", "month"] : dateType === "year" ? ["year"] : ["year", "month", "day"]}
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
             renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
@@ -363,14 +337,7 @@ const Graph = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card
-            sx={{
-              minWidth: 200,
-              textAlign: "center",
-              background: balance >= 0 ? "#4CAF50" : "#F44336",
-              color: "#fff",
-            }}
-          >
+          <Card sx={{ minWidth: 200, textAlign: "center", background: balance >= 0 ? "#4CAF50" : "#F44336", color: "#fff" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Balance
@@ -400,13 +367,7 @@ const Graph = () => {
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
-                      <Box
-                        sx={{
-                          width: "20px",
-                          height: "20px",
-                          backgroundColor: colorScale(item.CategoriesId.categoryName),
-                        }}
-                      />
+                      <Box sx={{ width: "20px", height: "20px", backgroundColor: colorScale(index) }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId.categoryName} (${(
@@ -433,13 +394,8 @@ const Graph = () => {
                       <Typography variant="h6" sx={{ fontWeight: "bold", color: "#007BFF" }}>
                         {item.CategoriesId.categoryName}
                       </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}
-                      >
-                        {item.CategoriesId.categoryType === "Expenses"
-                          ? `-${item.valueitem}`
-                          : item.valueitem}
+                      <Typography variant="body1" sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}>
+                        {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
