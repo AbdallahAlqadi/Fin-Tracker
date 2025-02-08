@@ -201,6 +201,11 @@ function DashboardLayoutBasic(props) {
               icon: <ChatBubbleIcon />,
             },
             {
+              segment: 'fedback',
+              title: 'Fedback',
+              icon: <ChatIcon />,
+            },
+            {
               segment: 'LogOut',
               title: '',
               icon: (

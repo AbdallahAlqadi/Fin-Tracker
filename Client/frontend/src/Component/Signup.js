@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import axios from 'axios'; // إضافة مكتبة axios
-import '../cssStyle/signup.css'; // أو استخدم نفس ملف login.css إذا كنت تريد استخدام نفس الأنماط
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import '../cssStyle/signup.css';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'; // استيراد SweetAlert2
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -9,45 +10,80 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // تحقق من إدخال الحقول
+
+    // التحقق من إدخال جميع الحقول
     if (!username || !email || !password) {
-      alert('Please fill out all fields.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Please fill out all fields.'
+      });
       return;
     }
-  
-    // تحقق من قوة كلمة المرور
+
+    // قيود على البريد الإلكتروني باستخدام تعبير منتظم
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Email',
+        text: 'Please enter a valid email address.'
+      });
+      return;
+    }
+
+    // التحقق من قوة كلمة المرور باستخدام تعبير منتظم:
+    // - على الأقل 8 أحرف
+    // - حرف كبير واحد على الأقل
+    // - حرف صغير واحد على الأقل
+    // - رقم واحد على الأقل
+    // - حرف خاص واحد على الأقل (من @$!%*?&)
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      alert('Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Weak Password',
+        text: 'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      });
       return;
     }
-  
+
     try {
       const res = await axios.post('http://127.0.0.1:5004/api/users', {
         username,
         email,
         password,
       });
-  
+
       if (res.status === 200) {
-        alert('User added successfully!');
-        navigate('/'); // إعادة التوجيه إلى صفحة تسجيل الدخول
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'User added successfully!'
+        }).then(() => {
+          navigate('/'); // إعادة التوجيه إلى صفحة تسجيل الدخول بعد الضغط على الزر
+        });
       } else {
-        alert('Failed to add user.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to add user.'
+        });
       }
     } catch (error) {
       console.error('Error adding user:', error);
-      alert('An error occurred while adding the user.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An error occurred while adding the user.'
+      });
     }
   };
 
-
   // تغيير خلفية الصفحة عند فتح صفحة التسجيل
-  React.useEffect(() => {
+  useEffect(() => {
     if (window.location.pathname === '/signup') {
       document.body.style.background = `
         linear-gradient(

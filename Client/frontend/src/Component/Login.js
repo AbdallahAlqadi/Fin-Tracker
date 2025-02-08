@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../cssStyle/login.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2'; // استيراد SweetAlert2
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,49 +17,52 @@ const Login = () => {
       // إرسال بيانات تسجيل الدخول إلى الخادم
       const res = await axios.post('http://127.0.0.1:5004/api/users/login', { email, password });
       setToken(res.data.token);
-      alert('Login Successful');
+      sessionStorage.setItem('jwt', res.data.token);
 
-
-
-
-      // إنشاء كائن يحتوي على بيانات المستخدم لإرساله
-      const sendData = {
-        email: email,
-        password: password,
-      };
-
-      // التنقل إلى الصفحة الرئيسية وإرسال البيانات
-      navigate('/tolpad');
-      sessionStorage.setItem('jwt',res.data.token)
+      // عرض تنبيه نجاح باستخدام SweetAlert2 ثم الانتقال إلى الصفحة الرئيسية
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: 'You have logged in successfully!',
+      }).then(() => {
+        navigate('/tolpad');
+      });
     } catch (error) {
-      alert('Invalid username or password');
-    }  };
+      // عرض تنبيه خطأ في حالة عدم تطابق بيانات المستخدم
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Invalid username or password',
+      });
+    }
+  };
 
+  // تغيير خلفية الصفحة إذا كان المسار هو صفحة تسجيل الدخول
   if (window.location.pathname === '/' || window.location.pathname === '/login') {
     document.body.style.background = `
-    linear-gradient(
+      linear-gradient(
         135deg, 
         rgba(173, 216, 230, 0.8), 
         rgba(135, 206, 235, 0.9), 
         rgba(70, 130, 180, 0.8), 
         rgba(25, 25, 112, 0.85)
-    )`;
+      )`;
     document.body.style.backgroundSize = '200% 200%';
     document.body.style.animation = 'gradientShift 8s ease infinite';
 
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
         }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
     `;
     document.head.appendChild(style);
   }
