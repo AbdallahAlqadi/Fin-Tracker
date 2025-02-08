@@ -27,7 +27,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as XLSX from "xlsx";
 
-// مكون StyledCard بتصميم عصري
+// مكون StyledCard بتصميم عصري مع استجابة للأجهزة الصغيرة
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
@@ -37,16 +37,21 @@ const StyledCard = styled(Card)(({ theme }) => ({
   border: "none",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(135deg, #ffffff, #f8f8f8)",
-  width: "120%",
+  width: "100%",
   maxWidth: "450px",
   boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+  [theme.breakpoints.down("sm")]: {
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+  },
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
   },
 }));
 
-const ImageContainer = styled("div")({
+const ImageContainer = styled("div")(({ theme }) => ({
   flex: "0 0 100px",
   marginRight: "16px",
   borderRadius: "50%",
@@ -54,7 +59,11 @@ const ImageContainer = styled("div")({
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
   width: "100px",
   height: "100px",
-});
+  [theme.breakpoints.down("sm")]: {
+    marginRight: 0,
+    marginBottom: "16px",
+  },
+}));
 
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
@@ -448,7 +457,7 @@ const BudgetItems = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
+      <Box sx={{ padding: { xs: 2, sm: 4 }, background: "#f5f5f5", minHeight: "100vh" }}>
         {/* Controls */}
         <Box
           sx={{
@@ -456,6 +465,7 @@ const BudgetItems = () => {
             display: "flex",
             justifyContent: "center",
             gap: 2,
+            flexWrap: "wrap",
           }}
         >
           <FormControl sx={{ minWidth: 120 }}>
@@ -463,6 +473,7 @@ const BudgetItems = () => {
             <StyledSelect
               value={dateType}
               onChange={(e) => setDateType(e.target.value)}
+              label="Date Type"
             >
               <MenuItem value="full">Full Date</MenuItem>
               <MenuItem value="month">Month</MenuItem>
@@ -486,15 +497,14 @@ const BudgetItems = () => {
             }
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
-            renderInput={(params) => (
-              <TextField {...params} sx={{ minWidth: 180 }} />
-            )}
+            renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
           />
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
             <StyledSelect
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
+              label="Type"
             >
               <MenuItem value="all">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
@@ -506,6 +516,7 @@ const BudgetItems = () => {
             <StyledSelect
               value={filterItem}
               onChange={(e) => setFilterItem(e.target.value)}
+              label="Item"
             >
               <MenuItem value="all">All</MenuItem>
               {uniqueItems.map((item, index) => (
@@ -515,11 +526,7 @@ const BudgetItems = () => {
               ))}
             </StyledSelect>
           </FormControl>
-          <ExportButton
-            onClick={exportToExcel}
-            variant="contained"
-            disabled={exportLoading}
-          >
+          <ExportButton onClick={exportToExcel} variant="contained" disabled={exportLoading}>
             {exportLoading ? (
               <CircularProgress size={20} color="inherit" />
             ) : (
@@ -530,11 +537,7 @@ const BudgetItems = () => {
         </Box>
 
         {exportLoading && (
-          <LinearProgress
-            variant="determinate"
-            value={exportProgress}
-            sx={{ marginBottom: 2 }}
-          />
+          <LinearProgress variant="determinate" value={exportProgress} sx={{ marginBottom: 2 }} />
         )}
 
         {/* Totals Cards */}
@@ -544,6 +547,8 @@ const BudgetItems = () => {
             display: "flex",
             justifyContent: "center",
             gap: 4,
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: "center",
           }}
         >
           <Card
@@ -610,21 +615,11 @@ const BudgetItems = () => {
 
         {/* Budget Items List */}
         {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="80vh"
-          >
+          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <CircularProgress size={60} />
           </Box>
         ) : filteredItems.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="80vh"
-          >
+          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
@@ -639,6 +634,7 @@ const BudgetItems = () => {
                   color: "#333",
                   fontWeight: "bold",
                   marginBottom: "24px",
+                  textAlign: "center",
                 }}
               >
                 {new Date(date).toLocaleDateString("en-GB", {
@@ -647,9 +643,9 @@ const BudgetItems = () => {
                   day: "2-digit",
                 })}
               </Typography>
-              <Grid container spacing={3} justifyContent="flex-start">
+              <Grid container spacing={3} justifyContent="center">
                 {items.map((item, index) => (
-                  <Grid item key={index} sx={{ marginLeft: "80px" }}>
+                  <Grid item key={index} xs={12} sm={6}>
                     <StyledCard>
                       <ImageContainer>
                         <img
@@ -697,9 +693,9 @@ const BudgetItems = () => {
                         </Box>
                         <Box
                           display="flex"
-                          justifyContent="flex-end"
+                          justifyContent="center"
                           gap={1}
-                          sx={{ marginTop: 2 }}
+                          sx={{ marginTop: 2, flexDirection: { xs: "column", sm: "row" } }}
                         >
                           <StyledButton
                             variant="contained"

@@ -1,86 +1,125 @@
-.feedback-form {
-  max-width: 700px;
-  margin: 50px auto;
-  padding: 40px;
-  background: rgba(173, 216, 230, 0.25);
-  backdrop-filter: blur(15px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8);
-  text-align: center;
-  font-family: 'Poppins', sans-serif;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  height: auto;
-}
+/* استيراد خط عصري */
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap");
 
-.feedback-form h2 {
-  font-size: 28px;
-  color: #0077b6;
-  margin-bottom: 25px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.feedback-form textarea {
+/* الحاوية الرئيسية */
+.feedback-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
-  min-height: 150px;
-  padding: 20px;
-  border: none;
+  padding: 20px; /* إضافة مسافة داخلية للحاوية */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6); /* زيادة الظل */
+}
+
+/* تصميم الكارد المُطوَّر */
+.feedback-card {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  padding: 40px 60px; /* زيادة حجم الحشو لجعل الكارد أكبر */
   border-radius: 15px;
-  font-size: 18px;
-  color: #333;
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4);
+  max-width: 800px; /* توسيع عرض الكارد */
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* أنيميشن عند ظهور الصفحة */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* عنوان الصفحة */
+.feedback-title {
+  font-size: 28px; /* تكبير حجم الخط */
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* العنوان الفرعي */
+.feedback-subtitle {
+  font-size: 18px; /* تكبير حجم الخط */
+  opacity: 0.8;
+  margin-bottom: 25px;
+}
+
+/* منطقة إدخال النص */
+.feedback-textarea {
+  width: 100%;
+  min-height: 200px; /* زيادة ارتفاع منطقة الإدخال */
+  padding: 20px; /* زيادة الحشو الداخلي */
+  border-radius: 8px;
+  border: 2px solid #fff; /* جعل لون BORDER ظاهر دائمًا */
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 18px; /* تكبير حجم الخط */
+  transition: 0.3s;
   outline: none;
-  transition: all 0.3s ease;
   resize: none;
-  box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.1);
-  overflow-y: hidden;
-  white-space: pre-wrap;
-  word-wrap: break-word;
 }
 
-.feedback-form textarea:focus {
-  border: 2px solid #0096c7;
-  box-shadow: 0 0 15px rgba(0, 150, 199, 0.4);
+.feedback-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.feedback-form textarea.auto-expand {
-  height: auto;
+.feedback-textarea:focus {
+  border-color: #87CEFA; /* تغيير اللون عند التركيز */
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.feedback-form button {
-  width: 95%;
-  padding: 16px;
-  margin-top: 30px;
-  background: linear-gradient(135deg, #00a6fb, #0096c7);
+/* زر الإرسال */
+.feedback-button {
+  margin-top: 20px;
+  padding: 15px; /* زيادة الحشو داخل الزر */
+  width: 100%;
   border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 22px;
+  background: #87CEFA; /* تغيير اللون الأصفر إلى أزرق فاتح */
+  color: #333;
+  font-size: 20px; /* تكبير حجم الخط */
   font-weight: bold;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 150, 199, 0.4);
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.feedback-form button:hover {
-  background: linear-gradient(135deg, #0096c7, #0077b6);
-  box-shadow: 0 8px 20px rgba(0, 150, 199, 0.5);
+.feedback-button:hover {
+  background: #ADD8E6; /* نسخة أفتح من الأزرق عند التحويم */
 }
 
-.feedback-form button:active {
-  transform: scale(0.96);
+.feedback-button:disabled {
+  background: #888;
+  cursor: not-allowed;
 }
 
-.feedback-form p {
-  margin-top: 25px;
-  font-size: 20px;
+/* رسائل التنبيه */
+.feedback-message {
+  margin-top: 20px;
+  padding: 15px;
   font-weight: bold;
-  color: #0077b6;
-  opacity: 0;
-  transform: translateY(-15px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-.feedback-form p.show {
-  opacity: 1;
-  transform: translateY(0);
+.feedback-message.success {
+  background: rgba(46, 204, 113, 0.8);
+  color: #fff;
+}
+
+.feedback-message.error {
+  background: rgba(231, 76, 60, 0.8);
+  color: #fff;
 }

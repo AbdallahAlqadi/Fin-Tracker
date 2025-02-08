@@ -1,4 +1,4 @@
-/* chat-container for the whole chat view */
+/* حاوية الدردشة لكامل العرض */
 .chat-container {
     position: absolute;
     top: 68%;
@@ -10,9 +10,23 @@
     background-color: #f4f7fc;
     padding: 20px;
     width: 60%; /* يمكنك تعديل العرض حسب الحاجة */
-border-radius: 40px;
+    border-radius: 40px;
+    padding-bottom: 120px !important; 
 }
 
+/* إضافة عنوان لآراء المستخدمين فوق الحاوية */
+.chat-container::before {
+    content: "آراء المستخدمين";
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* نافذة الدردشة */
 .chat-window {
     width: 100%;
     height: 80vh;
@@ -26,11 +40,11 @@ border-radius: 40px;
     gap: 15px;
 }
 
-/* For each message block */
+/* لكل كتلة رسالة (تم زيادة margin-bottom إلى 40px) */
 .chat-message {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 15px;
+    margin-bottom: 40px;  /* تم تعديل القيمة من 30px إلى 40px */
     max-width: 100%;
 }
 
@@ -42,71 +56,120 @@ border-radius: 40px;
     justify-content: flex-end;
 }
 
-/* Message bubble */
+/* تحسين فقاعة الرسالة بتصميم احترافي */
 .message-bubble {
     width: 80%;
-    background-color: #f1f1f1;
+    background: #ffffff;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-size: 18px;
-    line-height: .1;
+    overflow: hidden;  /* لضمان قص أي محتوى خارج حدودها */
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 10px; /* تم تقليل المساحة الداخلية من 15px إلى 10px */
-    margin-bottom: 50px; /* إضافة مسافة بين الرسائل */
+    transition: transform 0.3s ease;
 }
 
-/* Different colors for sent and received messages */
+/* إضافة شريط تمييز (Accent Border) للرسائل اليسارية واليمينية */
 .chat-message.left .message-bubble {
-    background-color: #e0e0e0;
+    border-left: 5px solid #e0e0e0;
+    background-color: #f1f1f1;
 }
 
 .chat-message.right .message-bubble {
+    border-right: 5px solid #0078ff;
     background-color: #0078ff;
     color: #fff;
 }
 
-/* Message header with user avatar and username */
+/* رأس الرسالة لعرض صورة المستخدم والاسم */
 .message-header {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    background-color: #f7f9fc;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eaeaea;
 }
 
+/* صورة المستخدم */
 .user-avatar {
-    width: 60px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    margin-right: 10px;
+    object-fit: cover;
+    margin-right: 15px;
     transition: transform 0.2s ease;
+    border: 2px solid #ddd;
 }
 
+/* اسم المستخدم */
 .username {
-    font-family: 'Cinzel', serif;
+    font-family: 'Helvetica Neue', sans-serif;
     font-weight: bold;
-    font-size: 19px;
-    color: #e61313;
+    font-size: 18px;
+    color: #333;
 }
 
-/* Message text */
+/* نص الرسالة */
 .message-text {
-    font-family: 'Cinzel', serif;
-    font-size: 20px;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 16px;
     color: inherit;
+    padding: 15px;
+    line-height: 1.6;
     word-wrap: break-word;
-    flex-grow: 1;
+    position: relative;
 }
 
-/* Hover effects */
+/* إضافة رمز اقتباس في بداية الرسالة لإبراز أنها آراء المستخدمين */
+.message-text::before {
+    content: "“";
+    font-size: 30px;
+    color: rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+/* تأثير تكبير بسيط عند التحويم على فقاعة الرسالة */
 .chat-message:hover .message-bubble {
-    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.02);
 }
 
-.chat-message.right:hover .message-bubble {
-    background-color: #005ecb;
-}
-
+/* تأثير تكبير على صورة المستخدم عند التحويم */
 .chat-message:hover .user-avatar {
     transform: scale(1.1);
+}
+
+/* إضافة ذيل الرسالة للجهة اليسرى */
+.chat-message.left .message-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: 10px;
+    left: -10px;
+    border-width: 10px 10px 10px 0;
+    border-style: solid;
+    border-color: transparent #f1f1f1 transparent transparent;
+}
+
+/* إضافة ذيل الرسالة للجهة اليمنى */
+.chat-message.right .message-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: 10px;
+    right: -10px;
+    border-width: 10px 0 10px 10px;
+    border-style: solid;
+    border-color: transparent transparent transparent #0078ff;
+}
+
+/* تنسيق خاص لتقييمات المستخدمين (يمكن إضافته داخل كل رسالة إذا احتجت) */
+.rating {
+    display: flex;
+    margin: 10px 15px 15px;
+}
+
+.rating span {
+    font-size: 20px;
+    color: gold;
+    margin-right: 5px;
 }
