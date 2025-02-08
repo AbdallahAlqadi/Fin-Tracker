@@ -9,6 +9,7 @@ import {
   TextField,
   Box,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import { styled, keyframes } from '@mui/system';
 
@@ -52,10 +53,17 @@ const DashboardUser = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [addedItems, setAddedItems] = useState([]); // لتتبع العناصر المضافة اليوم
+  // حالة لتتبع العناصر التي تم إضافة قيمتها اليوم (يتم جلبها من الخادم)
+  const [addedItems, setAddedItems] = useState([]);
 
+  // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
+  const getTodayDate = () => {
+    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
+  };
+
+  // جلب التصنيفات من الخادم
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategories = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         setCategories(response.data.data);
@@ -68,22 +76,44 @@ const DashboardUser = () => {
           return acc;
         }, {});
         setVisibleItems(initialVisibleItems);
-
-        // يمكن هنا إضافة استدعاء API آخر لجلب العناصر المضافة اليوم من الخادم
-        // مثال: await fetchAddedItems();
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchCategories();
   }, []);
 
+  // جلب العناصر التي تمت إضافتها اليوم من الخادم
+  useEffect(() => {
+    const fetchAddedItems = async () => {
+      try {
+        const token = sessionStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:5004/api/getBudget', {
+          headers: { Auth: `Bearer ${token}` },
+        });
+        // نفترض أن الكائن budget يحتوي على مصفوفة المنتجات في الخاصية products
+        const budget = response.data.budget;
+        const today = getTodayDate();
+        if (budget && budget.products) {
+          const addedToday = budget.products
+            .filter((product) => product.date === today)
+            .map((product) => product.CategoriesId);
+          setAddedItems(addedToday);
+        }
+      } catch (error) {
+        console.error('Error fetching today’s budget items:', error);
+      }
+    };
+
+    fetchAddedItems();
+  }, []);
+
+  // فتح نافذة الإدخال لعنصر معين إذا لم تتم إضافته اليوم
   const handleClickOpen = (category) => {
-    // إذا كانت الفئة مضافة مسبقاً اليوم، لا نقوم بفتح نافذة الإدخال
-    if (addedItems.includes(category._id)) return;
+    if (addedItems.includes(category._id)) return; // منع الضغط إذا تمت الإضافة
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
@@ -96,9 +126,17 @@ const DashboardUser = () => {
     setErrorMessage('');
   };
 
+  // إرسال القيمة إلى الخادم مع التحقق من أن القيمة المدخلة رقم عشري وغير سالبة
   const handleSubmit = async () => {
     if (!selectedCategory || !value) {
       setErrorMessage('يرجى إدخال قيمة صحيحة.');
+      return;
+    }
+
+    // التحقق من أن القيمة هي رقم عشري وغير سالبة
+    const parsedValue = parseFloat(value);
+    if (isNaN(parsedValue) || parsedValue < 0) {
+      setErrorMessage('يرجى إدخال رقم عشري غير سالب.');
       return;
     }
 
@@ -109,7 +147,7 @@ const DashboardUser = () => {
         'http://127.0.0.1:5004/api/addBudget',
         {
           CategoriesId: selectedCategory._id,
-          valueitem: value,
+          valueitem: parsedValue, // إرسال القيمة كرقم عشري
         },
         {
           headers: {
@@ -120,13 +158,13 @@ const DashboardUser = () => {
       );
 
       console.log('Response:', response.data);
-      // تحديث الحالة بحيث لا يمكن إعادة الإضافة لنفس العنصر اليوم
+      // تحديث الحالة بحيث لا يمكن إعادة الإضافة لنفس العنصر في اليوم ذاته
       setAddedItems((prev) => [...prev, selectedCategory._id]);
       handleClose();
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        setErrorMessage(error.response.data.error || 'لقد اضفت هذا العنصر بالفعل اليوم.');
-        // تحديث الحالة لمنع إعادة الإضافة
+        // في حالة الخطأ (مثلاً تم إضافة العنصر سابقاً اليوم) يتم منع الإعادة
+        setErrorMessage(error.response.data.error || 'لقد أضفت هذا العنصر بالفعل اليوم.');
         setAddedItems((prev) => [...prev, selectedCategory._id]);
       } else {
         console.error('Error submitting value:', error);
@@ -142,12 +180,13 @@ const DashboardUser = () => {
     }));
   };
 
-  if (loading)
+  if (loading) {
     return (
       <Typography variant="h6" align="center" sx={{ mt: 4 }}>
         Loading...
       </Typography>
     );
+  }
 
   // تصفية التصنيفات بناءً على قيمة البحث (غير حساس لحالة الأحرف)
   const filteredCategories = categories.filter((category) =>
@@ -163,7 +202,7 @@ const DashboardUser = () => {
     return acc;
   }, {});
 
-  // دالة لإرجاع أيقونة التصنيف
+  // دالة لإرجاع أيقونة التصنيف حسب النوع
   const getCategoryIcon = (type) => (type === 'Expense' ? '💸' : '💰');
 
   return (
@@ -196,7 +235,7 @@ const DashboardUser = () => {
         Finance Tracker
       </Typography>
 
-      {/* حقل البحث لإيجاد التصنيفات */}
+      {/* حقل البحث */}
       <TextField
         label="Search Item"
         variant="outlined"
@@ -235,37 +274,40 @@ const DashboardUser = () => {
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <CategoryCard
-                      key={category._id}
-                      onClick={() => handleClickOpen(category)}
-                      sx={{
-                        opacity: isAdded ? 0.6 : 1,
-                        pointerEvents: isAdded ? 'none' : 'auto',
-                      }}
-                    >
-                      {category.image && (
-                        <Box
-                          component="img"
-                          src={`http://127.0.0.1:5004/${category.image}`}
-                          alt={category.categoryName}
+                    <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
+                      <Box>
+                        <CategoryCard
+                          onClick={() => handleClickOpen(category)}
                           sx={{
-                            width: 70,
-                            height: 70,
-                            borderRadius: '50%',
-                            mb: 1,
-                            objectFit: 'cover',
+                            opacity: isAdded ? 0.6 : 1,
+                            pointerEvents: isAdded ? 'none' : 'auto',
                           }}
-                        />
-                      )}
-                      <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
-                        {category.categoryName}
-                      </Typography>
-                      {isAdded && (
-                        <Typography variant="caption" sx={{ color: '#FF0000', fontWeight: 'bold', mt: 1 }}>
-                          Added Today
-                        </Typography>
-                      )}
-                    </CategoryCard>
+                        >
+                          {category.image && (
+                            <Box
+                              component="img"
+                              src={`http://127.0.0.1:5004/${category.image}`}
+                              alt={category.categoryName}
+                              sx={{
+                                width: 70,
+                                height: 70,
+                                borderRadius: '50%',
+                                mb: 1,
+                                objectFit: 'cover',
+                              }}
+                            />
+                          )}
+                          <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
+                            {category.categoryName}
+                          </Typography>
+                          {isAdded && (
+                            <Typography variant="caption" sx={{ color: '#FF0000', fontWeight: 'bold', mt: 1 }}>
+                              Added Today
+                            </Typography>
+                          )}
+                        </CategoryCard>
+                      </Box>
+                    </Tooltip>
                   );
                 })}
             </Box>
@@ -293,7 +335,7 @@ const DashboardUser = () => {
         ))
       )}
 
-      {/* نافذة الحوار لإدخال القيمة */}
+      {/* نافذة الحوار لإدخال القيمة للعنصر المختار */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -335,10 +377,7 @@ const DashboardUser = () => {
               }}
             />
           )}
-          <Typography
-            variant="subtitle1"
-            sx={{ fontSize: 18, color: '#4A90E2', mb: 2, fontWeight: 500 }}
-          >
+          <Typography variant="subtitle1" sx={{ fontSize: 18, color: '#4A90E2', mb: 2, fontWeight: 500 }}>
             Type: {selectedCategory?.categoryType}
           </Typography>
           <TextField
@@ -346,6 +385,7 @@ const DashboardUser = () => {
             margin="dense"
             label="Value"
             type="number"
+            inputProps={{ step: "0.01", min: "0" }}  // للسماح بالأرقام العشرية ومنع الأرقام السالبة
             fullWidth
             variant="outlined"
             value={value}
