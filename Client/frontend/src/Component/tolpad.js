@@ -23,9 +23,8 @@ import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 import FedbackUser from '../Component/fedbackuser';
 import ChatIcon from '@mui/icons-material/Chat';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
-import HomePage from '../Component/Homepage'
-import InstallmentCalculator from '../Component/Installments'
-
+import HomePage from '../Component/Homepage';
+import InstallmentCalculator from '../Component/Installments';
 
 const demoTheme = createTheme({
   palette: {
@@ -70,14 +69,15 @@ function DemoPageContent({ pathname }) {
         textAlign: 'center',
       }}
     >
-            <Typography>{pathname}</Typography>
-
+      {/* تم تعديل Typography ليستخدم عنصر div بدلاً من p */}
+      <Typography component="div">{pathname}</Typography>
     </Box>
   );
 }
 
 DemoPageContent.propTypes = {
-  pathname: PropTypes.string.isRequired,
+  // يمكن أن يكون المحتوى نصاً أو مكوناً
+  pathname: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
 };
 
 function DashboardLayoutBasic(props) {
@@ -86,7 +86,7 @@ function DashboardLayoutBasic(props) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  //Component webSite
+  // قائمة الصفحات والمكونات
   const allPages = [
     { path: '/dashboard', component: <CategoryForm /> },
     { path: '/dashboarduser', component: <DashboardUser /> },
@@ -97,30 +97,22 @@ function DashboardLayoutBasic(props) {
     { path: '/fedbackuser', component: <FedbackUser /> },
     { path: '/homepage', component: <HomePage /> },
     { path: '/installment', component: <InstallmentCalculator /> },
-
-
-
-
-
- 
   ];
 
   const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
   const [dashNavigate, setDashNavigate] = useState([
-    //كبسات يلي بتوديني على الصفحات
-    
     {
-      segment: 'dashboarduser',  //هون بحط path
+      segment: 'dashboarduser',
       title: 'DashbordUser',
       icon: <DashboardCustomizeIcon />,
     },
     {
-      segment: 'showdatauser',  //هون بحط path
+      segment: 'showdatauser',
       title: 'ShowDataUser',
       icon: <AddToDriveIcon />,
     },
     {
-      segment: 'graphdatauser',  //هون بحط path
+      segment: 'graphdatauser',
       title: 'Graph',
       icon: <DataSaverOffIcon />,
     },
@@ -130,13 +122,12 @@ function DashboardLayoutBasic(props) {
       icon: <SignalCellularAltIcon />,
     },
     {
-      segment: 'fedback',  //هون بحط path
+      segment: 'fedback',
       title: 'Fedback',
       icon: <ChatIcon />,
     },
-
     {
-      segment: 'installment',  //هون بحط path
+      segment: 'installment',
       title: 'installment',
       icon: <ChatIcon />,
     },
@@ -156,10 +147,9 @@ function DashboardLayoutBasic(props) {
         </Box>
       ),
     },
-    
   ]);
 
-  //default page
+  // الصفحة الافتراضية
   const router = useDemoRouter('/homepage');
 
   useEffect(() => {
@@ -173,7 +163,7 @@ function DashboardLayoutBasic(props) {
           },
         });
 
-        sessionStorage.setItem('username',res.data.user)
+        sessionStorage.setItem('username', res.data.user);
 
         setUser(res.data.user);
 
@@ -186,21 +176,20 @@ function DashboardLayoutBasic(props) {
               icon: <DashboardIcon />,
             },
             {
-              segment: 'dashboarduser',  //هون بحط path
+              segment: 'dashboarduser',
               title: 'DashbordUser',
               icon: <DashboardCustomizeIcon />,
             },
             {
-              segment: 'showdatauser',  //هون بحط path
+              segment: 'showdatauser',
               title: 'ShowDataUser',
               icon: <AddToDriveIcon />,
             },
             {
-              segment: 'graphdatauser',  //هون بحط path
+              segment: 'graphdatauser',
               title: 'Graph',
               icon: <DataSaverOffIcon />,
             },
-           
             {
               segment: 'comparison',
               title: 'Comparison',
@@ -211,7 +200,6 @@ function DashboardLayoutBasic(props) {
               title: 'FedbakUser',
               icon: <ChatBubbleIcon />,
             },
-            
             {
               segment: 'LogOut',
               title: '',
@@ -242,8 +230,8 @@ function DashboardLayoutBasic(props) {
     };
 
     invaliedToken();
+    // تحديث الصفحة الحالية بناءً على router.pathname
     setCurrentComponent(allPages.find((page) => page.path === router.pathname)?.component);
-
   }, [router]);
 
   useEffect(() => {

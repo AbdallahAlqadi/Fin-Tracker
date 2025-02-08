@@ -31,7 +31,6 @@ const Login = () => {
       navigate('/tolpad');
       sessionStorage.setItem('jwt',res.data.token)
     } catch (error) {
-      console.error(error.response.data);
       alert('Invalid username or password');
     }  };
 
