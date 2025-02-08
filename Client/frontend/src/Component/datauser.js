@@ -94,6 +94,13 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
+// مكون جديد لتكبير حجم نافذة تحديث البند فقط
+const StyledUpdateDialog = styled(StyledDialog)(({ theme }) => ({
+  "& .MuiDialog-paper": {
+    minWidth: "500px", // تم تكبير حجم الديالوج هنا
+  },
+}));
+
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   background: "linear-gradient(90deg, #007BFF, #00C6FF)",
   color: "#fff",
@@ -786,7 +793,7 @@ const BudgetItems = () => {
         )}
 
         {/* نافذة تحديث البند */}
-        <StyledDialog open={openDialog} onClose={handleCloseDialog}>
+        <StyledUpdateDialog open={openDialog} onClose={handleCloseDialog}>
           <DialogHeader onClose={handleCloseDialog}>
             Update Budget Item
           </DialogHeader>
@@ -812,7 +819,7 @@ const BudgetItems = () => {
               Save
             </StyledButton>
           </StyledDialogActions>
-        </StyledDialog>
+        </StyledUpdateDialog>
 
         {/* نافذة تأكيد الحذف */}
         <StyledDialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
