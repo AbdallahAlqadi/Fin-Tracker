@@ -51,20 +51,26 @@ const DashboardUser = () => {
   const [visibleItems, setVisibleItems] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(''); // حالة لحفظ قيمة البحث
+  const [searchQuery, setSearchQuery] = useState('');
+  const [addedItems, setAddedItems] = useState([]); // لتتبع العناصر المضافة اليوم
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         setCategories(response.data.data);
+
+        // تهيئة عدد العناصر المرئية لكل نوع (افتراضي 12)
         const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
-            acc[category.categoryType] = 12; // إظهار أول 12 عنصر افتراضياً
+            acc[category.categoryType] = 12;
           }
           return acc;
         }, {});
         setVisibleItems(initialVisibleItems);
+
+        // يمكن هنا إضافة استدعاء API آخر لجلب العناصر المضافة اليوم من الخادم
+        // مثال: await fetchAddedItems();
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -76,8 +82,11 @@ const DashboardUser = () => {
   }, []);
 
   const handleClickOpen = (category) => {
+    // إذا كانت الفئة مضافة مسبقاً اليوم، لا نقوم بفتح نافذة الإدخال
+    if (addedItems.includes(category._id)) return;
     setSelectedCategory(category);
     setOpen(true);
+    setErrorMessage('');
   };
 
   const handleClose = () => {
@@ -88,7 +97,10 @@ const DashboardUser = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedCategory || !value) return;
+    if (!selectedCategory || !value) {
+      setErrorMessage('يرجى إدخال قيمة صحيحة.');
+      return;
+    }
 
     const token = sessionStorage.getItem('jwt');
 
@@ -106,13 +118,19 @@ const DashboardUser = () => {
           },
         }
       );
+
       console.log('Response:', response.data);
+      // تحديث الحالة بحيث لا يمكن إعادة الإضافة لنفس العنصر اليوم
+      setAddedItems((prev) => [...prev, selectedCategory._id]);
       handleClose();
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        setErrorMessage('لقد اضفت هذا العنصر بالفعل اليوم.');
+        setErrorMessage(error.response.data.error || 'لقد اضفت هذا العنصر بالفعل اليوم.');
+        // تحديث الحالة لمنع إعادة الإضافة
+        setAddedItems((prev) => [...prev, selectedCategory._id]);
       } else {
         console.error('Error submitting value:', error);
+        setErrorMessage('حدث خطأ أثناء الإرسال. حاول مرة أخرى.');
       }
     }
   };
@@ -214,27 +232,42 @@ const DashboardUser = () => {
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
               {groupedCategories[type]
                 .slice(0, visibleItems[type])
-                .map((category) => (
-                  <CategoryCard key={category._id} onClick={() => handleClickOpen(category)}>
-                    {category.image && (
-                      <Box
-                        component="img"
-                        src={`http://127.0.0.1:5004/${category.image}`}
-                        alt={category.categoryName}
-                        sx={{
-                          width: 70,
-                          height: 70,
-                          borderRadius: '50%',
-                          mb: 1,
-                          objectFit: 'cover',
-                        }}
-                      />
-                    )}
-                    <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
-                      {category.categoryName}
-                    </Typography>
-                  </CategoryCard>
-                ))}
+                .map((category) => {
+                  const isAdded = addedItems.includes(category._id);
+                  return (
+                    <CategoryCard
+                      key={category._id}
+                      onClick={() => handleClickOpen(category)}
+                      sx={{
+                        opacity: isAdded ? 0.6 : 1,
+                        pointerEvents: isAdded ? 'none' : 'auto',
+                      }}
+                    >
+                      {category.image && (
+                        <Box
+                          component="img"
+                          src={`http://127.0.0.1:5004/${category.image}`}
+                          alt={category.categoryName}
+                          sx={{
+                            width: 70,
+                            height: 70,
+                            borderRadius: '50%',
+                            mb: 1,
+                            objectFit: 'cover',
+                          }}
+                        />
+                      )}
+                      <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
+                        {category.categoryName}
+                      </Typography>
+                      {isAdded && (
+                        <Typography variant="caption" sx={{ color: '#FF0000', fontWeight: 'bold', mt: 1 }}>
+                          Added Today
+                        </Typography>
+                      )}
+                    </CategoryCard>
+                  );
+                })}
             </Box>
             {groupedCategories[type].length > visibleItems[type] && (
               <Box sx={{ textAlign: 'center', mt: 3 }}>

@@ -16,40 +16,40 @@ exports.getUserBudget = async (req, res) => {
 
 exports.addBudget = async (req, res) => {
     const { CategoriesId, valueitem } = req.body;
-    const userId = req.user;
-
-    // الحصول على التاريخ فقط بتوقيت الأردن بدون الوقت
+    const userId = req.user; // تأكد أن الـ middleware للمصادقة يملأ req.user
+  
+    // الحصول على التاريخ بتوقيت عمّان (تاريخ اليوم فقط بصيغة ISO مثل "2025-02-08")
     const todayJordan = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
-
+  
     try {
-        let budget = await Budget.findOne({ userId });
-
-        if (!budget) {
-            budget = new Budget({
-                userId,
-                products: []
-            });
-        }
-
-        // التحقق مما إذا كان العنصر موجودًا بالفعل في نفس اليوم
-        const isDuplicate = budget.products.some(item => 
-            item.CategoriesId.toString() === CategoriesId && 
-            item.date === todayJordan // مقارنة التاريخ فقط
-        );
-
-        if (isDuplicate) {
-            return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في اليوم.' });
-        }
-
-        // إضافة العنصر مع حفظ التاريخ فقط بتوقيت الأردن
-        budget.products.push({ CategoriesId, valueitem, date: todayJordan });
-
-        await budget.save();
-        res.status(200).json(budget);
+      /**
+       * نستخدم findOneAndUpdate مع شرط أن لا يوجد في مصفوفة المنتجات عنصر بنفس الـ CategoriesId وتاريخ اليوم.
+       * في حالة عدم وجود وثيقة Budget للمستخدم، نستخدم upsert لإنشائها.
+       * إذا لم يتم تحديث الوثيقة فهذا يعني أن العنصر موجود مسبقًا.
+       */
+      const updatedBudget = await Budget.findOneAndUpdate(
+        {
+          userId,
+          $or: [
+            { products: { $eq: [] } }, // حالة الوثيقة جديدة أو لا تحتوي على منتجات
+            { products: { $not: { $elemMatch: { CategoriesId, date: todayJordan } } } } // لا يوجد عنصر بنفس الـ CategoriesId وتاريخ اليوم
+          ]
+        },
+        { $push: { products: { CategoriesId, valueitem, date: todayJordan } } },
+        { new: true, upsert: true }
+      );
+  
+      // إذا لم يتم التحديث فهذا يعني أن العنصر موجود بالفعل
+      if (!updatedBudget) {
+        return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في اليوم.' });
+      }
+  
+      return res.status(200).json({ message: 'تمت الإضافة بنجاح.', budget: updatedBudget });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      console.error('Error in addBudget:', error);
+      return res.status(500).json({ error: error.message });
     }
-};
+  };
 
 
 
