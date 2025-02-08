@@ -51,6 +51,7 @@ const DashboardUser = () => {
   const [visibleItems, setVisibleItems] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
+  const [searchQuery, setSearchQuery] = useState(''); // حالة لحفظ قيمة البحث
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,8 +131,13 @@ const DashboardUser = () => {
       </Typography>
     );
 
-  // تجميع التصنيفات بحسب النوع
-  const groupedCategories = categories.reduce((acc, category) => {
+  // تصفية التصنيفات بناءً على قيمة البحث (غير حساس لحالة الأحرف)
+  const filteredCategories = categories.filter((category) =>
+    category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // تجميع التصنيفات بحسب النوع بعد التصفية
+  const groupedCategories = filteredCategories.reduce((acc, category) => {
     if (!acc[category.categoryType]) {
       acc[category.categoryType] = [];
     }
@@ -171,6 +177,16 @@ const DashboardUser = () => {
       >
         Finance Tracker
       </Typography>
+
+      {/* حقل البحث لإيجاد التصنيفات */}
+      <TextField
+        label="Search Item"
+        variant="outlined"
+        fullWidth
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        sx={{ mb: 4 }}
+      />
 
       {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: '#666', mt: 2 }}>
