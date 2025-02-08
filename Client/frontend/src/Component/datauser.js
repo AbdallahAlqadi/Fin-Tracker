@@ -18,10 +18,12 @@ import {
   FormControl,
   InputLabel,
   LinearProgress,
+  IconButton,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import CategoryIcon from "@mui/icons-material/Category";
-import DownloadIcon from "@mui/icons-material/Download"; // أيقونة التنزيل
+import DownloadIcon from "@mui/icons-material/Download";
+import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -80,30 +82,52 @@ const StyledSelect = styled(Select)(({ theme }) => ({
   },
 }));
 
+// تصميم صندوق الحوار الحديث
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialog-paper": {
-    borderRadius: "16px",
-    padding: "24px",
-    background: "#ffffff",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+    borderRadius: "20px",
+    overflow: "hidden",
+    background: "#fff",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
     border: "none",
   },
 }));
 
+// تصميم رأس صندوق الحوار مع خلفية متدرجة وإضافة أيقونة الإغلاق
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
-  fontSize: "1.75rem",
-  fontWeight: "bold",
-  color: "#007BFF",
+  background: "linear-gradient(90deg, #007BFF, #00C6FF)",
+  color: "#fff",
   textAlign: "center",
-  paddingBottom: "16px",
-  borderBottom: "2px solid #007BFF",
+  padding: theme.spacing(2),
+  fontSize: "1.5rem",
+  fontWeight: 600,
+  position: "relative",
 }));
 
+// مكون رأس الحوار مع أيقونة الإغلاق
+const DialogHeader = ({ children, onClose }) => (
+  <StyledDialogTitle>
+    {children}
+    {onClose ? (
+      <IconButton
+        aria-label="close"
+        onClick={onClose}
+        sx={{
+          position: "absolute",
+          right: 8,
+          top: 8,
+          color: "#fff",
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
+    ) : null}
+  </StyledDialogTitle>
+);
+
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-  padding: "24px 0",
+  padding: theme.spacing(3),
+  backgroundColor: "#f9f9f9",
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
@@ -122,9 +146,10 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
-  justifyContent: "space-between",
-  padding: "16px 24px",
-  borderTop: "1px solid #e0e0e0",
+  padding: theme.spacing(2),
+  backgroundColor: "#f9f9f9",
+  justifyContent: "flex-end",
+  gap: theme.spacing(1),
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -723,7 +748,9 @@ const BudgetItems = () => {
 
         {/* Update Dialog */}
         <StyledDialog open={openDialog} onClose={handleCloseDialog}>
-          <StyledDialogTitle>Update Budget Item</StyledDialogTitle>
+          <DialogHeader onClose={handleCloseDialog}>
+            Update Budget Item
+          </DialogHeader>
           <StyledDialogContent>
             <Typography variant="h6" sx={{ marginBottom: 2 }}>
               Item Name: {selectedItem?.CategoriesId?.categoryName}
@@ -736,19 +763,6 @@ const BudgetItems = () => {
               fullWidth
               value={updatedValue}
               onChange={(e) => setUpdatedValue(e.target.value)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "#007BFF",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#0056b3",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#007BFF",
-                  },
-                },
-              }}
             />
           </StyledDialogContent>
           <StyledDialogActions>

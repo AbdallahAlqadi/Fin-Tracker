@@ -149,9 +149,9 @@ const Comparison = () => {
 
   // دالة رسم الرسم البياني الشريطي (Bar Chart)
   const drawBarChart = (data) => {
-    // تكبير حجم الرسم
-    const width = 1000;
-    const height = 600;
+    // تقليل حجم الرسم: العرض 900 والارتفاع 500
+    const width = 900;
+    const height = 500;
     const margin = { top: 80, right: 100, bottom: 90, left: 80 };
 
     d3.select(svgRef.current).selectAll("*").remove();
@@ -354,9 +354,9 @@ const Comparison = () => {
 
   // دالة رسم الرسم البياني الخطي (Line Chart)
   const drawLineChart = (data) => {
-    // تكبير حجم الرسم
-    const width = 1000;
-    const height = 600;
+    // تقليل حجم الرسم: العرض 900 والارتفاع 500
+    const width = 900;
+    const height = 500;
     const margin = { top: 80, right: 100, bottom: 90, left: 80 };
 
     d3.select(svgRef.current).selectAll("*").remove();
@@ -702,7 +702,7 @@ const Comparison = () => {
         ) : (
           <>
             <Box id="chart-container">
-              <svg ref={svgRef} width="1000" height="600"></svg>
+              <svg ref={svgRef} width="900" height="500"></svg>
             </Box>
             <div id="tooltip" ref={tooltipRef} style={{ position: 'absolute', opacity: 0, background: '#fff', border: '1px solid #ccc', padding: '5px', borderRadius: '5px', pointerEvents: 'none' }}></div>
           </>

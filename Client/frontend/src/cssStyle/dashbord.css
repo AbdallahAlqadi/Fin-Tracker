@@ -235,70 +235,99 @@
   background-color: #c53030;
 }
 
+/* تحسين تصميم المودال */
+
+/* طبقة الخلفية للمودال */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(4px);
 }
 
+/* محتوى المودال */
 .modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 400px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* تأثير ظهور المودال */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* زر إغلاق المودال */
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* عنوان المودال */
+.modal-title {
+  margin-bottom: 20px;
+  font-size: 24px;
   text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #333;
 }
 
-.modal-input {
-  margin: 10px 0;
-  padding: 10px;
-  width: 100%;
-  border: 1px solid #cbd5e0;
-  border-radius: 8px;
-}
-
+/* حقول الإدخال والاختيار في المودال */
+.modal-input,
 .modal-select {
-  margin: 10px 0;
-  padding: 10px;
   width: 100%;
-  border: 1px solid #cbd5e0;
-  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+/* حاوية أزرار المودال */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* أزرار الحفظ والإلغاء */
+.save-button,
+.cancel-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .save-button {
-  background-color: #48bb78;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: background-color 0.2s;
-}
-
-.save-button:hover {
-  background-color: #38a169;
+  background-color: #4CAF50;
+  color: #fff;
 }
 
 .cancel-button {
-  background-color: #e53e3e;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px;
-  margin-top: 10px;
-  transition: background-color 0.2s;
-}
-
-.cancel-button:hover {
-  background-color: #c53030;
+  background-color: #f44336;
+  color: #fff;
 }

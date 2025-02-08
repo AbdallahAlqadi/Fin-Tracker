@@ -14,13 +14,11 @@ const CategoryForm = ({ onCategoryAdded }) => {
         alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
-
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
         alert('يرجى تحميل صورة بصيغة JPEG أو PNG أو GIF فقط');
         return;
       }
-
       setImage(file);
     }
   };
@@ -44,14 +42,13 @@ const CategoryForm = ({ onCategoryAdded }) => {
           'Content-Type': 'multipart/form-data'
         }
       });
-
       console.log('Success:', response.data);
 
       setCategoryName('');
       setCategoryType('');
       setImage(null);
 
-      // إعلام CombinedPage بوجود تحديث
+      // إعلام الصفحة الرئيسية بوجود تصنيف جديد
       onCategoryAdded(response.data.data);
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -173,7 +170,8 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
       {isModalOpen && selectedCategory && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Edit Category</h2>
+            <button className="modal-close-button" onClick={() => setIsModalOpen(false)}>×</button>
+            <h2 className="modal-title">Edit Category</h2>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -207,16 +205,18 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                 <option value="Revenues">Revenues</option>
                 <option value="Expenses">Expenses</option>
               </select>
-              <button type="submit" className="save-button">
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="cancel-button"
-              >
-                Cancel
-              </button>
+              <div className="modal-buttons">
+                <button type="submit" className="save-button">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="cancel-button"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -233,7 +233,6 @@ const CombinedPage = () => {
   const fetchCategories = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await axios.get("http://127.0.0.1:5004/api/getcategories");
       setCategories(response.data.data);
@@ -265,9 +264,14 @@ const CombinedPage = () => {
 
   const handleUpdate = async (updatedCategory) => {
     try {
-      const response = await axios.put(`http://127.0.0.1:5004/api/updatecategory/${updatedCategory._id}`, updatedCategory);
+      const response = await axios.put(
+        `http://127.0.0.1:5004/api/updatecategory/${updatedCategory._id}`,
+        updatedCategory
+      );
       if (response.status === 200) {
-        setCategories(categories.map((cat) => (cat._id === updatedCategory._id ? response.data : cat)));
+        setCategories(categories.map((cat) =>
+          cat._id === updatedCategory._id ? response.data : cat
+        ));
       }
     } catch (error) {
       alert(error.message);
