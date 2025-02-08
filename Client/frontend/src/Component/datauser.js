@@ -4,7 +4,7 @@ import {
   Grid,
   Card,
   CardContent,
-  Typography,
+  Typography,   
   Button,
   CircularProgress,
   Box,
@@ -517,7 +517,10 @@ const BudgetItems = () => {
     }
 
     setTimeout(() => {
-      XLSX.writeFile(XLSX.utils.book_new(), "BudgetItems.xlsx");
+      // إنشاء كتاب وضم الورقة إليه قبل عملية التصدير
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "BudgetItems");
+      XLSX.writeFile(wb, "BudgetItems.xlsx");
       setExportLoading(false);
       setExportProgress(0);
     }, 1000);
