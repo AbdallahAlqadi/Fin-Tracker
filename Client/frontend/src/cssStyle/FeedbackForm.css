@@ -15,10 +15,10 @@
 .feedback-card {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(15px);
-  padding: 40px 60px; /* زيادة حجم الحشو لجعل الكارد أكبر */
+  padding: 30px 40px; /* تقليل الحشو لتصغير حجم الكارد */
   border-radius: 15px;
   box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4);
-  max-width: 800px; /* توسيع عرض الكارد */
+  max-width: 600px; /* تقليل عرض الكارد */
   width: 100%;
   text-align: center;
   animation: fadeIn 0.8s ease-in-out;
@@ -38,27 +38,27 @@
 
 /* عنوان الصفحة */
 .feedback-title {
-  font-size: 28px; /* تكبير حجم الخط */
+  font-size: 24px; /* تقليل حجم الخط */
   font-weight: bold;
-  margin-bottom: 15px;
+  margin-bottom: 12px; /* تقليل المسافة أسفل العنوان */
 }
 
 /* العنوان الفرعي */
 .feedback-subtitle {
-  font-size: 18px; /* تكبير حجم الخط */
+  font-size: 16px; /* تقليل حجم الخط */
   opacity: 0.8;
-  margin-bottom: 25px;
+  margin-bottom: 20px; /* تقليل المسافة أسفل العنوان الفرعي */
 }
 
 /* منطقة إدخال النص */
 .feedback-textarea {
   width: 100%;
-  min-height: 200px; /* زيادة ارتفاع منطقة الإدخال */
-  padding: 20px; /* زيادة الحشو الداخلي */
+  min-height: 180px; /* تقليل ارتفاع منطقة الإدخال */
+  padding: 15px; /* تقليل الحشو الداخلي */
   border-radius: 8px;
-  border: 2px solid #fff; /* جعل لون BORDER ظاهر دائمًا */
+  border: 2px solid #fff; /* إبراز حد العنصر */
   background: rgba(255, 255, 255, 0.1);
-  font-size: 18px; /* تكبير حجم الخط */
+  font-size: 16px; /* تقليل حجم الخط */
   transition: 0.3s;
   outline: none;
   resize: none;
@@ -76,12 +76,12 @@
 /* زر الإرسال */
 .feedback-button {
   margin-top: 20px;
-  padding: 15px; /* زيادة الحشو داخل الزر */
+  padding: 12px; /* تقليل الحشو داخل الزر */
   width: 100%;
   border: none;
-  background: #87CEFA; /* تغيير اللون الأصفر إلى أزرق فاتح */
+  background: #87CEFA; /* اللون الأزرق الفاتح */
   color: #333;
-  font-size: 20px; /* تكبير حجم الخط */
+  font-size: 18px; /* تقليل حجم الخط */
   font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
@@ -104,7 +104,7 @@
 /* رسائل التنبيه */
 .feedback-message {
   margin-top: 20px;
-  padding: 15px;
+  padding: 12px; /* تقليل الحشو */
   font-weight: bold;
   border-radius: 8px;
   display: flex;
