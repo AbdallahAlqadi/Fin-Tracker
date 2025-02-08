@@ -21,29 +21,28 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/system";
 import CategoryIcon from "@mui/icons-material/Category";
-import DownloadIcon from "@mui/icons-material/Download"; // Import download icon
+import DownloadIcon from "@mui/icons-material/Download"; // أيقونة التنزيل
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as XLSX from "xlsx";
 
-// Styled components
+// مكون StyledCard بتصميم عصري
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  padding: "16px",
-  borderRadius: "12px",
-  border: "1px solid #e0e0e0",
+  padding: "20px",
+  borderRadius: "16px",
+  border: "none",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
-  width: "120%", // Make the card full width
-  maxWidth: "430px", // Set a max width
-  height: "auto", // Allow height to adjust based on content
+  background: "linear-gradient(135deg, #ffffff, #f8f8f8)",
+  width: "120%",
+  maxWidth: "450px",
+  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
   "&:hover": {
     transform: "translateY(-5px)",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-    borderColor: "#007BFF",
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
   },
 }));
 
@@ -52,7 +51,7 @@ const ImageContainer = styled("div")({
   marginRight: "16px",
   borderRadius: "50%",
   overflow: "hidden",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
   width: "100px",
   height: "100px",
 });
@@ -78,7 +77,7 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
     padding: "24px",
     background: "#ffffff",
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-    border: "1px solid #e0e0e0",
+    border: "none",
   },
 }));
 
@@ -122,28 +121,25 @@ const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
 const StyledButton = styled(Button)(({ theme }) => ({
   borderRadius: "8px",
   fontWeight: "600",
-  padding: "8px 16px",
+  padding: "10px 20px",
   textTransform: "none",
   transition: "all 0.3s ease",
+  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
   "&:hover": {
     transform: "translateY(-2px)",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
   },
-  "&:active": {
-    transform: "translateY(1px)",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-  },
 }));
 
 const ExportButton = styled(StyledButton)(({ theme }) => ({
-  backgroundColor: "#4CAF50", // Green color
+  background: "linear-gradient(135deg, #4CAF50, #43A047)",
   color: "#fff",
   "&:hover": {
-    backgroundColor: "#45a049", // Darker green on hover
+    background: "linear-gradient(135deg, #43A047, #388E3C)",
   },
   display: "flex",
   alignItems: "center",
-  gap: "8px", // Space between icon and text
+  gap: "8px",
 }));
 
 const BudgetItems = () => {
@@ -156,21 +152,21 @@ const BudgetItems = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterItem, setFilterItem] = useState("all");
   const [dateType, setDateType] = useState("month");
-  const [exportLoading, setExportLoading] = useState(false); // Loading state for export
-  const [exportProgress, setExportProgress] = useState(0); // Progress for export
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
 
   useEffect(() => {
     fetchBudget();
   }, []);
 
-  const token = sessionStorage.getItem('jwt');
+  const token = sessionStorage.getItem("jwt");
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5004/api/getUserBudget', {
+      const response = await axios.get("http://127.0.0.1:5004/api/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       setBudgetItems(response.data.products || []);
@@ -183,30 +179,34 @@ const BudgetItems = () => {
 
   const deleteItem = async (item) => {
     try {
-        const response = await axios.delete('http://127.0.0.1:5004/api/deleteBudget', {
-            headers: {
-                Auth: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            data: { 
-                CategoriesId: item.CategoriesId._id,
-                date: new Date(item.date).toISOString()
-            }
-        });
+      const response = await axios.delete("http://127.0.0.1:5004/api/deleteBudget", {
+        headers: {
+          Auth: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          CategoriesId: item.CategoriesId._id,
+          date: new Date(item.date).toISOString(),
+        },
+      });
 
-        if (response.status === 200) {
-            console.log("Item deleted successfully", response.data);
-            setBudgetItems((prevItems) => prevItems.filter(budgetItem => 
-                budgetItem.CategoriesId._id !== item.CategoriesId._id || budgetItem.date !== item.date
-            ));
-        } else {
-            console.error("Failed to delete item", response.data);
-        }
+      if (response.status === 200) {
+        console.log("Item deleted successfully", response.data);
+        setBudgetItems((prevItems) =>
+          prevItems.filter(
+            (budgetItem) =>
+              budgetItem.CategoriesId._id !== item.CategoriesId._id ||
+              budgetItem.date !== item.date
+          )
+        );
+      } else {
+        console.error("Failed to delete item", response.data);
+      }
     } catch (error) {
-        console.error("Error deleting budget", error.response?.data || error.message);
+      console.error("Error deleting budget", error.response?.data || error.message);
     }
-};
-  
+  };
+
   const handleUpdateClick = (item) => {
     setSelectedItem(item);
     setUpdatedValue(item.valueitem);
@@ -221,16 +221,16 @@ const BudgetItems = () => {
 
   const handleSaveUpdate = async () => {
     if (!selectedItem) return;
-  
+
     const numericValue = parseFloat(updatedValue);
     if (isNaN(numericValue)) {
       alert("الرجاء إدخال رقم صالح للقيمة.");
       return;
     }
-  
+
     try {
       const response = await axios.put(
-        'http://127.0.0.1:5004/api/updateBudget',
+        "http://127.0.0.1:5004/api/updateBudget",
         {
           CategoriesId: selectedItem.CategoriesId._id,
           date: selectedItem.date,
@@ -239,11 +239,11 @@ const BudgetItems = () => {
         {
           headers: {
             Auth: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
-  
+
       if (response.status === 200) {
         console.log("تم تحديث العنصر بنجاح", response.data);
         setBudgetItems((prevItems) =>
@@ -265,7 +265,7 @@ const BudgetItems = () => {
   const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
       const date = new Date(item.date);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = date.toISOString().split("T")[0];
       if (!acc[dateString]) {
         acc[dateString] = [];
       }
@@ -283,26 +283,33 @@ const BudgetItems = () => {
       const selectedDate = new Date(filterDate);
       filteredItems = filteredItems.filter((item) => {
         const itemDate = new Date(item.date);
-        // Ensure to compare only the date part
-        const isSameDate = selectedDate.getFullYear() === itemDate.getFullYear() &&
-                           selectedDate.getMonth() === itemDate.getMonth() &&
-                           selectedDate.getDate() === itemDate.getDate();
+        const isSameDate =
+          selectedDate.getFullYear() === itemDate.getFullYear() &&
+          selectedDate.getMonth() === itemDate.getMonth() &&
+          selectedDate.getDate() === itemDate.getDate();
         if (dateType === "month") {
-          return selectedDate.getMonth() === itemDate.getMonth() && selectedDate.getFullYear() === itemDate.getFullYear();
+          return (
+            selectedDate.getMonth() === itemDate.getMonth() &&
+            selectedDate.getFullYear() === itemDate.getFullYear()
+          );
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
         } else {
-          return isSameDate; // Compare only the date part
+          return isSameDate;
         }
       });
     }
 
     if (filterType !== "all") {
-      filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
+      filteredItems = filteredItems.filter(
+        (item) => item.CategoriesId.categoryType === filterType
+      );
     }
 
     if (filterItem !== "all") {
-      filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryName === filterItem);
+      filteredItems = filteredItems.filter(
+        (item) => item.CategoriesId.categoryName === filterItem
+      );
     }
 
     return filteredItems;
@@ -323,85 +330,102 @@ const BudgetItems = () => {
     return totals;
   };
 
-  const uniqueItems = filterType === "all" 
-    ? [...new Set(budgetItems.map((item) => item.CategoriesId.categoryName))] 
-    : [...new Set(budgetItems.filter((item) => item.CategoriesId.categoryType === filterType).map((item) => item.CategoriesId.categoryName))];
+  const uniqueItems =
+    filterType === "all"
+      ? [...new Set(budgetItems.map((item) => item.CategoriesId.categoryName))]
+      : [
+          ...new Set(
+            budgetItems
+              .filter((item) => item.CategoriesId.categoryType === filterType)
+              .map((item) => item.CategoriesId.categoryName)
+          ),
+        ];
 
   const filteredItems = filterItems(budgetItems);
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
   const exportToExcel = async () => {
-    setExportLoading(true); // Set loading state to true
-    setExportProgress(0); // Reset progress
+    setExportLoading(true);
+    setExportProgress(0);
 
-    // Create a worksheet from the filtered items
-    const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
-      Date: new Date(item.date).toLocaleDateString('en-GB', {
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric'
-      }),
-      Item: item.CategoriesId.categoryName, // Change "Category" to "Item"
-      Type: item.CategoriesId.categoryType,
-      Value: item.valueitem,
-    })));
+    const ws = XLSX.utils.json_to_sheet(
+      filteredItems.map((item) => ({
+        Date: new Date(item.date).toLocaleDateString("en-GB", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        }),
+        Item: item.CategoriesId.categoryName,
+        Type: item.CategoriesId.categoryType,
+        Value: item.valueitem,
+      }))
+    );
 
-    // Add totals to the worksheet
     const totalsRow = [
-      { Date: "Totals", Item: "Revenues", Type: "", Value: totals.Revenues.toFixed(2) },
-      { Date: "Totals", Item: "Expenses", Type: "", Value: totals.Expenses.toFixed(2) },
-      { Date: "Totals", Item: "Balance", Type: "", Value: balance.toFixed(2) },
+      {
+        Date: "Totals",
+        Item: "Revenues",
+        Type: "",
+        Value: totals.Revenues.toFixed(2),
+      },
+      {
+        Date: "Totals",
+        Item: "Expenses",
+        Type: "",
+        Value: totals.Expenses.toFixed(2),
+      },
+      {
+        Date: "Totals",
+        Item: "Balance",
+        Type: "",
+        Value: balance.toFixed(2),
+      },
     ];
 
-    // Append totals to the worksheet
     XLSX.utils.sheet_add_json(ws, totalsRow, { skipHeader: true, origin: -1 });
 
-    // Set column widths
-    ws['!cols'] = [
-      { wpx: 100 }, // Date column width
-      { wpx: 200 }, // Item column width
-      { wpx: 100 }, // Type column width
-      { wpx: 100 }, // Value column width
+    ws["!cols"] = [
+      { wpx: 100 },
+      { wpx: 200 },
+      { wpx: 100 },
+      { wpx: 100 },
     ];
 
-    // Apply cell styles
     const headerCellStyle = {
       font: { bold: true },
-      fill: { fgColor: { rgb: "FFFF00" } }, // Yellow background for header
+      fill: { fgColor: { rgb: "FFFF00" } },
       border: {
         top: { style: "thin", color: { rgb: "000000" } },
         bottom: { style: "thin", color: { rgb: "000000" } },
         left: { style: "thin", color: { rgb: "000000" } },
         right: { style: "thin", color: { rgb: "000000" } },
       },
-      alignment: { horizontal: "center" }, // Center text
+      alignment: { horizontal: "center" },
     };
 
-    // Apply styles to header
-    const headers = ["Date", "Item", "Type", "Value"]; // Change "Category" to "Item"
+    const headers = ["Date", "Item", "Type", "Value"];
     headers.forEach((header, index) => {
       const cell = ws[XLSX.utils.encode_cell({ r: 0, c: index })];
       if (cell) {
-        cell.s = headerCellStyle; // Apply header style
+        cell.s = headerCellStyle;
       }
     });
 
-    // Apply styles to total rows
     totalsRow.forEach((_, index) => {
-      const rowIndex = filteredItems.length + index + 1; // Adjust for total rows
-      const cell = ws[XLSX.utils.encode_cell({ r: rowIndex, c: 3 })]; // Value column
+      const rowIndex = filteredItems.length + index + 1;
+      const cell = ws[XLSX.utils.encode_cell({ r: rowIndex, c: 3 })];
       if (cell) {
         cell.s = {
           font: { bold: true },
-          fill: { fgColor: { rgb: "FFFF00" } }, // Yellow background for totals
+          fill: { fgColor: { rgb: "FFFF00" } },
           border: {
             top: { style: "thin", color: { rgb: "000000" } },
             bottom: { style: "thin", color: { rgb: "000000" } },
             left: { style: "thin", color: { rgb: "000000" } },
             right: { style: "thin", color: { rgb: "000000" } },
           },
-          alignment: { horizontal: "center" }, // Center text
+          alignment: { horizontal: "center" },
         };
       }
     });
@@ -409,43 +433,69 @@ const BudgetItems = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Budget Items");
 
-    // Simulate file writing with progress
     for (let i = 0; i <= 100; i += 10) {
       setTimeout(() => {
         setExportProgress(i);
-      }, i * 50); // Simulate progress
+      }, i * 50);
     }
 
-    // Write the file
     setTimeout(() => {
       XLSX.writeFile(wb, "BudgetItems.xlsx");
-      setExportLoading(false); // Reset loading state
-      setExportProgress(0); // Reset progress
-    }, 1000); // Simulate delay for file writing
+      setExportLoading(false);
+      setExportProgress(0);
+    }, 1000);
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
+        {/* Controls */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+          }}
+        >
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
-            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
+            <StyledSelect
+              value={dateType}
+              onChange={(e) => setDateType(e.target.value)}
+            >
               <MenuItem value="full">Full Date</MenuItem>
               <MenuItem value="month">Month</MenuItem>
               <MenuItem value="year">Year</MenuItem>
             </StyledSelect>
           </FormControl>
           <DatePicker
-            label={dateType === "month" ? "Select Month" : dateType === "year" ? "Select Year" : "Select Date"}
-            views={dateType === "month" ? ["year", "month"] : dateType === "year" ? ["year"] : ["year", "month", "day"]}
+            label={
+              dateType === "month"
+                ? "Select Month"
+                : dateType === "year"
+                ? "Select Year"
+                : "Select Date"
+            }
+            views={
+              dateType === "month"
+                ? ["year", "month"]
+                : dateType === "year"
+                ? ["year"]
+                : ["year", "month", "day"]
+            }
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
-            renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
+            renderInput={(params) => (
+              <TextField {...params} sx={{ minWidth: 180 }} />
+            )}
           />
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
-            <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+            <StyledSelect
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
               <MenuItem value="all">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
               <MenuItem value="Expenses">Expenses</MenuItem>
@@ -453,7 +503,10 @@ const BudgetItems = () => {
           </FormControl>
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Item</InputLabel>
-            <StyledSelect value={filterItem} onChange={(e) => setFilterItem(e.target.value)}>
+            <StyledSelect
+              value={filterItem}
+              onChange={(e) => setFilterItem(e.target.value)}
+            >
               <MenuItem value="all">All</MenuItem>
               {uniqueItems.map((item, index) => (
                 <MenuItem key={index} value={item}>
@@ -462,16 +515,47 @@ const BudgetItems = () => {
               ))}
             </StyledSelect>
           </FormControl>
-          <ExportButton onClick={exportToExcel} variant="contained" disabled={exportLoading}>
-            {exportLoading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+          <ExportButton
+            onClick={exportToExcel}
+            variant="contained"
+            disabled={exportLoading}
+          >
+            {exportLoading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <DownloadIcon />
+            )}
             {exportLoading ? "Exporting..." : "Export to Excel"}
           </ExportButton>
         </Box>
 
-        {exportLoading && <LinearProgress variant="determinate" value={exportProgress} sx={{ marginBottom: 2 }} />}
+        {exportLoading && (
+          <LinearProgress
+            variant="determinate"
+            value={exportProgress}
+            sx={{ marginBottom: 2 }}
+          />
+        )}
 
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: "#4CAF50", color: "#fff" }}>
+        {/* Totals Cards */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background: "linear-gradient(135deg, #66bb6a, #43a047)",
+              color: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Total Revenues
@@ -481,7 +565,16 @@ const BudgetItems = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: "#F44336", color: "#fff" }}>
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background: "linear-gradient(135deg, #ef5350, #e53935)",
+              color: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Total Expenses
@@ -491,7 +584,19 @@ const BudgetItems = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: balance >= 0 ? "#4CAF50" : "#F44336", color: "#fff" }}>
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background:
+                balance >= 0
+                  ? "linear-gradient(135deg, #66bb6a, #43a047)"
+                  : "linear-gradient(135deg, #ef5350, #e53935)",
+              color: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Balance
@@ -503,12 +608,23 @@ const BudgetItems = () => {
           </Card>
         </Box>
 
+        {/* Budget Items List */}
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="80vh"
+          >
             <CircularProgress size={60} />
           </Box>
         ) : filteredItems.length === 0 ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="80vh"
+          >
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
@@ -516,11 +632,19 @@ const BudgetItems = () => {
         ) : (
           groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
-              <Typography variant="h4" gutterBottom sx={{ color: "#333", fontWeight: "bold", marginBottom: "24px" }}>
-                {new Date(date).toLocaleDateString('en-GB', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit'
+              <Typography
+                variant="h4"
+                gutterBottom
+                sx={{
+                  color: "#333",
+                  fontWeight: "bold",
+                  marginBottom: "24px",
+                }}
+              >
+                {new Date(date).toLocaleDateString("en-GB", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
                 })}
               </Typography>
               <Grid container spacing={3} justifyContent="flex-start">
@@ -531,27 +655,52 @@ const BudgetItems = () => {
                         <img
                           src={`http://127.0.0.1:5004/${item.CategoriesId.image}`}
                           alt="Category"
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
                         />
                       </ImageContainer>
-                      <CardContent sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                      <CardContent
+                        sx={{
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
                         <Typography
                           variant="h6"
                           gutterBottom
                           sx={{
-                            color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
+                            color:
+                              item.CategoriesId.categoryType === "Revenues"
+                                ? "#4CAF50"
+                                : "#F44336",
                             fontWeight: "600",
                           }}
                         >
-                          {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
+                          {item.CategoriesId.categoryType === "Expenses"
+                            ? `-${item.valueitem}`
+                            : item.valueitem}
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
                           <CategoryIcon sx={{ color: "#007BFF" }} />
-                          <Typography variant="h5" sx={{ color: "#007BFF", fontWeight: "bold" }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#007BFF", fontWeight: "bold" }}
+                          >
                             {item.CategoriesId.categoryName}
                           </Typography>
                         </Box>
-                        <Box display="flex" justifyContent="flex-end" gap={1} sx={{ marginTop: 2 }}>
+                        <Box
+                          display="flex"
+                          justifyContent="flex-end"
+                          gap={1}
+                          sx={{ marginTop: 2 }}
+                        >
                           <StyledButton
                             variant="contained"
                             color="error"
@@ -576,6 +725,7 @@ const BudgetItems = () => {
           ))
         )}
 
+        {/* Update Dialog */}
         <StyledDialog open={openDialog} onClose={handleCloseDialog}>
           <StyledDialogTitle>Update Budget Item</StyledDialogTitle>
           <StyledDialogContent>

@@ -19,7 +19,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
 import '../cssStyle/comparsion.css';
 
-// Styled Select component
+// مكون Select مُخصص
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
@@ -54,6 +54,7 @@ const Comparison = () => {
 
   const token = sessionStorage.getItem('jwt');
 
+  // جلب البيانات من الخادم
   const fetchBudget = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:5004/api/getUserBudget', {
@@ -71,16 +72,15 @@ const Comparison = () => {
     }
   };
 
+  // تجميع البيانات بحسب التاريخ
   const groupByDate = (items) => {
     const groupedData = {};
-
     items.forEach((item) => {
       const date = new Date(item.date);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const categoryType = item.CategoriesId.categoryType;
-
       let key;
       if (dateType === "year") {
         key = year;
@@ -89,26 +89,22 @@ const Comparison = () => {
       } else if (dateType === "day") {
         key = `${year}-${month}-${day}`;
       }
-
       if (!groupedData[key]) {
         groupedData[key] = { Revenues: 0, Expenses: 0 };
       }
-
       groupedData[key][categoryType] += parseFloat(item.valueitem);
     });
-
     const sortedKeys = Object.keys(groupedData).sort((a, b) => new Date(b) - new Date(a));
     const sortedData = {};
     sortedKeys.forEach(key => {
       sortedData[key] = groupedData[key];
     });
-
     return sortedData;
   };
 
+  // تصفية البيانات بناءً على اختيارات المستخدم للتاريخ
   const filterItems = (items) => {
     let filteredItems = items;
-  
     if (dateType === "year" && selectedYear.length > 0) {
       filteredItems = filteredItems.filter((item) => {
         const year = new Date(item.date).getFullYear();
@@ -128,21 +124,19 @@ const Comparison = () => {
                selectedDays.includes(dayKey);
       });
     }
-  
     const groupedData = groupByDate(filteredItems);
-  
     const result = {};
     Object.keys(groupedData).forEach((key) => {
       result[key] = {};
       if (showRevenues) result[key].Revenues = groupedData[key].Revenues || 0;
       if (showExpenses) result[key].Expenses = groupedData[key].Expenses || 0;
     });
-  
     return result;
   };
 
   const filteredItems = filterItems(budgetItems);
 
+  // إعادة رسم الرسم البياني عند تغيير البيانات أو نوع الرسم أو ظهور الأصناف
   useEffect(() => {
     if (Object.keys(filteredItems).length > 0) {
       if (chartType === "bar") {
@@ -151,265 +145,422 @@ const Comparison = () => {
         drawLineChart(filteredItems);
       }
     }
-  }, [filteredItems, chartType]);
+  }, [filteredItems, chartType, showRevenues, showExpenses]);
 
+  // دالة رسم الرسم البياني الشريطي (Bar Chart)
   const drawBarChart = (data) => {
-    const width = 800;
-    const height = 400;
-    const margin = { top: 50, right: 150, bottom: 60, left: 60 };
+    // تكبير حجم الرسم
+    const width = 1000;
+    const height = 600;
+    const margin = { top: 80, right: 100, bottom: 90, left: 80 };
 
     d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
-      .attr("height", height)
-      .append("g")
+      .attr("height", height);
+
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    // إضافة تدرج خلفية حديث
+    const defs = svg.append("defs");
+    const gradient = defs.append("linearGradient")
+      .attr("id", "chartGradient")
+      .attr("x1", "0%").attr("y1", "0%")
+      .attr("x2", "0%").attr("y2", "100%");
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#f5f7fa");
+    gradient.append("stop").attr("offset", "100%").attr("stop-color", "#c3cfe2");
+
+    // مجموعة الرسم الأساسية مع خلفية ذات حواف دائرية
+    const chartGroup = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    chartGroup.append("rect")
+      .attr("width", chartWidth)
+      .attr("height", chartHeight)
+      .attr("fill", "url(#chartGradient)")
+      .attr("rx", 10)
+      .attr("ry", 10);
+
     const dates = Object.keys(data);
+    // تحديد التصنيفات المراد رسمها (حسب الخيارات)
     const categories = [];
     if (showRevenues) categories.push("Revenues");
     if (showExpenses) categories.push("Expenses");
 
+    // تحديد ألوان محددة لكل نوع
+    const colorMapping = {
+      Revenues: "#2ecc71",   // أخضر
+      Expenses: "#e74c3c"    // أحمر
+    };
+
     const x0 = d3.scaleBand()
       .domain(dates)
-      .rangeRound([0, width - margin.left - margin.right])
-      .paddingInner(0.1);
+      .range([0, chartWidth])
+      .padding(0.2);
 
     const x1 = d3.scaleBand()
       .domain(categories)
-      .rangeRound([0, x0.bandwidth()])
+      .range([0, x0.bandwidth()])
       .padding(0.05);
 
+    const maxVal = d3.max(Object.values(data), d => d3.max(categories.map(cat => d[cat] || 0)));
     const y = d3.scaleLinear()
-      .domain([0, d3.max(Object.values(data), date => d3.max(Object.values(date)))])
+      .domain([0, maxVal])
       .nice()
-      .rangeRound([height - margin.top - margin.bottom, 0]);
+      .range([chartHeight, 0]);
 
+    // استخدام ألوان محددة لكل تصنيف
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#4CAF50", "#F44336"]); // استخدام ألوان أكثر جاذبية
+      .range(categories.map(cat => colorMapping[cat]));
 
-    // إضافة تأثير الظل
-    svg.append("defs").append("filter")
-      .attr("id", "shadow")
-      .append("feDropShadow")
+    // تأثير ظل حديث للأعمدة
+    const filter = defs.append("filter")
+      .attr("id", "dropShadow")
+      .attr("height", "130%");
+    filter.append("feGaussianBlur")
+      .attr("in", "SourceAlpha")
+      .attr("stdDeviation", 3)
+      .attr("result", "blur");
+    filter.append("feOffset")
+      .attr("in", "blur")
       .attr("dx", 2)
       .attr("dy", 2)
-      .attr("stdDeviation", 3)
-      .attr("flood-color", "rgba(0, 0, 0, 0.5)");
+      .attr("result", "offsetBlur");
+    const feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "offsetBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-    const bars = svg.append("g")
-      .selectAll("g")
+    // خطوط شبكة خفيفة للمحور الرأسي
+    chartGroup.append("g")
+      .attr("class", "grid")
+      .call(d3.axisLeft(y)
+        .tickSize(-chartWidth)
+        .tickFormat(""))
+      .selectAll("line")
+      .attr("stroke", "#e0e0e0")
+      .attr("stroke-dasharray", "3 3");
+
+    const barGroups = chartGroup.selectAll(".bar-group")
       .data(dates)
       .enter()
       .append("g")
-      .attr("transform", d => `translate(${x0(d)},0)`)
-      .selectAll("rect")
-      .data(d => categories.map(category => ({ category, value: data[d][category] })))
+      .attr("class", "bar-group")
+      .attr("transform", d => `translate(${x0(d)},0)`);
+
+    barGroups.selectAll("rect")
+      .data(d => categories.map(cat => ({ category: cat, value: data[d][cat] || 0 })))
       .enter()
       .append("rect")
       .attr("x", d => x1(d.category))
-      .attr("y", height - margin.top - margin.bottom) // Start from the bottom
+      .attr("y", chartHeight)
       .attr("width", x1.bandwidth())
-      .attr("height", 0) // Start with height 0
+      .attr("height", 0)
       .attr("fill", d => color(d.category))
-      .attr("filter", "url(#shadow)") // إضافة تأثير الظل
+      .attr("filter", "url(#dropShadow)")
       .on("mouseover", function (event, d) {
-        d3.select(this).attr("opacity", 0.7);
+        d3.select(this).attr("opacity", 0.8);
         d3.select(tooltipRef.current)
           .style("opacity", 1)
-          .html(`${d.category}: ${d.value}`)
-          .style("left", `${event.pageX + 5}px`)
-          .style("top", `${event.pageY - 28}px`);
+          .html(`<strong>${d.category}</strong>: ${d.value}`)
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY - 30}px`);
       })
       .on("mouseout", function () {
         d3.select(this).attr("opacity", 1);
         d3.select(tooltipRef.current).style("opacity", 0);
-      });
-
-    // Animate the bars
-    bars.transition()
+      })
+      .transition()
       .duration(800)
+      .ease(d3.easeCubicOut)
       .attr("y", d => y(d.value))
-      .attr("height", d => height - margin.top - margin.bottom - y(d.value));
+      .attr("height", d => chartHeight - y(d.value));
 
-    svg.append("g")
-      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(d3.axisBottom(x0))
+    // رسم المحور الأفقي مع تدوير النصوص
+    const xAxis = d3.axisBottom(x0)
+      .tickSize(0)
+      .tickPadding(10);
+
+    chartGroup.append("g")
+      .attr("transform", `translate(0, ${chartHeight})`)
+      .call(xAxis)
       .selectAll("text")
-      .style("text-anchor", "end")
-      .attr("dx", "-.8em")
-      .attr("dy", ".15em")
+      .attr("fill", "#616161")
+      .style("font-size", "14px")
+      .style("font-weight", "500")
       .attr("transform", "rotate(-45)")
-      .style("font-size", "12px")
-      .style("fill", "#333"); // تحسين لون النص
+      .style("text-anchor", "end");
 
-    svg.append("g")
-      .call(d3.axisLeft(y))
+    // رسم المحور الرأسي
+    const yAxis = d3.axisLeft(y)
+      .ticks(6)
+      .tickSize(0)
+      .tickPadding(10);
+
+    chartGroup.append("g")
+      .call(yAxis)
       .selectAll("text")
-      .style("font-size", "12px")
-      .style("fill", "#333"); // تحسين لون النص
+      .attr("fill", "#616161")
+      .style("font-size", "14px")
+      .style("font-weight", "500");
 
-    const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
+    chartGroup.selectAll(".domain").attr("stroke", "#e0e0e0");
 
-    categories.forEach((category, i) => {
-      legend.append("rect")
-        .attr("x", 0)
-        .attr("y", i * 20)
-        .attr("width", 15)
-        .attr("height", 15)
-        .attr("fill", color(category));
-
-      legend.append("text")
-        .attr("x", 20)
-        .attr("y", i * 20 + 12)
-        .text(category)
-        .style("font-size", "12px")
-        .attr("alignment-baseline", "middle");
-    });
-
+    // عنوان الرسم البياني
     svg.append("text")
-      .attr("x", (width - margin.left - margin.right) / 2)
-      .attr("y", -margin.top / 2)
+      .attr("x", width / 2)
+      .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "20px") // زيادة حجم الخط
+      .style("font-size", "28px")
+      .style("font-family", "sans-serif")
+      .style("fill", "#424242")
       .style("font-weight", "bold")
-      .style("fill", "#333") // تحسين لون النص
       .text("Budget Comparison");
+
+    // إضافة وتنسيق وسيلة الإيضاح (Legend) فوق الرسم على الجهة اليسرى مع مسافة إضافية
+    const legendGap = 20; // المسافة بين الرسم والوسيلة الإيضاحية
+    const legend = svg.append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top - 60 - legendGap})`);
+
+    legend.append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", 130)
+      .attr("height", categories.length * 30 + 10)
+      .attr("fill", "#f9f9f9")
+      .attr("stroke", "#ccc")
+      .attr("rx", 8)
+      .attr("ry", 8);
+
+    categories.forEach((cat, i) => {
+      legend.append("rect")
+        .attr("x", 10)
+        .attr("y", i * 30 + 5)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("fill", colorMapping[cat]);
+      
+      legend.append("text")
+        .attr("x", 40)
+        .attr("y", i * 30 + 20)
+        .text(cat)
+        .style("font-size", "16px")
+        .style("fill", "#424242")
+        .style("font-weight", "500");
+    });
   };
 
+  // دالة رسم الرسم البياني الخطي (Line Chart)
   const drawLineChart = (data) => {
-    const width = 800;
-    const height = 400;
-    const margin = { top: 50, right: 150, bottom: 60, left: 60 };
+    // تكبير حجم الرسم
+    const width = 1000;
+    const height = 600;
+    const margin = { top: 80, right: 100, bottom: 90, left: 80 };
 
     d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
-      .attr("height", height)
-      .append("g")
+      .attr("height", height);
+
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    const defs = svg.append("defs");
+    // تدرج خلفية الرسم البياني
+    const bgGradient = defs.append("linearGradient")
+      .attr("id", "lineChartGradient")
+      .attr("x1", "0%").attr("y1", "0%")
+      .attr("x2", "0%").attr("y2", "100%");
+    bgGradient.append("stop").attr("offset", "0%").attr("stop-color", "#f5f7fa");
+    bgGradient.append("stop").attr("offset", "100%").attr("stop-color", "#c3cfe2");
+
+    const chartGroup = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    chartGroup.append("rect")
+      .attr("width", chartWidth)
+      .attr("height", chartHeight)
+      .attr("fill", "url(#lineChartGradient)")
+      .attr("rx", 10)
+      .attr("ry", 10);
 
     const dates = Object.keys(data);
     const categories = [];
     if (showRevenues) categories.push("Revenues");
     if (showExpenses) categories.push("Expenses");
 
-    const x = d3.scaleBand()
-      .domain(dates)
-      .rangeRound([0, width - margin.left - margin.right])
-      .padding(0.1);
+    // تحديد ألوان محددة لكل نوع
+    const colorMapping = {
+      Revenues: "#2ecc71",
+      Expenses: "#e74c3c"
+    };
 
+    const x = d3.scalePoint()
+      .domain(dates)
+      .range([0, chartWidth])
+      .padding(0.5);
+
+    const maxVal = d3.max(Object.values(data), d => d3.max(categories.map(cat => d[cat] || 0)));
     const y = d3.scaleLinear()
-      .domain([0, d3.max(Object.values(data), date => d3.max(Object.values(date)))])
+      .domain([0, maxVal])
       .nice()
-      .rangeRound([height - margin.top - margin.bottom, 0]);
+      .range([chartHeight, 0]);
 
     const color = d3.scaleOrdinal()
       .domain(categories)
-      .range(["#CD5C5C", "#884ea0"]); // استخدام ألوان أكثر جاذبية
+      .range(categories.map(cat => colorMapping[cat]));
 
-    const line = d3.line()
-      .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
-      .y(d => y(d.value));
+    // خطوط شبكة خفيفة
+    chartGroup.append("g")
+      .attr("class", "grid")
+      .call(d3.axisLeft(y)
+        .tickSize(-chartWidth)
+        .tickFormat(""))
+      .selectAll("line")
+      .attr("stroke", "#e0e0e0")
+      .attr("stroke-dasharray", "3 3");
 
-    categories.forEach((category) => {
-      const categoryData = dates.map(date => ({ value: data[date][category] || 0 }));
+    // تأثير ظل حديث للخطوط
+    const filter = defs.append("filter")
+      .attr("id", "lineShadow")
+      .attr("height", "130%");
+    filter.append("feGaussianBlur")
+      .attr("in", "SourceAlpha")
+      .attr("stdDeviation", 3)
+      .attr("result", "blur");
+    filter.append("feOffset")
+      .attr("in", "blur")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("result", "offsetBlur");
+    const feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "offsetBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-      // Draw the line
-      const path = svg.append("path")
+    // دالة رسم خط ناعم
+    const lineGenerator = d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.value))
+      .curve(d3.curveMonotoneX);
+
+    categories.forEach(category => {
+      const categoryData = dates.map(date => ({ date, value: data[date][category] || 0 }));
+      const path = chartGroup.append("path")
         .datum(categoryData)
         .attr("fill", "none")
-        .attr("stroke", color(category))
-        .attr("stroke-width", 2)
-        .attr("d", line);
+        .attr("stroke", colorMapping[category])
+        .attr("stroke-width", 3)
+        .attr("stroke-linecap", "round")
+        .attr("filter", "url(#lineShadow)")
+        .attr("d", lineGenerator);
 
-      // Animate the line
       const totalLength = path.node().getTotalLength();
-      path.attr("stroke-dasharray", totalLength)
+      path
+        .attr("stroke-dasharray", totalLength + " " + totalLength)
         .attr("stroke-dashoffset", totalLength)
         .transition()
-        .duration(800)
+        .duration(1000)
+        .ease(d3.easeCubicOut)
         .attr("stroke-dashoffset", 0);
 
-      svg.selectAll(`.dot-${category}`)
+      chartGroup.selectAll(`.dot-${category}`)
         .data(categoryData)
         .enter()
         .append("circle")
         .attr("class", `dot-${category}`)
-        .attr("cx", (d, i) => x(dates[i]) + x.bandwidth() / 2)
+        .attr("cx", d => x(d.date))
         .attr("cy", d => y(d.value))
-        .attr("r", 5)
-        .attr("fill", color(category))
+        .attr("r", 6)
+        .attr("fill", colorMapping[category])
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2)
         .on("mouseover", function (event, d) {
-          d3.select(this).attr("r", 8);
+          d3.select(this).transition().duration(200).attr("r", 8);
           d3.select(tooltipRef.current)
             .style("opacity", 1)
-            .html(`${category}: ${d.value}`)
-            .style("left", `${event.pageX + 5}px`)
-            .style("top", `${event.pageY - 28}px`);
+            .html(`<strong>${category}</strong>: ${d.value}`)
+            .style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY - 30}px`);
         })
         .on("mouseout", function () {
-          d3.select(this).attr("r", 5);
+          d3.select(this).transition().duration(200).attr("r", 6);
           d3.select(tooltipRef.current).style("opacity", 0);
         });
-
-      // Animate the dots
-      svg.selectAll(`.dot-${category}`)
-        .transition()
-        .duration(800)
-        .attr("cy", d => y(d.value));
     });
 
-    svg.append("g")
-      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(d3.axisBottom(x))
+    const xAxis = d3.axisBottom(x)
+      .tickSize(0)
+      .tickPadding(10);
+    chartGroup.append("g")
+      .attr("transform", `translate(0, ${chartHeight})`)
+      .call(xAxis)
       .selectAll("text")
-      .style("text-anchor", "end")
-      .attr("dx", "-.8em")
-      .attr("dy", ".15em")
+      .attr("fill", "#616161")
+      .style("font-size", "14px")
+      .style("font-weight", "500")
       .attr("transform", "rotate(-45)")
-      .style("font-size", "12px")
-      .style("fill", "#333"); // تحسين لون النص
+      .style("text-anchor", "end");
 
-    svg.append("g")
-      .call(d3.axisLeft(y))
+    const yAxis = d3.axisLeft(y)
+      .ticks(6)
+      .tickSize(0)
+      .tickPadding(10);
+    chartGroup.append("g")
+      .call(yAxis)
       .selectAll("text")
-      .style("font-size", "12px")
-      .style("fill", "#333"); // تحسين لون النص
+      .attr("fill", "#616161")
+      .style("font-size", "14px")
+      .style("font-weight", "500");
 
-    const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 10},${margin.top})`);
-
-    categories.forEach((category, i) => {
-      legend.append("rect")
-        .attr("x", 0)
-        .attr("y", i * 20)
-        .attr("width", 15)
-        .attr("height", 15)
-        .attr("fill", color(category));
-
-      legend.append("text")
-        .attr("x", 20)
-        .attr("y", i * 20 + 12)
-        .text(category)
-        .style("font-size", "12px")
-        .attr("alignment-baseline", "middle");
-    });
+    chartGroup.selectAll(".domain").attr("stroke", "#e0e0e0");
 
     svg.append("text")
-      .attr("x", (width - margin.left - margin.right) / 2)
-      .attr("y", -margin.top / 2)
+      .attr("x", width / 2)
+      .attr("y", margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "20px") // زيادة حجم الخط
+      .style("font-size", "28px")
+      .style("font-family", "sans-serif")
+      .style("fill", "#424242")
       .style("font-weight", "bold")
-      .style("fill", "#333") // تحسين لون النص
       .text("Budget Comparison");
+
+    // إضافة وتنسيق وسيلة الإيضاح (Legend) فوق الرسم على الجهة اليسرى مع مسافة إضافية
+    const legendGap = 20; // المسافة بين الرسم والوسيلة الإيضاحية
+    const legend = svg.append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top - 60 - legendGap})`);
+
+    legend.append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", 130)
+      .attr("height", categories.length * 30 + 10)
+      .attr("fill", "#f9f9f9")
+      .attr("stroke", "#ccc")
+      .attr("rx", 8)
+      .attr("ry", 8);
+
+    categories.forEach((cat, i) => {
+      legend.append("rect")
+        .attr("x", 10)
+        .attr("y", i * 30 + 5)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("fill", colorMapping[cat]);
+      
+      legend.append("text")
+        .attr("x", 40)
+        .attr("y", i * 30 + 20)
+        .text(cat)
+        .style("font-size", "16px")
+        .style("fill", "#424242")
+        .style("font-weight", "500");
+    });
   };
 
+  // المتغيرات الخاصة بالتواريخ المتاحة حسب البيانات
   const availableYears = [...new Set(budgetItems.map(item => new Date(item.date).getFullYear()))];
 
   const availableMonths = selectedYear.length > 0 
@@ -439,7 +590,7 @@ const Comparison = () => {
         : [...prev, year]
     );
     setSelectedMonths([]); 
-    setSelectedDays([]); 
+    setSelectedDays([]);
   };
 
   const handleMonthChange = (month) => {
@@ -448,7 +599,7 @@ const Comparison = () => {
         ? prev.filter(m => m !== month) 
         : [...prev, month]
     );
-    setSelectedDays([]); 
+    setSelectedDays([]);
   };
 
   const handleDayChange = (day) => {
@@ -518,9 +669,7 @@ const Comparison = () => {
                   const [dayYear, dayMonth] = day.split("-");
                   return parseInt(dayMonth) === month && parseInt(dayYear) === year;
                 });
-  
                 if (validDays.length === 0) return null;
-  
                 return (
                   <Box key={month} className="month-days-container">
                     <strong>{`الشهر ${month.toString().padStart(2, "0")} (${year})`}</strong>
@@ -553,7 +702,7 @@ const Comparison = () => {
         ) : (
           <>
             <Box id="chart-container">
-              <svg ref={svgRef} width="800" height="400"></svg>
+              <svg ref={svgRef} width="1000" height="600"></svg>
             </Box>
             <div id="tooltip" ref={tooltipRef} style={{ position: 'absolute', opacity: 0, background: '#fff', border: '1px solid #ccc', padding: '5px', borderRadius: '5px', pointerEvents: 'none' }}></div>
           </>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import {
   Grid,
@@ -22,7 +22,6 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
-import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
@@ -70,25 +69,22 @@ const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState(new Date());
-  const [filterType, setFilterType] = useState("Revenues"); // Default to "Revenues"
+  const [filterType, setFilterType] = useState("Revenues"); // افتراضيًا الإيرادات
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
-
-  // إنشاء مقياس لوني باستخدام أكثر من 40 لونًا مختلفًا
-  const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
 
   useEffect(() => {
     fetchBudget();
   }, []);
 
-  const token = sessionStorage.getItem('jwt');
+  const token = sessionStorage.getItem("jwt");
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5004/api/getUserBudget', {
+      const response = await axios.get("http://127.0.0.1:5004/api/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       setBudgetItems(response.data.products || []);
@@ -99,12 +95,13 @@ const Graph = () => {
     }
   };
 
+  // دالة لتجميع العناصر حسب الفئة والتاريخ
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
       const categoryName = item.CategoriesId.categoryName;
       const date = new Date(item.date);
-      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // Format date as DD/MM/YYYY
-      const key = `${categoryName}-${formattedDate}`; // Unique key for each category and date combination
+      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+      const key = `${categoryName}-${formattedDate}`;
       if (!acc[key]) {
         acc[key] = { ...item, valueitem: 0 };
       }
@@ -113,6 +110,7 @@ const Graph = () => {
     }, {});
   };
 
+  // دالة لتصفية العناصر بناءً على التاريخ والنوع
   const filterItems = (items) => {
     let filteredItems = items;
 
@@ -121,7 +119,10 @@ const Graph = () => {
       filteredItems = filteredItems.filter((item) => {
         const itemDate = new Date(item.date);
         if (dateType === "month") {
-          return selectedDate.getMonth() === itemDate.getMonth() && selectedDate.getFullYear() === itemDate.getFullYear();
+          return (
+            selectedDate.getMonth() === itemDate.getMonth() &&
+            selectedDate.getFullYear() === itemDate.getFullYear()
+          );
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
         } else {
@@ -132,14 +133,17 @@ const Graph = () => {
       });
     }
 
-    // Filter by type (Revenues or Expenses)
+    // التصفية حسب النوع (إيرادات أو مصروفات)
     if (filterType !== "All") {
-      filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
+      filteredItems = filteredItems.filter(
+        (item) => item.CategoriesId.categoryType === filterType
+      );
     }
 
     return Object.values(groupByCategory(filteredItems));
   };
 
+  // دالة لحساب المجاميع الكلية للإيرادات والمصروفات
   const calculateTotals = (items) => {
     const totals = { Revenues: 0, Expenses: 0 };
 
@@ -159,44 +163,143 @@ const Graph = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
+  // استخدام useMemo لحساب الفئات الفريدة من البيانات
+  const uniqueCategories = useMemo(() => {
+    const categories = filteredItems.map((item) => item.CategoriesId.categoryName);
+    return Array.from(new Set(categories));
+  }, [filteredItems]);
+
+  // إنشاء مقياس ألوان يربط كل فئة بلون مميز باستخدام دالة interpolateRainbow
+  const colorScale = useMemo(() => {
+    return d3
+      .scaleOrdinal()
+      .domain(uniqueCategories)
+      .range(d3.quantize(d3.interpolateRainbow, uniqueCategories.length));
+  }, [uniqueCategories]);
+
   useEffect(() => {
     if (filteredItems.length > 0) {
       drawPieChart(filteredItems);
     }
-  }, [filteredItems]);
+  }, [filteredItems, colorScale]);
 
   const drawPieChart = (data) => {
     const width = 600;
     const height = 400;
     const radius = Math.min(width, height) / 2 - 50;
 
-    d3.select(svgRef.current).selectAll("*").remove(); // Clear previous chart
+    // إزالة المحتوى السابق داخل الـ SVG
+    d3.select(svgRef.current).selectAll("*").remove();
 
-    const svg = d3.select(svgRef.current)
+    // إنشاء التلميح (tooltip) إذا لم يكن موجوداً مسبقاً
+    let tooltip = d3.select("#tooltip");
+    if (tooltip.empty()) {
+      tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("id", "tooltip")
+        .style("position", "absolute")
+        .style("text-align", "center")
+        .style("padding", "8px")
+        .style("background", "rgba(0, 0, 0, 0.6)")
+        .style("color", "#fff")
+        .style("border-radius", "4px")
+        .style("pointer-events", "none")
+        .style("opacity", 0);
+    }
+
+    const svg = d3
+      .select(svgRef.current)
       .attr("width", width)
       .attr("height", height)
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
-    const pie = d3.pie()
-      .value(d => parseFloat(d.valueitem))
+    const pie = d3
+      .pie()
+      .value((d) => parseFloat(d.valueitem))
       .sort(null);
 
-    const arc = d3.arc()
-      .innerRadius(0)
+    // إنشاء مخطط دونات (donut chart)
+    const arc = d3
+      .arc()
+      .innerRadius(radius * 0.6)
       .outerRadius(radius);
 
-    const arcs = svg.selectAll(".arc")
+    // تكبير الشريحة عند المرور بالفأرة
+    const arcHover = d3
+      .arc()
+      .innerRadius(radius * 0.6)
+      .outerRadius(radius + 10);
+
+    const arcs = svg
+      .selectAll(".arc")
       .data(pie(data))
       .enter()
       .append("g")
       .attr("class", "arc");
 
-    arcs.append("path")
+    arcs
+      .append("path")
       .attr("d", arc)
-      .attr("fill", (d, i) => colorScale(i)) // استخدام المقياس اللوني الجديد
+      // استخدام اسم الفئة للحصول على اللون المميز من المقياس
+      .attr("fill", (d) => colorScale(d.data.CategoriesId.categoryName))
       .attr("stroke", "#fff")
-      .style("stroke-width", "2px");
+      .style("stroke-width", "2px")
+      .each(function (d) {
+        this._current = d;
+      })
+      .on("mouseover", function (event, d) {
+        tooltip
+          .transition()
+          .duration(200)
+          .style("opacity", 0.9);
+        tooltip
+          .html(
+            `${d.data.CategoriesId.categoryName}: ${parseFloat(
+              d.data.valueitem
+            ).toFixed(2)}`
+          )
+          .style("left", event.pageX + 10 + "px")
+          .style("top", event.pageY - 28 + "px");
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("d", arcHover);
+      })
+      .on("mousemove", function (event, d) {
+        tooltip
+          .style("left", event.pageX + 10 + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseout", function (event, d) {
+        tooltip
+          .transition()
+          .duration(500)
+          .style("opacity", 0);
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("d", arc);
+      })
+      .transition()
+      .duration(1000)
+      .attrTween("d", function (d) {
+        let i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+        return function (t) {
+          return arc(i(t));
+        };
+      });
+
+    // إضافة نص في منتصف المخطط لإظهار الإجمالي
+    const totalValue = d3.sum(data, (d) => parseFloat(d.valueitem));
+    svg
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", "0.35em")
+      .style("font-size", "24px")
+      .style("font-weight", "bold")
+      .text(totalValue.toFixed(2));
   };
 
   return (
@@ -212,8 +315,20 @@ const Graph = () => {
             </StyledSelect>
           </FormControl>
           <DatePicker
-            label={dateType === "month" ? "Select Month" : dateType === "year" ? "Select Year" : "Select Date"}
-            views={dateType === "month" ? ["year", "month"] : dateType === "year" ? ["year"] : ["year", "month", "day"]}
+            label={
+              dateType === "month"
+                ? "Select Month"
+                : dateType === "year"
+                ? "Select Year"
+                : "Select Date"
+            }
+            views={
+              dateType === "month"
+                ? ["year", "month"]
+                : dateType === "year"
+                ? ["year"]
+                : ["year", "month", "day"]
+            }
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
             renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
@@ -248,7 +363,14 @@ const Graph = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: balance >= 0 ? "#4CAF50" : "#F44336", color: "#fff" }}>
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background: balance >= 0 ? "#4CAF50" : "#F44336",
+              color: "#fff",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Balance
@@ -278,10 +400,19 @@ const Graph = () => {
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
-                      <Box sx={{ width: "20px", height: "20px", backgroundColor: colorScale(index) }} />
+                      <Box
+                        sx={{
+                          width: "20px",
+                          height: "20px",
+                          backgroundColor: colorScale(item.CategoriesId.categoryName),
+                        }}
+                      />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`${item.CategoriesId.categoryName} (${((item.valueitem / d3.sum(filteredItems.map(i => i.valueitem))) * 100).toFixed(2)}%)`}
+                      primary={`${item.CategoriesId.categoryName} (${(
+                        (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
+                        100
+                      ).toFixed(2)}%)`}
                     />
                   </ListItem>
                 ))}
@@ -302,14 +433,19 @@ const Graph = () => {
                       <Typography variant="h6" sx={{ fontWeight: "bold", color: "#007BFF" }}>
                         {item.CategoriesId.categoryName}
                       </Typography>
-                      <Typography variant="body1" sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}>
-                        {item.CategoriesId.categoryType === "Expenses" ? `-${item.valueitem}` : item.valueitem}
+                      <Typography
+                        variant="body1"
+                        sx={{ color: item.CategoriesId.categoryType === "Revenues" ? "#4CAF50" : "#F44336" }}
+                      >
+                        {item.CategoriesId.categoryType === "Expenses"
+                          ? `-${item.valueitem}`
+                          : item.valueitem}
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)}%
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666" }}>
-                        Date: {new Date(item.date).toLocaleDateString('en-GB')} {/* Displaying the date in DD/MM/YYYY format */}
+                        Date: {new Date(item.date).toLocaleDateString("en-GB")}
                       </Typography>
                     </CardContent>
                   </StyledCard>

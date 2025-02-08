@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import { styled } from '@mui/system';
-import { keyframes } from '@emotion/react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Box,
+  Typography,
+} from '@mui/material';
+import { styled, keyframes } from '@mui/system';
 
-// Animation for category cards
-const float = keyframes`
+// حركة انسيابية للبطاقات
+const floatAnimation = keyframes`
   0% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
   100% { transform: translateY(0); }
 `;
 
-const CategoryCard = styled('div')(({ theme, type }) => ({
-  border: `2px solid ${type === 'Expense' ? '#FF6B6B' : '#4A90E2'}`,
+// بطاقة التصنيف بتصميم حديث
+const CategoryCard = styled(Box)(({ theme }) => ({
+  border: '2px solid #4A90E2',
   backgroundColor: '#FFFFFF',
   borderRadius: '16px',
   padding: '20px',
@@ -34,7 +38,7 @@ const CategoryCard = styled('div')(({ theme, type }) => ({
   '&:hover': {
     transform: 'scale(1.05)',
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-    animation: `${float} 2s ease-in-out infinite`,
+    animation: `${floatAnimation} 2s ease-in-out infinite`,
   },
 }));
 
@@ -48,7 +52,6 @@ const DashboardUser = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -56,7 +59,7 @@ const DashboardUser = () => {
         setCategories(response.data.data);
         const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
-            acc[category.categoryType] = 12; // Show first 12 items by default
+            acc[category.categoryType] = 12; // إظهار أول 12 عنصر افتراضياً
           }
           return acc;
         }, {});
@@ -102,7 +105,6 @@ const DashboardUser = () => {
           },
         }
       );
-
       console.log('Response:', response.data);
       handleClose();
     } catch (error) {
@@ -121,8 +123,14 @@ const DashboardUser = () => {
     }));
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <Typography variant="h6" align="center" sx={{ mt: 4 }}>
+        Loading...
+      </Typography>
+    );
 
+  // تجميع التصنيفات بحسب النوع
   const groupedCategories = categories.reduce((acc, category) => {
     if (!acc[category.categoryType]) {
       acc[category.categoryType] = [];
@@ -131,92 +139,98 @@ const DashboardUser = () => {
     return acc;
   }, {});
 
-  const getCategoryIcon = (type) => {
-    return type === 'Expense' ? '💸' : '💰';
-  };
+  // دالة لإرجاع أيقونة التصنيف
+  const getCategoryIcon = (type) => (type === 'Expense' ? '💸' : '💰');
+
   return (
-    <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif', backgroundColor: '#F5F7FA', minHeight: '100vh' }}>
-  <h1
-      style={{
-        textAlign: "center",
-        fontSize: "50px",
-        fontWeight: "800",
-        textTransform: "uppercase",
-        background: "linear-gradient(to right,rgb(92, 212, 245),rgb(117, 171, 236))",
-        WebkitBackgroundClip: "text",
-        color: "transparent",
-        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
-        letterSpacing: "2px",
-        transition: "transform 0.3s ease-in-out",
-        transform: `scale(${scale})`,
-        cursor: "pointer",
+    <Box
+      sx={{
+        p: 4,
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
+        fontFamily: 'Arial, sans-serif',
       }}
-      onMouseEnter={() => setScale(1.1)}
-      onMouseLeave={() => setScale(1)}
     >
-      ⚔️ Categories ⚔️
-    </h1>
+      {/* العنوان الرئيسي مع تأثير تكبير عند المرور */}
+      <Typography
+        variant="h2"
+        align="center"
+        sx={{
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          color: '#4A90E2',
+          textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+          letterSpacing: 2,
+          transition: 'transform 0.3s ease-in-out',
+          transform: `scale(${scale})`,
+          cursor: 'pointer',
+          mb: 4,
+        }}
+        onMouseEnter={() => setScale(1.1)}
+        onMouseLeave={() => setScale(1)}
+      >
+        Finance Tracker
+      </Typography>
 
       {Object.keys(groupedCategories).length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#666', fontSize: '18px' }}>No categories found.</p>
+        <Typography variant="h6" align="center" sx={{ color: '#666', mt: 2 }}>
+          No categories found.
+        </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
-          <div key={type} style={{ marginBottom: '40px' }}>
-            <h2
-              style={{
-                backgroundColor: type === 'Expense' ? '#FF6B6B' : '#04a1ec',
+          <Box key={type} sx={{ mb: 6 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                backgroundColor: '#4A90E2',
                 color: '#FFFFFF',
-                padding: '15px 20px',
-                borderRadius: '12px',
+                p: 2,
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                mb: 3,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                fontSize: '28px', // Increased font size
-                fontWeight: '600',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                marginBottom: '20px',
+                gap: 1,
               }}
             >
-              {getCategoryIcon(type)} {type === 'Expense' ? 'Expenses' : type}
-            </h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
-              {groupedCategories[type].slice(0, visibleItems[type]).map((category) => (
-                <CategoryCard
-                  key={category._id}
-                  type={category.categoryType}
-                  onClick={() => handleClickOpen(category)}
-                >
-                  {category.image && (
-                    <img
-                      src={`http://127.0.0.1:5004/${category.image}`}
-                      alt={category.categoryName}
-                      style={{
-                        width: '70px',
-                        height: '70px',
-                        borderRadius: '50%',
-                        marginBottom: '10px',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  )}
-                  <h3 style={{ fontSize: '20px', color: type === 'Expense' ? '#FF6B6B' : '#4A90E2', fontWeight: '600' }}>
-                    {category.categoryName}
-                  </h3>
-                </CategoryCard>
-              ))}
-            </div>
+              {getCategoryIcon(type)} {type}
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              {groupedCategories[type]
+                .slice(0, visibleItems[type])
+                .map((category) => (
+                  <CategoryCard key={category._id} onClick={() => handleClickOpen(category)}>
+                    {category.image && (
+                      <Box
+                        component="img"
+                        src={`http://127.0.0.1:5004/${category.image}`}
+                        alt={category.categoryName}
+                        sx={{
+                          width: 70,
+                          height: 70,
+                          borderRadius: '50%',
+                          mb: 1,
+                          objectFit: 'cover',
+                        }}
+                      />
+                    )}
+                    <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
+                      {category.categoryName}
+                    </Typography>
+                  </CategoryCard>
+                ))}
+            </Box>
             {groupedCategories[type].length > visibleItems[type] && (
-              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <Box sx={{ textAlign: 'center', mt: 3 }}>
                 <Button
                   onClick={() => handleLoadMore(type)}
-                  style={{
-                    backgroundColor: '#e40000',
+                  sx={{
+                    backgroundColor: '#4A90E2',
                     color: '#FFFFFF',
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    fontWeight: '500',
-                    textTransform: 'none',
-                    fontSize: '16px',
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    fontSize: 16,
                     '&:hover': {
                       backgroundColor: '#357ABD',
                     },
@@ -224,59 +238,60 @@ const DashboardUser = () => {
                 >
                   Load More
                 </Button>
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
         ))
       )}
 
+      {/* نافذة الحوار لإدخال القيمة */}
       <Dialog
         open={open}
         onClose={handleClose}
         fullWidth
         maxWidth="xs"
         PaperProps={{
-          style: { minWidth: '320px', borderRadius: '15px', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)' },
+          sx: {
+            minWidth: 320,
+            borderRadius: 2,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+          },
         }}
       >
         <DialogTitle
-          style={{
-            backgroundColor: selectedCategory?.categoryType === 'Expense' ? '#FF6B6B' : '#4A90E2',
+          sx={{
+            backgroundColor: '#4A90E2',
             color: '#FFFFFF',
-            padding: '20px',
+            p: 2,
             textAlign: 'center',
-            fontSize: '24px',
-            fontWeight: '700',
-            borderRadius: '15px 15px 0 0',
-            fontFamily: '"Poppins", sans-serif',
+            fontSize: 24,
+            fontWeight: 'bold',
+            borderRadius: '2px 2px 0 0',
           }}
         >
           {selectedCategory?.categoryName}
         </DialogTitle>
-        <DialogContent style={{ padding: '20px', textAlign: 'center' }}>
+        <DialogContent sx={{ p: 3, textAlign: 'center' }}>
           {selectedCategory?.image && (
-            <img
+            <Box
+              component="img"
               src={`http://127.0.0.1:5004/${selectedCategory.image}`}
               alt={selectedCategory.categoryName}
-              style={{
-                width: '100px',
-                height: '100px',
+              sx={{
+                width: 100,
+                height: 100,
                 borderRadius: '50%',
-                marginBottom: '20px',
+                mb: 2,
                 objectFit: 'cover',
               }}
             />
           )}
-          <p
-            style={{
-              fontSize: '18px',
-              color: selectedCategory?.categoryType === 'Expense' ? '#FF6B6B' : '#4A90E2',
-              marginBottom: '20px',
-              fontWeight: '500',
-            }}
+          <Typography
+            variant="subtitle1"
+            sx={{ fontSize: 18, color: '#4A90E2', mb: 2, fontWeight: 500 }}
           >
             Type: {selectedCategory?.categoryType}
-          </p>
+          </Typography>
           <TextField
             autoFocus
             margin="dense"
@@ -286,41 +301,38 @@ const DashboardUser = () => {
             variant="outlined"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            style={{ marginBottom: '20px' }}
+            sx={{ mb: 2 }}
           />
           {errorMessage && (
-            <p style={{ color: '#FF6B6B', textAlign: 'center' }}>{errorMessage}</p>
+            <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center' }}>
+              {errorMessage}
+            </Typography>
           )}
         </DialogContent>
-        <DialogActions style={{ padding: '20px', justifyContent: 'center' }}>
+        <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 2 }}>
           <Button
             onClick={handleClose}
-            style={{
-              backgroundColor: '#FF6B6B',
-              color: '#FFFFFF',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              marginRight: '10px',
-              fontWeight: '500',
-              textTransform: 'none',
-              fontSize: '16px',
-              '&:hover': {
-                backgroundColor: '#FF4C4C',
-              },
+            sx={{
+              backgroundColor: '#FFFFFF',
+              color: '#4A90E2',
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              border: '2px solid #4A90E2',
+              fontSize: 16,
             }}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            style={{
+            sx={{
               backgroundColor: '#4A90E2',
               color: '#FFFFFF',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              fontWeight: '500',
-              textTransform: 'none',
-              fontSize: '16px',
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              fontSize: 16,
               '&:hover': {
                 backgroundColor: '#357ABD',
               },
@@ -330,7 +342,7 @@ const DashboardUser = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 
