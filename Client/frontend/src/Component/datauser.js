@@ -265,48 +265,46 @@ const BudgetItems = () => {
   const groupByDate = (items) => {
     const grouped = items.reduce((acc, item) => {
       const date = new Date(item.date);
-      const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000); // تحويل إلى المنطقة الزمنية المحلية
-      const dateString = localDate.toISOString().split('T')[0];
+      const dateString = date.toISOString().split('T')[0];
       if (!acc[dateString]) {
         acc[dateString] = [];
       }
       acc[dateString].push(item);
       return acc;
     }, {});
-  
+
     return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
   };
 
-
   const filterItems = (items) => {
     let filteredItems = items;
-  
+
     if (filterDate) {
       const selectedDate = new Date(filterDate);
-      const localSelectedDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000); // تحويل إلى المنطقة الزمنية المحلية
-  
       filteredItems = filteredItems.filter((item) => {
         const itemDate = new Date(item.date);
-        const localItemDate = new Date(itemDate.getTime() - itemDate.getTimezoneOffset() * 60000); // تحويل إلى المنطقة الزمنية المحلية
-  
+        // Ensure to compare only the date part
+        const isSameDate = selectedDate.getFullYear() === itemDate.getFullYear() &&
+                           selectedDate.getMonth() === itemDate.getMonth() &&
+                           selectedDate.getDate() === itemDate.getDate();
         if (dateType === "month") {
-          return localSelectedDate.getMonth() === localItemDate.getMonth() && localSelectedDate.getFullYear() === localItemDate.getFullYear();
+          return selectedDate.getMonth() === itemDate.getMonth() && selectedDate.getFullYear() === itemDate.getFullYear();
         } else if (dateType === "year") {
-          return localSelectedDate.getFullYear() === localItemDate.getFullYear();
+          return selectedDate.getFullYear() === itemDate.getFullYear();
         } else {
-          return localSelectedDate.toDateString() === localItemDate.toDateString();
+          return isSameDate; // Compare only the date part
         }
       });
     }
-  
+
     if (filterType !== "all") {
       filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryType === filterType);
     }
-  
+
     if (filterItem !== "all") {
       filteredItems = filteredItems.filter((item) => item.CategoriesId.categoryName === filterItem);
     }
-  
+
     return filteredItems;
   };
 
@@ -519,12 +517,11 @@ const BudgetItems = () => {
           groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
               <Typography variant="h4" gutterBottom sx={{ color: "#333", fontWeight: "bold", marginBottom: "24px" }}>
-              {new Date(date).toLocaleDateString('en-GB', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  timeZone: 'UTC' // أو المنطقة الزمنية المطلوبة
-})}
+                {new Date(date).toLocaleDateString('en-GB', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                })}
               </Typography>
               <Grid container spacing={3} justifyContent="flex-start">
                 {items.map((item, index) => (

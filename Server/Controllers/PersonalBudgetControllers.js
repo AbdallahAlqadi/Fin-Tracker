@@ -17,8 +17,9 @@ exports.getUserBudget = async (req, res) => {
 exports.addBudget = async (req, res) => {
     const { CategoriesId, valueitem } = req.body;
     const userId = req.user;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // تصفير الوقت لضمان المقارنة حسب اليوم فقط
+
+    // الحصول على التاريخ فقط بتوقيت الأردن بدون الوقت
+    const todayJordan = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
 
     try {
         let budget = await Budget.findOne({ userId });
@@ -33,15 +34,15 @@ exports.addBudget = async (req, res) => {
         // التحقق مما إذا كان العنصر موجودًا بالفعل في نفس اليوم
         const isDuplicate = budget.products.some(item => 
             item.CategoriesId.toString() === CategoriesId && 
-            new Date(item.date).setHours(0, 0, 0, 0) === today.getTime()
+            item.date === todayJordan // مقارنة التاريخ فقط
         );
 
         if (isDuplicate) {
             return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في اليوم.' });
         }
 
-        // إضافة العنصر إذا لم يكن مكررًا
-        budget.products.push({ CategoriesId, valueitem, date: new Date() });
+        // إضافة العنصر مع حفظ التاريخ فقط بتوقيت الأردن
+        budget.products.push({ CategoriesId, valueitem, date: todayJordan });
 
         await budget.save();
         res.status(200).json(budget);
