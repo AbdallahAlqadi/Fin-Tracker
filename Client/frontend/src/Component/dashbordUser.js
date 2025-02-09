@@ -44,8 +44,7 @@ const CategoryCard = styled(Box)(({ theme }) => ({
   },
 }));
 
-const DashboardUser = (props) => {
-  const { language = 'en' } = props;
+const DashboardUser = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -55,33 +54,14 @@ const DashboardUser = (props) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  // حالة لتتبع العناصر التي تم إضافة قيمتها اليوم (يتم جلبها من الخادم)
   const [addedItems, setAddedItems] = useState([]);
+  // حالة لتتبع عملية الإرسال
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // ترجمات النصوص بناءً على اللغة
-  const translations = {
-    title: language === 'ar' ? 'متعقب المالية' : 'Finance Tracker',
-    searchLabel: language === 'ar' ? 'ابحث عن عنصر' : 'Search Item',
-    noItem: language === 'ar' ? 'لا يوجد عنصر.' : 'No Item found.',
-    loadMore: language === 'ar' ? 'تحميل المزيد' : 'Load More',
-    addedToday: language === 'ar' ? 'تمت الإضافة اليوم' : 'Added Today',
-    type: language === 'ar' ? 'النوع: ' : 'Type: ',
-    cancel: language === 'ar' ? 'إلغاء' : 'Cancel',
-    submit: language === 'ar' ? 'إرسال' : 'Submit',
-    errorInvalidValue:
-      language === 'ar'
-        ? 'يرجى إدخال قيمة صحيحة.'
-        : 'Please enter a valid value.',
-    errorNonNegative:
-      language === 'ar'
-        ? 'يرجى إدخال رقم عشري غير سالب.'
-        : 'Please enter a non-negative decimal number.',
-    loading: language === 'ar' ? 'جار التحميل...' : 'Loading...',
-  };
 
   // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
   const getTodayDate = () => {
-    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
+    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
   };
 
   // جلب التصنيفات من الخادم
@@ -117,6 +97,7 @@ const DashboardUser = (props) => {
         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getBudget', {
           headers: { Auth: `Bearer ${token}` },
         });
+        // نفترض أن الكائن budget يحتوي على مصفوفة المنتجات في الخاصية products
         const budget = response.data.budget;
         const today = getTodayDate();
         if (budget && budget.products) {
@@ -135,7 +116,7 @@ const DashboardUser = (props) => {
 
   // فتح نافذة الإدخال لعنصر معين إذا لم تتم إضافته اليوم
   const handleClickOpen = (category) => {
-    if (addedItems.includes(category._id)) return;
+    if (addedItems.includes(category._id)) return; // منع الضغط إذا تمت الإضافة
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
@@ -148,20 +129,24 @@ const DashboardUser = (props) => {
     setErrorMessage('');
   };
 
-  // إرسال القيمة إلى الخادم مع التحقق
+  // إرسال القيمة إلى الخادم مع التحقق من أن القيمة المدخلة رقم عشري وغير سالبة
+  // مع إغلاق النافذة مباشرة عند الضغط على "Submit"
   const handleSubmit = async () => {
     if (!selectedCategory || !value) {
-      setErrorMessage(translations.errorInvalidValue);
+      setErrorMessage('يرجى إدخال قيمة صحيحة.');
       return;
     }
 
+    // التحقق من أن القيمة هي رقم عشري وغير سالبة
     const parsedValue = parseFloat(value);
     if (isNaN(parsedValue) || parsedValue < 0) {
-      setErrorMessage(translations.errorNonNegative);
+      setErrorMessage('يرجى إدخال رقم عشري غير سالب.');
       return;
     }
 
+    // حفظ التصنيف الحالي قبل إغلاق النافذة
     const currentCategory = selectedCategory;
+    // إغلاق النافذة مباشرة
     handleClose();
 
     setIsSubmitting(true);
@@ -172,7 +157,7 @@ const DashboardUser = (props) => {
         'https://fin-tracker-ncbx.onrender.com/api/addBudget',
         {
           CategoriesId: currentCategory._id,
-          valueitem: parsedValue,
+          valueitem: parsedValue, // إرسال القيمة كرقم عشري
         },
         {
           headers: {
@@ -183,15 +168,11 @@ const DashboardUser = (props) => {
       );
 
       console.log('Response:', response.data);
+      // تحديث الحالة بحيث لا يمكن إعادة الإضافة لنفس العنصر في اليوم ذاته
       setAddedItems((prev) => [...prev, currentCategory._id]);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.error(
-          error.response.data.error ||
-            (language === 'ar'
-              ? 'لقد أضفت هذا العنصر بالفعل اليوم.'
-              : 'You have already added this item today.')
-        );
+        console.error(error.response.data.error || 'لقد أضفت هذا العنصر بالفعل اليوم.');
         setAddedItems((prev) => [...prev, currentCategory._id]);
       } else {
         console.error('Error submitting value:', error);
@@ -211,12 +192,12 @@ const DashboardUser = (props) => {
   if (loading) {
     return (
       <Typography variant="h6" align="center" sx={{ mt: 4 }}>
-        {translations.loading}
+        Loading...
       </Typography>
     );
   }
 
-  // تصفية التصنيفات بناءً على قيمة البحث
+  // تصفية التصنيفات بناءً على قيمة البحث (غير حساس لحالة الأحرف)
   const filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -242,6 +223,7 @@ const DashboardUser = (props) => {
         fontFamily: 'Arial, sans-serif',
       }}
     >
+      {/* العنوان الرئيسي مع تأثير تكبير عند المرور */}
       <Typography
         variant="h2"
         align="center"
@@ -259,11 +241,12 @@ const DashboardUser = (props) => {
         onMouseEnter={() => setScale(1.1)}
         onMouseLeave={() => setScale(1)}
       >
-        {translations.title}
+        Finance Tracker
       </Typography>
 
+      {/* حقل البحث */}
       <TextField
-        label={translations.searchLabel}
+        label="Search Item"
         variant="outlined"
         fullWidth
         value={searchQuery}
@@ -273,7 +256,7 @@ const DashboardUser = (props) => {
 
       {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: '#666', mt: 2 }}>
-          {translations.noItem}
+          No Item found.
         </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
@@ -300,7 +283,7 @@ const DashboardUser = (props) => {
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <Tooltip key={category._id} title={isAdded ? translations.addedToday : ''}>
+                    <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
                       <Box>
                         <CategoryCard
                           onClick={() => handleClickOpen(category)}
@@ -328,7 +311,7 @@ const DashboardUser = (props) => {
                           </Typography>
                           {isAdded && (
                             <Typography variant="caption" sx={{ color: '#FF0000', fontWeight: 'bold', mt: 1 }}>
-                              {translations.addedToday}
+                              Added Today
                             </Typography>
                           )}
                         </CategoryCard>
@@ -353,7 +336,7 @@ const DashboardUser = (props) => {
                     },
                   }}
                 >
-                  {translations.loadMore}
+                  Load More
                 </Button>
               </Box>
             )}
@@ -361,6 +344,7 @@ const DashboardUser = (props) => {
         ))
       )}
 
+      {/* نافذة الحوار لإدخال القيمة للعنصر المختار */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -403,15 +387,14 @@ const DashboardUser = (props) => {
             />
           )}
           <Typography variant="subtitle1" sx={{ fontSize: 18, color: '#4A90E2', mb: 2, fontWeight: 500 }}>
-            {translations.type}
-            {selectedCategory?.categoryType}
+            Type: {selectedCategory?.categoryType}
           </Typography>
           <TextField
             autoFocus
             margin="dense"
             label="Value"
             type="number"
-            inputProps={{ step: '0.01', min: '0' }}
+            inputProps={{ step: "0.01", min: "0" }}  // للسماح بالأرقام العشرية ومنع الأرقام السالبة
             fullWidth
             variant="outlined"
             value={value}
@@ -437,7 +420,7 @@ const DashboardUser = (props) => {
               fontSize: 16,
             }}
           >
-            {translations.cancel}
+            Cancel
           </Button>
           <Button
             onClick={handleSubmit}
@@ -454,7 +437,7 @@ const DashboardUser = (props) => {
               },
             }}
           >
-            {isSubmitting ? <CircularProgress size={24} sx={{ color: '#FFFFFF' }} /> : translations.submit}
+            {isSubmitting ? <CircularProgress size={24} sx={{ color: '#FFFFFF' }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>
