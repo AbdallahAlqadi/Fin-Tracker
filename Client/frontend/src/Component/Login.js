@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import '../cssStyle/login.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Swal from 'sweetalert2'; // استيراد SweetAlert2
+import Swal from 'sweetalert2';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,10 +19,8 @@ const Login = () => {
       setToken(res.data.token);
       sessionStorage.setItem('jwt', res.data.token);
 
-      // عرض تنبيه نجاح باستخدام SweetAlert2 ثم الانتقال إلى الصفحة الرئيسية
-  .then(() => {
-        navigate('/tolpad');
-      });
+      // الانتقال مباشرة إلى الصفحة الرئيسية دون عرض رسالة نجاح
+      navigate('/tolpad');
     } catch (error) {
       // عرض تنبيه خطأ في حالة عدم تطابق بيانات المستخدم
       Swal.fire({
