@@ -44,6 +44,7 @@ const ImageContainer = styled("div")({
   justifyContent: "center",
 });
 
+// تحديث StyledCard لجعله مستجيبًا مع إزالة القياسات الثابتة
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -53,8 +54,9 @@ const StyledCard = styled(Card)(({ theme }) => ({
   border: "1px solid #e0e0e0",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
-  width: "200px",
-  height: "250px",
+  width: "100%",
+  maxWidth: "200px",
+  height: "auto",
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -62,6 +64,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }));
 
+// تعديل StyledSelect مع بعض الثوابت
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
@@ -115,8 +118,8 @@ const Graph = () => {
     return items.reduce((acc, item) => {
       const categoryName = item.CategoriesId?.categoryName || "Unknown";
       const date = new Date(item.date);
-      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // تنسيق التاريخ بصيغة DD/MM/YYYY
-      const key = `${categoryName}-${formattedDate}`; // مفتاح فريد لكل مجموعة من التصنيف والتاريخ
+      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+      const key = `${categoryName}-${formattedDate}`; // مفتاح فريد لكل مجموعة
       if (!acc[key]) {
         acc[key] = { ...item, valueitem: 0 };
       }
@@ -159,7 +162,6 @@ const Graph = () => {
 
   const calculateTotals = (items) => {
     const totals = { Revenues: 0, Expenses: 0 };
-
     items.forEach((item) => {
       const value = parseFloat(item.valueitem);
       if (item.CategoriesId?.categoryType === "Revenues") {
@@ -168,7 +170,6 @@ const Graph = () => {
         totals.Expenses += value;
       }
     });
-
     return totals;
   };
 
@@ -179,11 +180,14 @@ const Graph = () => {
   useEffect(() => {
     if (filteredItems.length > 0) {
       drawPieChart(filteredItems);
+    } else {
+      // في حالة عدم وجود بيانات، إزالة محتوى SVG
+      d3.select(svgRef.current).selectAll("*").remove();
     }
   }, [filteredItems]);
 
   const drawPieChart = (data) => {
-    // تعديل الأبعاد لتكبير الرسم البياني
+    // تحديد أبعاد الرسم البياني
     const width = 700;
     const height = 500;
     const radius = Math.min(width, height) / 2 - 50;
@@ -191,7 +195,7 @@ const Graph = () => {
     // إزالة المحتوى السابق داخل الـ SVG
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // إنشاء تلميح (tooltip) إذا لم يكن موجودًا مسبقاً
+    // إنشاء تلميح (tooltip)
     let tooltip = d3.select("#tooltip");
     if (tooltip.empty()) {
       tooltip = d3
@@ -210,8 +214,8 @@ const Graph = () => {
 
     const svg = d3
       .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height)
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet")
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
@@ -221,16 +225,9 @@ const Graph = () => {
       .sort(null);
 
     // إنشاء مخطط دونات (donut chart)
-    const arc = d3
-      .arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius);
-
+    const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
     // تكبير الشريحة عند المرور بالفأرة
-    const arcHover = d3
-      .arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius + 10);
+    const arcHover = d3.arc().innerRadius(radius * 0.6).outerRadius(radius + 10);
 
     const arcs = svg
       .selectAll(".arc")
@@ -266,20 +263,12 @@ const Graph = () => {
           .duration(200)
           .attr("d", arcHover);
       })
-      .on("mousemove", function (event, d) {
-        tooltip
-          .style("left", event.pageX + 10 + "px")
-          .style("top", event.pageY - 28 + "px");
+      .on("mousemove", function (event) {
+        tooltip.style("left", event.pageX + 10 + "px").style("top", event.pageY - 28 + "px");
       })
-      .on("mouseout", function (event, d) {
-        tooltip
-          .transition()
-          .duration(500)
-          .style("opacity", 0);
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr("d", arc);
+      .on("mouseout", function () {
+        tooltip.transition().duration(500).style("opacity", 0);
+        d3.select(this).transition().duration(200).attr("d", arc);
       })
       .transition()
       .duration(1000)
@@ -303,8 +292,17 @@ const Graph = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
+      <Box sx={{ padding: 2, background: "#f5f5f5", minHeight: "100vh" }}>
+        {/* قسم الفلاتر */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 2,
+          }}
+        >
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
             <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
@@ -341,7 +339,16 @@ const Graph = () => {
           </FormControl>
         </Box>
 
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
+        {/* قسم الإحصائيات */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
           <Card sx={{ minWidth: 200, textAlign: "center", background: "#4CAF50", color: "#fff" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -393,33 +400,51 @@ const Graph = () => {
           </Box>
         ) : (
           <>
-            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
-              <svg ref={svgRef}></svg>
-              <List sx={{ marginLeft: "20px", width: "300px", marginTop: "120px" }}>
-                {filteredItems.map((item, index) => (
-                  <ListItem key={index}>
-                    <ListItemIcon>
-                      <Box
-                        sx={{
-                          width: "20px",
-                          height: "20px",
-                          backgroundColor: colorScale(index),
-                        }}
+            {/* قسم الرسم البياني والقائمة */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                justifyContent: "center",
+                alignItems: "center",
+                marginBottom: 4,
+                gap: 2,
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
+                <svg
+                  ref={svgRef}
+                  style={{ width: "100%", height: "auto", maxWidth: "700px" }}
+                ></svg>
+              </Box>
+              <Box sx={{ width: { xs: "100%", md: "300px" } }}>
+                <List sx={{ marginTop: { xs: 2, md: "120px" } }}>
+                  {filteredItems.map((item, index) => (
+                    <ListItem key={index}>
+                      <ListItemIcon>
+                        <Box
+                          sx={{
+                            width: "20px",
+                            height: "20px",
+                            backgroundColor: colorScale(index),
+                          }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
+                          (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
+                          100
+                        ).toFixed(2)}%)`}
                       />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                        (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
-                        100
-                      ).toFixed(2)}%)`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
             </Box>
+            {/* قسم البطاقات الفردية */}
             <Grid container spacing={3} justifyContent="center">
               {filteredItems.map((item, index) => (
-                <Grid item key={index}>
+                <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
                   <StyledCard>
                     <ImageContainer>
                       <StyledImage
@@ -436,7 +461,8 @@ const Graph = () => {
                       <Typography
                         variant="body1"
                         sx={{
-                          color: item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
+                          color:
+                            item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
                         }}
                       >
                         {item.CategoriesId?.categoryType === "Expenses"

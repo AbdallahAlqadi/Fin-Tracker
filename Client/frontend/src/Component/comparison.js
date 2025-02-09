@@ -48,6 +48,11 @@ const Comparison = () => {
   const svgRef = useRef();
   const tooltipRef = useRef();
 
+  // أبعاد الرسم البياني (يمكنك تعديلها لاحقاً)
+  const width = 900;
+  const height = 500;
+  const margin = { top: 80, right: 100, bottom: 90, left: 80 };
+
   useEffect(() => {
     fetchBudget();
   }, []);
@@ -166,19 +171,17 @@ const Comparison = () => {
       // في حالة عدم وجود بيانات يتم مسح محتويات الـ SVG
       d3.select(svgRef.current).selectAll("*").remove();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredItems, chartType, showRevenues, showExpenses]);
 
   // دالة رسم الرسم البياني الشريطي (Bar Chart)
   const drawBarChart = (data) => {
-    const width = 900;
-    const height = 500;
-    const margin = { top: 80, right: 100, bottom: 90, left: 80 };
-
     d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .style("width", "100%")
+      .style("height", "auto");
 
     const chartWidth = width - margin.left - margin.right;
     const chartHeight = height - margin.top - margin.bottom;
@@ -225,7 +228,9 @@ const Comparison = () => {
       .range([0, x0.bandwidth()])
       .padding(0.05);
 
-    const maxVal = d3.max(Object.values(data), d => d3.max(categories.map(cat => d[cat] || 0)));
+    const maxVal = d3.max(Object.values(data), d =>
+      d3.max(categories.map(cat => d[cat] || 0))
+    );
     const y = d3.scaleLinear()
       .domain([0, maxVal])
       .nice()
@@ -361,7 +366,7 @@ const Comparison = () => {
         .attr("width", 20)
         .attr("height", 20)
         .attr("fill", colorMapping[cat]);
-      
+
       legend.append("text")
         .attr("x", 40)
         .attr("y", i * 30 + 20)
@@ -374,15 +379,12 @@ const Comparison = () => {
 
   // دالة رسم الرسم البياني الخطي (Line Chart)
   const drawLineChart = (data) => {
-    const width = 900;
-    const height = 500;
-    const margin = { top: 80, right: 100, bottom: 90, left: 80 };
-
     d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .style("width", "100%")
+      .style("height", "auto");
 
     const chartWidth = width - margin.left - margin.right;
     const chartHeight = height - margin.top - margin.bottom;
@@ -573,7 +575,7 @@ const Comparison = () => {
         .attr("width", 20)
         .attr("height", 20)
         .attr("fill", colorMapping[cat]);
-      
+
       legend.append("text")
         .attr("x", 40)
         .attr("y", i * 30 + 20)
@@ -651,19 +653,31 @@ const Comparison = () => {
       <Box
         id="main-container"
         sx={{
-          padding: 3,
+          p: { xs: 2, md: 3 },
           backgroundColor: "#ffffff",
           borderRadius: "12px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
           transition: "all 0.3s ease",
+          maxWidth: "1200px",
+          margin: "auto",
         }}
       >
-        <Box id="controls-container" sx={{ marginBottom: 2 }}>
-          <FormControl id="date-type-select" sx={{ marginRight: 2 }}>
+        <Box
+          id="controls-container"
+          sx={{
+            mb: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            justifyContent: "center",
+          }}
+        >
+          <FormControl id="date-type-select" sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
             <StyledSelect
               value={dateType}
               onChange={(e) => setDateType(e.target.value)}
+              label="Date Type"
             >
               <MenuItem value="year">Year</MenuItem>
               <MenuItem value="month">Month</MenuItem>
@@ -706,9 +720,17 @@ const Comparison = () => {
           />
         </Box>
 
-        <Box id="date-selection-container" sx={{ marginBottom: 2 }}>
+        <Box id="date-selection-container" sx={{ mb: 2 }}>
           {dateType === "year" && (
-            <Box id="year-selection">
+            <Box
+              id="year-selection"
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                justifyContent: "center",
+              }}
+            >
               {availableYears.map((year) => (
                 <FormControlLabel
                   key={year}
@@ -725,7 +747,15 @@ const Comparison = () => {
           )}
 
           {dateType === "month" && selectedYear.length > 0 && (
-            <Box id="month-selection">
+            <Box
+              id="month-selection"
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                justifyContent: "center",
+              }}
+            >
               {availableMonths.map((month) => (
                 <FormControlLabel
                   key={month}
@@ -744,23 +774,23 @@ const Comparison = () => {
           {dateType === "day" &&
             selectedYear.length > 0 &&
             selectedMonths.length > 0 && (
-              <Box id="day-selection">
+              <Box id="day-selection" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {selectedMonths.map((month) => {
                   const year = selectedYear[0];
                   const validDays = availableDays.filter((day) => {
                     const [dayYear, dayMonth] = day.split("-");
                     return (
-                      parseInt(dayMonth) === month &&
-                      parseInt(dayYear) === year
+                      parseInt(dayMonth, 10) === month &&
+                      parseInt(dayYear, 10) === year
                     );
                   });
                   if (validDays.length === 0) return null;
                   return (
-                    <Box key={month} className="month-days-container">
-                      <strong>{`الشهر ${month
-                        .toString()
-                        .padStart(2, "0")} (${year})`}</strong>
-                      <Box className="days-checkbox-group">
+                    <Box key={month} className="month-days-container" sx={{ textAlign: "center" }}>
+                      <Typography variant="subtitle1">
+                        {`الشهر ${month.toString().padStart(2, "0")} (${year})`}
+                      </Typography>
+                      <Box className="days-checkbox-group" sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "center" }}>
                         {validDays.map((day) => (
                           <FormControlLabel
                             key={day}
@@ -782,19 +812,19 @@ const Comparison = () => {
         </Box>
 
         {loading ? (
-          <Box id="loading-container">
+          <Box id="loading-container" sx={{ textAlign: "center", my: 4 }}>
             <CircularProgress size={60} />
           </Box>
         ) : Object.keys(filteredItems).length === 0 ? (
-          <Box id="no-items-container">
+          <Box id="no-items-container" sx={{ textAlign: "center", my: 4 }}>
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
           <>
-            <Box id="chart-container">
-              <svg ref={svgRef} width="900" height="500"></svg>
+            <Box id="chart-container" sx={{ mb: 4 }}>
+              <svg ref={svgRef} />
             </Box>
             <div
               id="tooltip"
@@ -807,6 +837,7 @@ const Comparison = () => {
                 padding: "5px",
                 borderRadius: "5px",
                 pointerEvents: "none",
+                fontSize: "14px",
               }}
             ></div>
           </>
