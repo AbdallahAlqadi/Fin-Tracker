@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-
 .feedback-page {
   font-family: 'Roboto', sans-serif;
   min-height: 100vh;
@@ -26,12 +25,13 @@
 }
 
 .feedback-container {
-  max-width: 800px;
+  max-width: 1000px;
+  width: 800px;
   margin: 20px auto;
   background: #fff;
   border-radius: 8px;
-  padding: 20px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
 }
 
 .feedback-window {
@@ -40,8 +40,11 @@
   gap: 20px;
   max-height: calc(100vh - 160px); /* تخصيص ارتفاع ديناميكي بناءً على ارتفاع الهيدر */
   overflow-y: auto;
+  width: 90%;
+  margin: 0 auto;
 }
 
+/* تقليل عرض الرسالة وتوسيطها */
 .feedback-message {
   display: flex;
   align-items: flex-start;
@@ -49,8 +52,11 @@
   padding: 15px;
   background: #f9f9f9;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  max-width: 600px; /* تقليل عرض الرسالة */
+  width: 500px;
+  margin: 0 auto;   /* توسيط الرسالة داخل الحاوية */
 }
 
 .feedback-message:hover {
