@@ -272,6 +272,8 @@ const BudgetItems = () => {
   // دالة تأكيد الحذف واستدعاء API الحذف
   const confirmDelete = async () => {
     if (!itemToDelete) return;
+    // إغلاق نافذة الحذف فور النقر على زر "Delete"
+    handleCloseDeleteDialog();
     try {
       const response = await axios.delete("https://fin-tracker-ncbx.onrender.com/api/deleteBudget", {
         headers: {
@@ -300,7 +302,6 @@ const BudgetItems = () => {
     } catch (error) {
       console.error("Error deleting budget", error.response?.data || error.message);
     }
-    handleCloseDeleteDialog();
   };
 
   const handleUpdateClick = (item) => {
@@ -323,7 +324,8 @@ const BudgetItems = () => {
       alert("الرجاء إدخال رقم صالح للقيمة.");
       return;
     }
-
+    // إغلاق نافذة التحديث فور النقر على زر "Save"
+    handleCloseDialog();
     try {
       const response = await axios.put(
         "https://fin-tracker-ncbx.onrender.com/api/updateBudget",
@@ -350,7 +352,6 @@ const BudgetItems = () => {
               : item
           )
         );
-        handleCloseDialog();
       } else {
         console.error("فشل تحديث العنصر", response.data);
       }
