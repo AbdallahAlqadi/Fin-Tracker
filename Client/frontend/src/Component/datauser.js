@@ -726,7 +726,7 @@ const BudgetItems = () => {
                       <StyledCard>
                         <ImageContainer>
                           <img
-                            src={`http://127.0.0.1:5004/${item.CategoriesId.image}`}
+                            src={`https://fin-tracker-ncbx.onrender.com/${item.CategoriesId.image}`}
                             alt="Category"
                             style={{
                               width: "100%",

@@ -168,7 +168,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
-                            src={`http://127.0.0.1:5004/${category.image}`}
+                            src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
                           />

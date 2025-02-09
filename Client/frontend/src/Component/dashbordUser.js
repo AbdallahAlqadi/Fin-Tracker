@@ -286,7 +286,7 @@ const DashboardUser = () => {
                           {category.image && (
                             <Box
                               component="img"
-                              src={`http://127.0.0.1:5004/${category.image}`}
+                              src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                               alt={category.categoryName}
                               sx={{
                                 width: 70,
@@ -366,7 +366,7 @@ const DashboardUser = () => {
           {selectedCategory?.image && (
             <Box
               component="img"
-              src={`http://127.0.0.1:5004/${selectedCategory.image}`}
+              src={`https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`}
               alt={selectedCategory.categoryName}
               sx={{
                 width: 100,
