@@ -130,6 +130,7 @@ const DashboardUser = () => {
   };
 
   // إرسال القيمة إلى الخادم مع التحقق من أن القيمة المدخلة رقم عشري وغير سالبة
+  // مع إغلاق النافذة مباشرة عند الضغط على "Submit"
   const handleSubmit = async () => {
     if (!selectedCategory || !value) {
       setErrorMessage('يرجى إدخال قيمة صحيحة.');
@@ -143,6 +144,11 @@ const DashboardUser = () => {
       return;
     }
 
+    // حفظ التصنيف الحالي قبل إغلاق النافذة
+    const currentCategory = selectedCategory;
+    // إغلاق النافذة مباشرة
+    handleClose();
+
     setIsSubmitting(true);
     const token = sessionStorage.getItem('jwt');
 
@@ -150,7 +156,7 @@ const DashboardUser = () => {
       const response = await axios.post(
         'https://fin-tracker-ncbx.onrender.com/api/addBudget',
         {
-          CategoriesId: selectedCategory._id,
+          CategoriesId: currentCategory._id,
           valueitem: parsedValue, // إرسال القيمة كرقم عشري
         },
         {
@@ -163,16 +169,13 @@ const DashboardUser = () => {
 
       console.log('Response:', response.data);
       // تحديث الحالة بحيث لا يمكن إعادة الإضافة لنفس العنصر في اليوم ذاته
-      setAddedItems((prev) => [...prev, selectedCategory._id]);
-      handleClose();
+      setAddedItems((prev) => [...prev, currentCategory._id]);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        // في حالة الخطأ (مثلاً تم إضافة العنصر سابقاً اليوم) يتم منع الإعادة
-        setErrorMessage(error.response.data.error || 'لقد أضفت هذا العنصر بالفعل اليوم.');
-        setAddedItems((prev) => [...prev, selectedCategory._id]);
+        console.error(error.response.data.error || 'لقد أضفت هذا العنصر بالفعل اليوم.');
+        setAddedItems((prev) => [...prev, currentCategory._id]);
       } else {
         console.error('Error submitting value:', error);
-        setErrorMessage('حدث خطأ أثناء الإرسال. حاول مرة أخرى.');
       }
     } finally {
       setIsSubmitting(false);
