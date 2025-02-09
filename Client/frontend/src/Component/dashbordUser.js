@@ -366,7 +366,7 @@ const DashboardUser = () => {
           {selectedCategory?.image && (
             <Box
               component="img"
-              src={`https://fin-tracker-ncbx.onrender.com/api/${selectedCategory.image}`}
+              src={`https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`}
               alt={selectedCategory.categoryName}
               sx={{
                 width: 100,
