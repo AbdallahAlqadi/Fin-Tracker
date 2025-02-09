@@ -243,7 +243,7 @@ const BudgetItems = () => {
   // دالة جلب البيانات مع فلترة العناصر التي ليس لها فئة
   const fetchBudget = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:5004/api/getUserBudget", {
+      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -273,7 +273,7 @@ const BudgetItems = () => {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
     try {
-      const response = await axios.delete("http://127.0.0.1:5004/api/deleteBudget", {
+      const response = await axios.delete("https://fin-tracker-ncbx.onrender.com/deleteBudget", {
         headers: {
           Auth: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -326,7 +326,7 @@ const BudgetItems = () => {
 
     try {
       const response = await axios.put(
-        "http://127.0.0.1:5004/api/updateBudget",
+        "https://fin-tracker-ncbx.onrender.com/updateBudget",
         {
           CategoriesId: selectedItem.CategoriesId._id,
           date: selectedItem.date,

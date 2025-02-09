@@ -57,7 +57,7 @@ const Comparison = () => {
   // جلب البيانات من الخادم
   const fetchBudget = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:5004/api/getUserBudget", {
+      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
           "Content-Type": "application/json",

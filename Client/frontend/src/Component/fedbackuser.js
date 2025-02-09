@@ -8,7 +8,7 @@ const FedbackUser = () => {
     useEffect(() => {
         const fetchFeedbacks = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:5004/api/fedback');
+                const response = await axios.get('https://fin-tracker-ncbx.onrender.com/fedback');
                 setFeedbacks(response.data); // البيانات تحتوي على username و message
             } catch (error) {
                 console.error('Error fetching feedbacks:', error);
