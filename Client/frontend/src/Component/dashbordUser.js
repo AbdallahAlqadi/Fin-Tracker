@@ -10,6 +10,7 @@ import {
   Box,
   Typography,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import { styled, keyframes } from '@mui/system';
 
@@ -55,6 +56,8 @@ const DashboardUser = () => {
   const [searchQuery, setSearchQuery] = useState('');
   // حالة لتتبع العناصر التي تم إضافة قيمتها اليوم (يتم جلبها من الخادم)
   const [addedItems, setAddedItems] = useState([]);
+  // حالة لتتبع عملية الإرسال
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
   const getTodayDate = () => {
@@ -140,6 +143,7 @@ const DashboardUser = () => {
       return;
     }
 
+    setIsSubmitting(true);
     const token = sessionStorage.getItem('jwt');
 
     try {
@@ -170,6 +174,8 @@ const DashboardUser = () => {
         console.error('Error submitting value:', error);
         setErrorMessage('حدث خطأ أثناء الإرسال. حاول مرة أخرى.');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -415,6 +421,7 @@ const DashboardUser = () => {
           </Button>
           <Button
             onClick={handleSubmit}
+            disabled={isSubmitting}
             sx={{
               backgroundColor: '#4A90E2',
               color: '#FFFFFF',
@@ -427,7 +434,7 @@ const DashboardUser = () => {
               },
             }}
           >
-            Submit
+            {isSubmitting ? <CircularProgress size={24} sx={{ color: '#FFFFFF' }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>

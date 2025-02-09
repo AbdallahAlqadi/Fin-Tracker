@@ -443,22 +443,21 @@ const BudgetItems = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
+  // تم تعديل دالة التصدير إلى Excel لتكون استجابة الزر أسرع دون تأخيرات زائدة
   const exportToExcel = async () => {
     setExportLoading(true);
     setExportProgress(0);
 
-    const ws = XLSX.utils.json_to_sheet(
-      filteredItems.map((item) => ({
-        Date: new Date(item.date).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-        Item: item.CategoriesId.categoryName,
-        Type: item.CategoriesId.categoryType,
-        Value: item.valueitem,
-      }))
-    );
+    const wsData = filteredItems.map((item) => ({
+      Date: new Date(item.date).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      Item: item.CategoriesId.categoryName,
+      Type: item.CategoriesId.categoryType,
+      Value: item.valueitem,
+    }));
 
     const totalsRow = [
       {
@@ -481,7 +480,9 @@ const BudgetItems = () => {
       },
     ];
 
-    XLSX.utils.sheet_add_json(ws, totalsRow, { skipHeader: true, origin: -1 });
+    const exportData = [...wsData, ...totalsRow];
+
+    const ws = XLSX.utils.json_to_sheet(exportData, { header: ["Date", "Item", "Type", "Value"] });
 
     ws["!cols"] = [
       { wpx: 100 },
@@ -490,6 +491,7 @@ const BudgetItems = () => {
       { wpx: 100 },
     ];
 
+    // تطبيق نمط للعنوان (ملاحظة: قد لا تعمل تنسيقات الخلايا بشكل مثالي مع مكتبة XLSX في جميع الحالات)
     const headerCellStyle = {
       font: { bold: true },
       fill: { fgColor: { rgb: "FFFF00" } },
@@ -504,26 +506,23 @@ const BudgetItems = () => {
 
     const headers = ["Date", "Item", "Type", "Value"];
     headers.forEach((header, index) => {
-      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: index })];
-      if (cell) {
-        cell.s = headerCellStyle;
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: index });
+      if (ws[cellAddress]) {
+        ws[cellAddress].s = headerCellStyle;
       }
     });
 
-    for (let i = 0; i <= 100; i += 10) {
-      setTimeout(() => {
-        setExportProgress(i);
-      }, i * 50);
-    }
+    // تحديث سريع لتقدم العملية قبل بدء التصدير
+    setExportProgress(50);
 
     setTimeout(() => {
-      // إنشاء كتاب وضم الورقة إليه قبل عملية التصدير
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "BudgetItems");
       XLSX.writeFile(wb, "BudgetItems.xlsx");
+      setExportProgress(100);
       setExportLoading(false);
       setExportProgress(0);
-    }, 1000);
+    }, 100); // تأخير قصير جداً (100 مللي ثانية)
   };
 
   return (
