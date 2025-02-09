@@ -1,175 +1,88 @@
-/* حاوية الدردشة لكامل العرض */
-.chat-container {
-    position: absolute;
-    top: 68%;
-    left: 60%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    background-color: #f4f7fc;
-    padding: 20px;
-    width: 60%; /* يمكنك تعديل العرض حسب الحاجة */
-    border-radius: 40px;
-    padding-bottom: 120px !important; 
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* إضافة عنوان لآراء المستخدمين فوق الحاوية */
-.chat-container::before {
-    content: "آراء المستخدمين";
-    position: absolute;
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 28px;
-    font-weight: bold;
-    color: #333;
+.feedback-page {
+  font-family: 'Roboto', sans-serif;
+  min-height: 100vh;
+  background: #f9f9f9;
 }
 
-/* نافذة الدردشة */
-.chat-window {
-    width: 100%;
-    height: 80vh;
-    overflow-y: auto;
-    border-radius: 12px;
-    background-color: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+/* تصميم الهيدر العنوان في أعلى الصفحة */
+.page-header {
+  width: 100%;
+  background: #007BFF;
+  padding: 20px 0;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-/* لكل كتلة رسالة (تم زيادة margin-bottom إلى 40px) */
-.chat-message {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 40px;  /* تم تعديل القيمة من 30px إلى 40px */
-    max-width: 100%;
+.page-header h1 {
+  font-size: 2em;
+  margin: 0;
 }
 
-.chat-message.left {
-    justify-content: flex-start;
+.feedback-container {
+  max-width: 800px;
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.chat-message.right {
-    justify-content: flex-end;
+.feedback-window {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: calc(100vh - 160px); /* تخصيص ارتفاع ديناميكي بناءً على ارتفاع الهيدر */
+  overflow-y: auto;
 }
 
-/* تحسين فقاعة الرسالة بتصميم احترافي */
-.message-bubble {
-    width: 80%;
-    background: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;  /* لضمان قص أي محتوى خارج حدودها */
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease;
+.feedback-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* إضافة شريط تمييز (Accent Border) للرسائل اليسارية واليمينية */
-.chat-message.left .message-bubble {
-    border-left: 5px solid #e0e0e0;
-    background-color: #f1f1f1;
+.feedback-message:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.chat-message.right .message-bubble {
-    border-right: 5px solid #0078ff;
-    background-color: #0078ff;
-    color: #fff;
+.message-avatar img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #007BFF;
 }
 
-/* رأس الرسالة لعرض صورة المستخدم والاسم */
-.message-header {
-    display: flex;
-    align-items: center;
-    background-color: #f7f9fc;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eaeaea;
+.message-content {
+  flex: 1;
 }
 
-/* صورة المستخدم */
-.user-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 15px;
-    transition: transform 0.2s ease;
-    border: 2px solid #ddd;
+.message-username {
+  font-weight: 600;
+  color: #007BFF;
+  margin-bottom: 8px;
+  display: block;
 }
 
-/* اسم المستخدم */
-.username {
-    font-family: 'Helvetica Neue', sans-serif;
-    font-weight: bold;
-    font-size: 18px;
-    color: #333;
-}
-
-/* نص الرسالة */
 .message-text {
-    font-family: 'Helvetica Neue', sans-serif;
-    font-size: 16px;
-    color: inherit;
-    padding: 15px;
-    line-height: 1.6;
-    word-wrap: break-word;
-    position: relative;
-}
-
-/* إضافة رمز اقتباس في بداية الرسالة لإبراز أنها آراء المستخدمين */
-.message-text::before {
-    content: "“";
-    font-size: 30px;
-    color: rgba(0, 0, 0, 0.1);
-    position: absolute;
-    top: 10px;
-    left: 10px;
-}
-
-/* تأثير تكبير بسيط عند التحويم على فقاعة الرسالة */
-.chat-message:hover .message-bubble {
-    transform: scale(1.02);
-}
-
-/* تأثير تكبير على صورة المستخدم عند التحويم */
-.chat-message:hover .user-avatar {
-    transform: scale(1.1);
-}
-
-/* إضافة ذيل الرسالة للجهة اليسرى */
-.chat-message.left .message-bubble::after {
-    content: "";
-    position: absolute;
-    bottom: 10px;
-    left: -10px;
-    border-width: 10px 10px 10px 0;
-    border-style: solid;
-    border-color: transparent #f1f1f1 transparent transparent;
-}
-
-/* إضافة ذيل الرسالة للجهة اليمنى */
-.chat-message.right .message-bubble::after {
-    content: "";
-    position: absolute;
-    bottom: 10px;
-    right: -10px;
-    border-width: 10px 0 10px 10px;
-    border-style: solid;
-    border-color: transparent transparent transparent #0078ff;
-}
-
-/* تنسيق خاص لتقييمات المستخدمين (يمكن إضافته داخل كل رسالة إذا احتجت) */
-.rating {
-    display: flex;
-    margin: 10px 15px 15px;
-}
-
-.rating span {
-    font-size: 20px;
-    color: gold;
-    margin-right: 5px;
+  color: #555;
+  line-height: 1.5;
 }
