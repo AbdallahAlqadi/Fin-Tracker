@@ -20,11 +20,7 @@ const Login = () => {
       sessionStorage.setItem('jwt', res.data.token);
 
       // عرض تنبيه نجاح باستخدام SweetAlert2 ثم الانتقال إلى الصفحة الرئيسية
-      Swal.fire({
-        icon: 'success',
-        title: 'Login Successful',
-        text: 'You have logged in successfully!',
-      }).then(() => {
+  .then(() => {
         navigate('/tolpad');
       });
     } catch (error) {
