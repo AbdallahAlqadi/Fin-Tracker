@@ -423,7 +423,7 @@ const Graph = () => {
                   <StyledCard>
                     <ImageContainer>
                       <StyledImage
-                        src={`https://fin-tracker-ncbx.onrender.com/api/${
+                        src={`https://fin-tracker-ncbx.onrender.com/${
                           item.CategoriesId?.image || "fallback-image.png"
                         }`}
                         alt="Category"

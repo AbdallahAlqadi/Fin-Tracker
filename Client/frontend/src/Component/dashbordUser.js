@@ -286,7 +286,7 @@ const DashboardUser = () => {
                           {category.image && (
                             <Box
                               component="img"
-                              src={`https://fin-tracker-ncbx.onrender.com/api/${category.image}`}
+                              src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                               alt={category.categoryName}
                               sx={{
                                 width: 70,
