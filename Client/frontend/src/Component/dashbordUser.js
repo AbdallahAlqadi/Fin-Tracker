@@ -65,7 +65,7 @@ const DashboardUser = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/getcategories');
+        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
         setCategories(response.data.data);
 
         // تهيئة عدد العناصر المرئية لكل نوع (افتراضي 12)
@@ -91,7 +91,7 @@ const DashboardUser = () => {
     const fetchAddedItems = async () => {
       try {
         const token = sessionStorage.getItem('jwt');
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/getBudget', {
+        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getBudget', {
           headers: { Auth: `Bearer ${token}` },
         });
         // نفترض أن الكائن budget يحتوي على مصفوفة المنتجات في الخاصية products
@@ -144,7 +144,7 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/addBudget',
+        'https://fin-tracker-ncbx.onrender.com/api/addBudget',
         {
           CategoriesId: selectedCategory._id,
           valueitem: parsedValue, // إرسال القيمة كرقم عشري

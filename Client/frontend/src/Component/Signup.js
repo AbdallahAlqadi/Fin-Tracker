@@ -51,7 +51,7 @@ const Signup = () => {
     }
 
     try {
-      const res = await axios.post('https://fin-tracker-ncbx.onrender.com/users', {
+      const res = await axios.post('https://fin-tracker-ncbx.onrender.com/api/users', {
         username,
         email,
         password,

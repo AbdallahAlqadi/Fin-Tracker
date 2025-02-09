@@ -96,7 +96,7 @@ const Graph = () => {
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/getUserBudget", {
+      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
           "Content-Type": "application/json",
