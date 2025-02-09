@@ -4,7 +4,7 @@ import {
   Grid,
   Card,
   CardContent,
-  Typography,   
+  Typography,
   Button,
   CircularProgress,
   Box,
@@ -19,6 +19,8 @@ import {
   InputLabel,
   LinearProgress,
   IconButton,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -234,6 +236,10 @@ const BudgetItems = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
+  // حالات التنبيه لعرض الشريط (Snackbar)
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const token = sessionStorage.getItem("jwt");
 
   useEffect(() => {
@@ -250,7 +256,7 @@ const BudgetItems = () => {
         },
       });
       // فلترة العناصر التي لا تحتوي على CategoriesId لتجنب حدوث الخطأ
-      setBudgetItems((response.data.products || []).filter(item => item.CategoriesId));
+      setBudgetItems((response.data.products || []).filter((item) => item.CategoriesId));
     } catch (error) {
       console.error("Error fetching budget", error);
     } finally {
@@ -321,7 +327,7 @@ const BudgetItems = () => {
 
     const numericValue = parseFloat(updatedValue);
     if (isNaN(numericValue)) {
-      alert("الرجاء إدخال رقم صالح للقيمة.");
+      alert("Please enter a valid number.");
       return;
     }
     // إغلاق نافذة التحديث فور النقر على زر "Save"
@@ -343,7 +349,7 @@ const BudgetItems = () => {
       );
 
       if (response.status === 200) {
-        console.log("تم تحديث العنصر بنجاح", response.data);
+        console.log("Item updated successfully", response.data);
         setBudgetItems((prevItems) =>
           prevItems.map((item) =>
             item.CategoriesId._id === selectedItem.CategoriesId._id &&
@@ -353,10 +359,10 @@ const BudgetItems = () => {
           )
         );
       } else {
-        console.error("فشل تحديث العنصر", response.data);
+        console.error("Failed to update item", response.data);
       }
     } catch (error) {
-      console.error("خطأ في تحديث الميزانية", error.response?.data || error.message);
+      console.error("Error updating budget", error.response?.data || error.message);
     }
   };
 
@@ -375,7 +381,7 @@ const BudgetItems = () => {
 
   // دالة التصفية مع التأكد من وجود بيانات الفئة
   const filterItems = (items) => {
-    let filteredItems = items.filter(item => item.CategoriesId);
+    let filteredItems = items.filter((item) => item.CategoriesId);
 
     if (filterDate && !isNaN(new Date(filterDate).getTime())) {
       const selectedDate = new Date(filterDate);
@@ -416,12 +422,12 @@ const BudgetItems = () => {
   // تحديث uniqueItems مع فلترة العناصر التي ليس لها CategoriesId
   const uniqueItems =
     filterType === "all"
-      ? [...new Set(budgetItems.filter(item => item.CategoriesId).map(item => item.CategoriesId.categoryName))]
+      ? [...new Set(budgetItems.filter((item) => item.CategoriesId).map((item) => item.CategoriesId.categoryName))]
       : [
           ...new Set(
             budgetItems
-              .filter(item => item.CategoriesId && item.CategoriesId.categoryType === filterType)
-              .map(item => item.CategoriesId.categoryName)
+              .filter((item) => item.CategoriesId && item.CategoriesId.categoryType === filterType)
+              .map((item) => item.CategoriesId.categoryName)
           ),
         ];
 
@@ -444,7 +450,25 @@ const BudgetItems = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
-  // تم تعديل دالة التصدير إلى Excel لتكون استجابة الزر أسرع دون تأخيرات زائدة
+  // useEffect لمراقبة الـ balance وعرض شريط التنبيه المناسب
+  useEffect(() => {
+    if (balance < 0) {
+      setShowError(true);
+      setShowSuccess(false);
+      const timer = setTimeout(() => setShowError(false), 5000);
+      return () => clearTimeout(timer);
+    } else if (balance > 0) {
+      setShowSuccess(true);
+      setShowError(false);
+      const timer = setTimeout(() => setShowSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowError(false);
+      setShowSuccess(false);
+    }
+  }, [balance]);
+
+  // دالة التصدير إلى Excel
   const exportToExcel = async () => {
     setExportLoading(true);
     setExportProgress(0);
@@ -492,7 +516,7 @@ const BudgetItems = () => {
       { wpx: 100 },
     ];
 
-    // تطبيق نمط للعنوان (ملاحظة: قد لا تعمل تنسيقات الخلايا بشكل مثالي مع مكتبة XLSX في جميع الحالات)
+    // تطبيق نمط للعنوان (قد لا تعمل تنسيقات الخلايا بشكل مثالي مع مكتبة XLSX في جميع الحالات)
     const headerCellStyle = {
       font: { bold: true },
       fill: { fgColor: { rgb: "FFFF00" } },
@@ -523,11 +547,43 @@ const BudgetItems = () => {
       setExportProgress(100);
       setExportLoading(false);
       setExportProgress(0);
-    }, 100); // تأخير قصير جداً (100 مللي ثانية)
+    }, 100);
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      {/* شريط التنبيه عند كون النفقات أكبر من الإيرادات (باللون الأحمر وبحجم أكبر) */}
+      <Snackbar
+        open={showError}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        autoHideDuration={5000}
+        onClose={() => setShowError(false)}
+      >
+        <Alert
+          onClose={() => setShowError(false)}
+          severity="error"
+          sx={{ fontSize: "1.2rem", padding: "16px", width: "100%" }}
+        >
+          Warning: Expenses exceed Revenues!
+        </Alert>
+      </Snackbar>
+
+      {/* شريط التنبيه عند كون الإيرادات أكبر من النفقات (باللون الأخضر وبحجم أكبر) */}
+      <Snackbar
+        open={showSuccess}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        autoHideDuration={5000}
+        onClose={() => setShowSuccess(false)}
+      >
+        <Alert
+          onClose={() => setShowSuccess(false)}
+          severity="success"
+          sx={{ fontSize: "1.2rem", padding: "16px", width: "100%" }}
+        >
+          Success: Revenues exceed Expenses!
+        </Alert>
+      </Snackbar>
+
       <Box sx={{ padding: { xs: 2, sm: 4 }, background: "#f5f5f5", minHeight: "100vh" }}>
         {/* عناصر التحكم */}
         <Box
@@ -720,7 +776,7 @@ const BudgetItems = () => {
               </Typography>
               <Grid container spacing={3} justifyContent="center">
                 {items
-                  .filter(item => item.CategoriesId)
+                  .filter((item) => item.CategoriesId)
                   .map((item, index) => (
                     <Grid item key={index} xs={12} sm={6}>
                       <StyledCard>
