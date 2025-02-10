@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../cssStyle/login.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -8,8 +8,36 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
-
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (window.location.pathname === '/' || window.location.pathname === '/login') {
+      document.body.style.background = `
+        linear-gradient(
+          135deg, 
+          rgba(173, 216, 230, 0.8), 
+          rgba(135, 206, 235, 0.9), 
+          rgba(70, 130, 180, 0.8), 
+          rgba(25, 25, 112, 0.85)
+        )`;
+      document.body.style.backgroundSize = '200% 200%';
+      document.body.style.animation = 'gradientShift 8s ease infinite';
+
+      // التحقق إذا لم يكن النمط موجودًا مسبقًا لتجنب التكرار
+      if (!document.getElementById('gradientShiftStyle')) {
+        const style = document.createElement('style');
+        style.id = 'gradientShiftStyle';
+        style.textContent = `
+          @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []); // تنفيذ مرة واحدة عند تحميل المكون
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +47,7 @@ const Login = () => {
       setToken(res.data.token);
       sessionStorage.setItem('jwt', res.data.token);
 
-      // الانتقال مباشرة إلى الصفحة الرئيسية دون عرض رسالة نجاح
+      // الانتقال مباشرة إلى الصفحة الرئيسية
       navigate('/tolpad');
     } catch (error) {
       // عرض تنبيه خطأ في حالة عدم تطابق بيانات المستخدم
@@ -30,36 +58,6 @@ const Login = () => {
       });
     }
   };
-
-  // تغيير خلفية الصفحة إذا كان المسار هو صفحة تسجيل الدخول
-  if (window.location.pathname === '/' || window.location.pathname === '/login') {
-    document.body.style.background = `
-      linear-gradient(
-        135deg, 
-        rgba(173, 216, 230, 0.8), 
-        rgba(135, 206, 235, 0.9), 
-        rgba(70, 130, 180, 0.8), 
-        rgba(25, 25, 112, 0.85)
-      )`;
-    document.body.style.backgroundSize = '200% 200%';
-    document.body.style.animation = 'gradientShift 8s ease infinite';
-
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes gradientShift {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
 
   return (
     <div>
