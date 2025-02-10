@@ -24,14 +24,14 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
-// تعريف مكوّن لتنسيق الصورة بحيث تكون بأبعاد ثابتة وتغطي الحاوية
+// مكوّن لتنسيق الصورة بحيث تكون بأبعاد ثابتة وتغطي الحاوية
 const StyledImage = styled("img")({
   width: "100%",
   height: "100%",
   objectFit: "cover",
 });
 
-// تعديل ImageContainer ليحتوي على خصائص Flex-center لضمان تمركز الصورة
+// حاوية الصورة مع تنسيق Flex-center
 const ImageContainer = styled("div")({
   width: "80px",
   height: "80px",
@@ -44,6 +44,7 @@ const ImageContainer = styled("div")({
   justifyContent: "center",
 });
 
+// تنسيق البطاقة (Card)
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -54,7 +55,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
   width: "200px",
-  height: "250px",
+  height: "230px", // تم تقليل الارتفاع لإزالة سطر التاريخ
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -110,14 +111,13 @@ const Graph = () => {
     }
   };
 
-  // تجميع العناصر حسب التصنيف والتاريخ مع التأكد من وجود البيانات
+  // دالة لتجميع العناصر بناءً على التصنيف فقط (دمج العناصر المكررة)
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
       const categoryName = item.CategoriesId?.categoryName || "Unknown";
-      const date = new Date(item.date);
-      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // تنسيق التاريخ بصيغة DD/MM/YYYY
-      const key = `${categoryName}-${formattedDate}`; // مفتاح فريد لكل مجموعة من التصنيف والتاريخ
+      const key = categoryName;
       if (!acc[key]) {
+        // نأخذ باقي بيانات العنصر، لكن سنجمع القيمة فقط
         acc[key] = { ...item, valueitem: 0 };
       }
       acc[key].valueitem += parseFloat(item.valueitem);
@@ -140,26 +140,25 @@ const Graph = () => {
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
         } else {
-          const formattedSelectedDate = `${selectedDate.getDate()}/${selectedDate.getMonth() + 1}/${selectedDate.getFullYear()}`;
-          const formattedItemDate = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
-          return formattedSelectedDate === formattedItemDate;
+          // في حالة التاريخ الكامل يمكن إرجاع كافة العناصر (أو تعديلها حسب الحاجة)
+          return true;
         }
       });
     }
 
-    // التصفية حسب النوع (إيرادات أو مصروفات)
+    // التصفية حسب النوع (إيرادات أو مصروفات) إذا لم يكن "All"
     if (filterType !== "All") {
       filteredItems = filteredItems.filter(
         (item) => item.CategoriesId?.categoryType === filterType
       );
     }
 
+    // تجميع العناصر المكررة بناءً على التصنيف فقط
     return Object.values(groupByCategory(filteredItems));
   };
 
   const calculateTotals = (items) => {
     const totals = { Revenues: 0, Expenses: 0 };
-
     items.forEach((item) => {
       const value = parseFloat(item.valueitem);
       if (item.CategoriesId?.categoryType === "Revenues") {
@@ -168,7 +167,6 @@ const Graph = () => {
         totals.Expenses += value;
       }
     });
-
     return totals;
   };
 
@@ -183,7 +181,6 @@ const Graph = () => {
   }, [filteredItems]);
 
   const drawPieChart = (data) => {
-    // تعديل الأبعاد لتكبير الرسم البياني
     const width = 700;
     const height = 500;
     const radius = Math.min(width, height) / 2 - 50;
@@ -191,7 +188,7 @@ const Graph = () => {
     // إزالة المحتوى السابق داخل الـ SVG
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // إنشاء تلميح (tooltip) إذا لم يكن موجودًا مسبقاً
+    // إنشاء تلميح (tooltip)
     let tooltip = d3.select("#tooltip");
     if (tooltip.empty()) {
       tooltip = d3
@@ -220,7 +217,7 @@ const Graph = () => {
       .value((d) => parseFloat(d.valueitem))
       .sort(null);
 
-    // إنشاء مخطط دونات (donut chart)
+    // إنشاء مخطط دونات
     const arc = d3
       .arc()
       .innerRadius(radius * 0.6)
@@ -272,10 +269,7 @@ const Graph = () => {
           .style("top", event.pageY - 28 + "px");
       })
       .on("mouseout", function (event, d) {
-        tooltip
-          .transition()
-          .duration(500)
-          .style("opacity", 0);
+        tooltip.transition().duration(500).style("opacity", 0);
         d3.select(this)
           .transition()
           .duration(200)
@@ -284,7 +278,7 @@ const Graph = () => {
       .transition()
       .duration(1000)
       .attrTween("d", function (d) {
-        let i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+        const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
         return function (t) {
           return arc(i(t));
         };
@@ -335,6 +329,8 @@ const Graph = () => {
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
             <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              {/* أضفنا خيار "All" للسماح بعرض كافة العناصر */}
+              <MenuItem value="All">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
@@ -436,7 +432,10 @@ const Graph = () => {
                       <Typography
                         variant="body1"
                         sx={{
-                          color: item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
+                          color:
+                            item.CategoriesId?.categoryType === "Revenues"
+                              ? "#4CAF50"
+                              : "#F44336",
                         }}
                       >
                         {item.CategoriesId?.categoryType === "Expenses"
@@ -446,12 +445,12 @@ const Graph = () => {
                       <Typography variant="body2" sx={{ color: "#666" }}>
                         {item.CategoriesId?.categoryType &&
                         totals[item.CategoriesId.categoryType]
-                          ? ((item.valueitem / totals[item.CategoriesId.categoryType]) * 100).toFixed(2)
+                          ? (
+                              (item.valueitem / totals[item.CategoriesId.categoryType]) *
+                              100
+                            ).toFixed(2)
                           : "0.00"}
                         %
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#666" }}>
-                        Date: {new Date(item.date).toLocaleDateString("en-GB")}
                       </Typography>
                     </CardContent>
                   </StyledCard>
