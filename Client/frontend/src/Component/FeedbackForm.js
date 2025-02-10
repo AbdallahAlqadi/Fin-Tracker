@@ -31,7 +31,6 @@ const FeedbackForm = () => {
   };
 
   return (
-    <div className="feedback-container">
       <div className="feedback-card">
         <h2 className="feedback-title">💬 Share Your Thoughts About the Site</h2>
         <p className="feedback-subtitle">Your feedback helps us improve your experience 💡</p>
@@ -53,7 +52,6 @@ const FeedbackForm = () => {
           </p>
         )}
       </div>
-    </div>
   );
 };
 
