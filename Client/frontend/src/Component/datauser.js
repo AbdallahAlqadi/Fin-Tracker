@@ -30,11 +30,12 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as XLSX from "xlsx";
-import "../cssStyle/datauser.css"; // استيراد ملف الـ CSS الخارجي
 
 // ==========================
 // تعريف المكونات المُنسّقة (Styled Components)
 // ==========================
+
+// تعديل StyledCard بحيث يتم تقليل عرضها إلى 300px بين 600px و750px
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
@@ -51,6 +52,21 @@ const StyledCard = styled(Card)(({ theme }) => ({
     flexDirection: "column",
     alignItems: "center",
     textAlign: "center",
+    maxWidth: "100%",
+  },
+  // للأجهزة التي يكون عرضها بين 600px و750px، نقوم بتقليل عرض البطاقة إلى 300px
+  "@media (min-width:600px) and (max-width:750px)": {
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+    maxWidth: "300px",
+  },
+  // للأجهزة التي يكون عرضها بين 751px و860px
+  "@media (min-width:751px) and (max-width:860px)": {
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+    maxWidth: "100%",
   },
   "&:hover": {
     transform: "translateY(-5px)",
@@ -58,6 +74,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }));
 
+// تعديل ImageContainer ليقلل أبعاد الصورة على الشاشات الصغيرة وبين 600px و860px
 const ImageContainer = styled("div")(({ theme }) => ({
   flex: "0 0 100px",
   marginRight: "16px",
@@ -69,6 +86,12 @@ const ImageContainer = styled("div")(({ theme }) => ({
   [theme.breakpoints.down("sm")]: {
     marginRight: 0,
     marginBottom: "16px",
+  },
+  "@media (min-width:600px) and (max-width:860px)": {
+    marginRight: 0,
+    marginBottom: "16px",
+    width: "80px",
+    height: "80px",
   },
 }));
 
@@ -553,34 +576,50 @@ const BudgetItems = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      {/* شريط التنبيه عند كون النفقات أكبر من الإيرادات */}
+      {/* شريط التنبيه عند كون النفقات أكبر من الإيرادات (باللون الأحمر وبحجم أكبر) */}
       <Snackbar
         open={showError}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={5000}
         onClose={() => setShowError(false)}
       >
-        <Alert onClose={() => setShowError(false)} severity="error" className="alert">
+        <Alert
+          onClose={() => setShowError(false)}
+          severity="error"
+          sx={{ fontSize: "1.2rem", padding: "16px", width: "100%" }}
+        >
           Warning: Expenses exceed Revenues!
         </Alert>
       </Snackbar>
 
-      {/* شريط التنبيه عند كون الإيرادات أكبر من النفقات */}
+      {/* شريط التنبيه عند كون الإيرادات أكبر من النفقات (باللون الأخضر وبحجم أكبر) */}
       <Snackbar
         open={showSuccess}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={5000}
         onClose={() => setShowSuccess(false)}
       >
-        <Alert onClose={() => setShowSuccess(false)} severity="success" className="alert">
+        <Alert
+          onClose={() => setShowSuccess(false)}
+          severity="success"
+          sx={{ fontSize: "1.2rem", padding: "16px", width: "100%" }}
+        >
           Success: Revenues exceed Expenses!
         </Alert>
       </Snackbar>
 
-      <Box className="container">
+      <Box sx={{ padding: { xs: 2, sm: 4 }, background: "#f5f5f5", minHeight: "100vh" }}>
         {/* عناصر التحكم */}
-        <Box className="controls-container">
-          <FormControl className="form-control">
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+            flexWrap: "wrap",
+          }}
+        >
+          <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
             <StyledSelect
               value={dateType}
@@ -613,9 +652,9 @@ const BudgetItems = () => {
                 setFilterDate(newValue);
               }
             }}
-            renderInput={(params) => <TextField {...params} className="datepicker-textfield" />}
+            renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
           />
-          <FormControl className="form-control">
+          <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
             <StyledSelect
               value={filterType}
@@ -627,7 +666,7 @@ const BudgetItems = () => {
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
           </FormControl>
-          <FormControl className="form-control">
+          <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Item</InputLabel>
             <StyledSelect
               value={filterItem}
@@ -653,15 +692,20 @@ const BudgetItems = () => {
         </Box>
 
         {exportLoading && (
-          <LinearProgress
-            variant="determinate"
-            value={exportProgress}
-            className="linear-progress"
-          />
+          <LinearProgress variant="determinate" value={exportProgress} sx={{ marginBottom: 2 }} />
         )}
 
-        {/* بطاقات الإجماليات (تبقى أنماطها inline كما هي) */}
-        <Box className="totals-container">
+        {/* بطاقات الإجماليات */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            justifyContent: "center",
+            gap: 4,
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: "center",
+          }}
+        >
           <Card
             sx={{
               minWidth: 200,
@@ -726,19 +770,28 @@ const BudgetItems = () => {
 
         {/* قائمة البنود */}
         {loading ? (
-          <Box className="centered-full-height">
+          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <CircularProgress size={60} />
           </Box>
         ) : filteredItems.length === 0 ? (
-          <Box className="centered-full-height">
+          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
           groupByDate(filteredItems).map(([date, items]) => (
-            <Box key={date} className="group-container">
-              <Typography variant="h4" gutterBottom className="group-heading">
+            <Box key={date} sx={{ marginBottom: 4 }}>
+              <Typography
+                variant="h4"
+                gutterBottom
+                sx={{
+                  color: "#333",
+                  fontWeight: "bold",
+                  marginBottom: "24px",
+                  textAlign: "center",
+                }}
+              >
                 {new Date(date).toLocaleDateString("en-GB", {
                   year: "numeric",
                   month: "2-digit",
@@ -749,16 +802,29 @@ const BudgetItems = () => {
                 {items
                   .filter((item) => item.CategoriesId)
                   .map((item, index) => (
-                    <Grid item key={index} xs={12} sm={6}>
+                    // استخدام xs={6} لضمان عرض عنصرين في كل صف
+                    <Grid item key={index} xs={6}>
                       <StyledCard>
                         <ImageContainer>
                           <img
                             src={`https://fin-tracker-ncbx.onrender.com/${item.CategoriesId.image}`}
                             alt="Category"
-                            className="category-image"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
                           />
                         </ImageContainer>
-                        <CardContent className="card-content-centered">
+                        <CardContent
+                          sx={{
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
                           <Typography
                             variant="h6"
                             gutterBottom
@@ -774,13 +840,18 @@ const BudgetItems = () => {
                               ? `-${item.valueitem}`
                               : item.valueitem}
                           </Typography>
-                          <Box className="category-info">
+                          <Box display="flex" alignItems="center" gap={1}>
                             <CategoryIcon sx={{ color: "#007BFF" }} />
                             <Typography variant="h5" sx={{ color: "#007BFF", fontWeight: "bold" }}>
                               {item.CategoriesId.categoryName}
                             </Typography>
                           </Box>
-                          <Box className="button-container">
+                          <Box
+                            display="flex"
+                            justifyContent="center"
+                            gap={1}
+                            sx={{ marginTop: 2, flexDirection: { xs: "column", sm: "row" } }}
+                          >
                             <StyledButton
                               variant="contained"
                               color="error"
@@ -811,7 +882,7 @@ const BudgetItems = () => {
             Update Budget Item
           </DialogHeader>
           <StyledDialogContent>
-            <Typography variant="h6" className="dialog-text">
+            <Typography variant="h6" sx={{ marginBottom: 2 }}>
               Item Name: {selectedItem?.CategoriesId?.categoryName}
             </Typography>
             <StyledTextField
