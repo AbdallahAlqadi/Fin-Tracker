@@ -21,7 +21,7 @@ const floatAnimation = keyframes`
   100% { transform: translateY(0); }
 `;
 
-// بطاقة التصنيف بتصميم حديث
+// بطاقة التصنيف بتصميم حديث مع تعديلات للعرض على الأجهزة الصغيرة
 const CategoryCard = styled(Box)(({ theme }) => ({
   border: '2px solid #4A90E2',
   backgroundColor: '#FFFFFF',
@@ -41,6 +41,12 @@ const CategoryCard = styled(Box)(({ theme }) => ({
     transform: 'scale(1.05)',
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
     animation: `${floatAnimation} 2s ease-in-out infinite`,
+  },
+  // تعديل المقاسات على الشاشات الصغيرة
+  [theme.breakpoints.down('sm')]: {
+    width: '140px',
+    height: '140px',
+    padding: '15px',
   },
 }));
 
@@ -217,7 +223,7 @@ const DashboardUser = () => {
   return (
     <Box
       sx={{
-        p: 4,
+        p: { xs: 2, sm: 4 }, // تعديل الحواف لتكون استجابة لمختلف الشاشات
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
         fontFamily: 'Arial, sans-serif',
@@ -237,6 +243,7 @@ const DashboardUser = () => {
           transform: `scale(${scale})`,
           cursor: 'pointer',
           mb: 4,
+          fontSize: { xs: '2rem', md: '3rem' } // ضبط حجم الخط ليكون استجابة
         }}
         onMouseEnter={() => setScale(1.1)}
         onMouseLeave={() => setScale(1)}
@@ -277,7 +284,7 @@ const DashboardUser = () => {
             >
               {getCategoryIcon(type)} {type}
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
               {groupedCategories[type]
                 .slice(0, visibleItems[type])
                 .map((category) => {
@@ -298,8 +305,8 @@ const DashboardUser = () => {
                               src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                               alt={category.categoryName}
                               sx={{
-                                width: 70,
-                                height: 70,
+                                width: { xs: 50, sm: 70 },
+                                height: { xs: 50, sm: 70 },
                                 borderRadius: '50%',
                                 mb: 1,
                                 objectFit: 'cover',
