@@ -34,8 +34,6 @@ import * as XLSX from "xlsx";
 // ==========================
 // تعريف المكونات المُنسّقة (Styled Components)
 // ==========================
-
-// تعديل StyledCard بحيث يتم تقليل عرضها إلى 300px بين 600px و750px
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
@@ -52,21 +50,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
     flexDirection: "column",
     alignItems: "center",
     textAlign: "center",
-    maxWidth: "100%",
-  },
-  // للأجهزة التي يكون عرضها بين 600px و750px، نقوم بتقليل عرض البطاقة إلى 300px
-  "@media (min-width:600px) and (max-width:750px)": {
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    maxWidth: "300px",
-  },
-  // للأجهزة التي يكون عرضها بين 751px و860px
-  "@media (min-width:751px) and (max-width:860px)": {
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    maxWidth: "100%",
   },
   "&:hover": {
     transform: "translateY(-5px)",
@@ -74,7 +57,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }));
 
-// تعديل ImageContainer ليقلل أبعاد الصورة على الشاشات الصغيرة وبين 600px و860px
 const ImageContainer = styled("div")(({ theme }) => ({
   flex: "0 0 100px",
   marginRight: "16px",
@@ -86,12 +68,6 @@ const ImageContainer = styled("div")(({ theme }) => ({
   [theme.breakpoints.down("sm")]: {
     marginRight: 0,
     marginBottom: "16px",
-  },
-  "@media (min-width:600px) and (max-width:860px)": {
-    marginRight: 0,
-    marginBottom: "16px",
-    width: "80px",
-    height: "80px",
   },
 }));
 
@@ -802,8 +778,7 @@ const BudgetItems = () => {
                 {items
                   .filter((item) => item.CategoriesId)
                   .map((item, index) => (
-                    // استخدام xs={6} لضمان عرض عنصرين في كل صف
-                    <Grid item key={index} xs={6}>
+                    <Grid item key={index} xs={12} sm={6}>
                       <StyledCard>
                         <ImageContainer>
                           <img
