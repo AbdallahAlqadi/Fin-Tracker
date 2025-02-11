@@ -30,6 +30,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as XLSX from "xlsx";
+import "../cssStyle/datauser.css"; // استيراد ملف الـ CSS الخارجي
 
 // ==========================
 // تعريف المكونات المُنسّقة (Styled Components)
@@ -552,50 +553,34 @@ const BudgetItems = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      {/* شريط التنبيه عند كون النفقات أكبر من الإيرادات (باللون الأحمر وبحجم أكبر) */}
+      {/* شريط التنبيه عند كون النفقات أكبر من الإيرادات */}
       <Snackbar
         open={showError}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={5000}
         onClose={() => setShowError(false)}
       >
-        <Alert
-          onClose={() => setShowError(false)}
-          severity="error"
-          sx={{ fontSize: "1.2rem", padding: "16px", width: "100%" }}
-        >
+        <Alert onClose={() => setShowError(false)} severity="error" className="alert">
           Warning: Expenses exceed Revenues!
         </Alert>
       </Snackbar>
 
-      {/* شريط التنبيه عند كون الإيرادات أكبر من النفقات (باللون الأخضر وبحجم أكبر) */}
+      {/* شريط التنبيه عند كون الإيرادات أكبر من النفقات */}
       <Snackbar
         open={showSuccess}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={5000}
         onClose={() => setShowSuccess(false)}
       >
-        <Alert
-          onClose={() => setShowSuccess(false)}
-          severity="success"
-          sx={{ fontSize: "1.2rem", padding: "16px", width: "100%" }}
-        >
+        <Alert onClose={() => setShowSuccess(false)} severity="success" className="alert">
           Success: Revenues exceed Expenses!
         </Alert>
       </Snackbar>
 
-      <Box sx={{ padding: { xs: 2, sm: 4 }, background: "#f5f5f5", minHeight: "100vh" }}>
+      <Box className="container">
         {/* عناصر التحكم */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            justifyContent: "center",
-            gap: 2,
-            flexWrap: "wrap",
-          }}
-        >
-          <FormControl sx={{ minWidth: 120 }}>
+        <Box className="controls-container">
+          <FormControl className="form-control">
             <InputLabel>Date Type</InputLabel>
             <StyledSelect
               value={dateType}
@@ -628,9 +613,9 @@ const BudgetItems = () => {
                 setFilterDate(newValue);
               }
             }}
-            renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
+            renderInput={(params) => <TextField {...params} className="datepicker-textfield" />}
           />
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl className="form-control">
             <InputLabel>Type</InputLabel>
             <StyledSelect
               value={filterType}
@@ -642,7 +627,7 @@ const BudgetItems = () => {
               <MenuItem value="Expenses">Expenses</MenuItem>
             </StyledSelect>
           </FormControl>
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl className="form-control">
             <InputLabel>Item</InputLabel>
             <StyledSelect
               value={filterItem}
@@ -668,20 +653,15 @@ const BudgetItems = () => {
         </Box>
 
         {exportLoading && (
-          <LinearProgress variant="determinate" value={exportProgress} sx={{ marginBottom: 2 }} />
+          <LinearProgress
+            variant="determinate"
+            value={exportProgress}
+            className="linear-progress"
+          />
         )}
 
-        {/* بطاقات الإجماليات */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            justifyContent: "center",
-            gap: 4,
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-          }}
-        >
+        {/* بطاقات الإجماليات (تبقى أنماطها inline كما هي) */}
+        <Box className="totals-container">
           <Card
             sx={{
               minWidth: 200,
@@ -746,28 +726,19 @@ const BudgetItems = () => {
 
         {/* قائمة البنود */}
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <Box className="centered-full-height">
             <CircularProgress size={60} />
           </Box>
         ) : filteredItems.length === 0 ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <Box className="centered-full-height">
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
           groupByDate(filteredItems).map(([date, items]) => (
-            <Box key={date} sx={{ marginBottom: 4 }}>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{
-                  color: "#333",
-                  fontWeight: "bold",
-                  marginBottom: "24px",
-                  textAlign: "center",
-                }}
-              >
+            <Box key={date} className="group-container">
+              <Typography variant="h4" gutterBottom className="group-heading">
                 {new Date(date).toLocaleDateString("en-GB", {
                   year: "numeric",
                   month: "2-digit",
@@ -784,22 +755,10 @@ const BudgetItems = () => {
                           <img
                             src={`https://fin-tracker-ncbx.onrender.com/${item.CategoriesId.image}`}
                             alt="Category"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
+                            className="category-image"
                           />
                         </ImageContainer>
-                        <CardContent
-                          sx={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
+                        <CardContent className="card-content-centered">
                           <Typography
                             variant="h6"
                             gutterBottom
@@ -815,18 +774,13 @@ const BudgetItems = () => {
                               ? `-${item.valueitem}`
                               : item.valueitem}
                           </Typography>
-                          <Box display="flex" alignItems="center" gap={1}>
+                          <Box className="category-info">
                             <CategoryIcon sx={{ color: "#007BFF" }} />
                             <Typography variant="h5" sx={{ color: "#007BFF", fontWeight: "bold" }}>
                               {item.CategoriesId.categoryName}
                             </Typography>
                           </Box>
-                          <Box
-                            display="flex"
-                            justifyContent="center"
-                            gap={1}
-                            sx={{ marginTop: 2, flexDirection: { xs: "column", sm: "row" } }}
-                          >
+                          <Box className="button-container">
                             <StyledButton
                               variant="contained"
                               color="error"
@@ -857,7 +811,7 @@ const BudgetItems = () => {
             Update Budget Item
           </DialogHeader>
           <StyledDialogContent>
-            <Typography variant="h6" sx={{ marginBottom: 2 }}>
+            <Typography variant="h6" className="dialog-text">
               Item Name: {selectedItem?.CategoriesId?.categoryName}
             </Typography>
             <StyledTextField
