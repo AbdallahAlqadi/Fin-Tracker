@@ -11,6 +11,7 @@ import {
   Typography,
   Tooltip,
   CircularProgress,
+  Grid,
 } from '@mui/material';
 import { styled, keyframes } from '@mui/system';
 
@@ -223,7 +224,7 @@ const DashboardUser = () => {
   return (
     <Box
       sx={{
-        p: { xs: 2, sm: 4 }, // تعديل الحواف لتكون استجابة لمختلف الشاشات
+        p: { xs: 2, sm: 4 },
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
         fontFamily: 'Arial, sans-serif',
@@ -243,7 +244,7 @@ const DashboardUser = () => {
           transform: `scale(${scale})`,
           cursor: 'pointer',
           mb: 4,
-          fontSize: { xs: '2rem', md: '3rem' } // ضبط حجم الخط ليكون استجابة
+          fontSize: { xs: '2rem', md: '3rem' }
         }}
         onMouseEnter={() => setScale(1.1)}
         onMouseLeave={() => setScale(1)}
@@ -284,14 +285,22 @@ const DashboardUser = () => {
             >
               {getCategoryIcon(type)} {type}
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
+            {/* استخدام Grid لعرض عنصرين في الصف على الأجهزة الصغيرة */}
+            <Grid container spacing={3} justifyContent="center">
               {groupedCategories[type]
                 .slice(0, visibleItems[type])
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
-                      <Box>
+                    <Grid
+                      item
+                      xs={6}
+                      sm="auto"
+                      key={category._id}
+                      display="flex"
+                      justifyContent="center"
+                    >
+                      <Tooltip title={isAdded ? 'تمت الإضافة اليوم' : ''}>
                         <CategoryCard
                           onClick={() => handleClickOpen(category)}
                           sx={{
@@ -322,11 +331,11 @@ const DashboardUser = () => {
                             </Typography>
                           )}
                         </CategoryCard>
-                      </Box>
-                    </Tooltip>
+                      </Tooltip>
+                    </Grid>
                   );
                 })}
-            </Box>
+            </Grid>
             {groupedCategories[type].length > visibleItems[type] && (
               <Box sx={{ textAlign: 'center', mt: 3 }}>
                 <Button
@@ -401,7 +410,7 @@ const DashboardUser = () => {
             margin="dense"
             label="Value"
             type="number"
-            inputProps={{ step: "0.01", min: "0" }}  // للسماح بالأرقام العشرية ومنع الأرقام السالبة
+            inputProps={{ step: '0.01', min: '0' }}
             fullWidth
             variant="outlined"
             value={value}
