@@ -678,13 +678,14 @@ const BudgetItems = () => {
             display: "flex",
             justifyContent: "center",
             gap: 4,
-            flexDirection: { xs: "column", sm: "row" },
+            flexDirection: "row", // عرض البطاقات جنباً إلى جنب على جميع الأجهزة
             alignItems: "center",
+            flexWrap: "wrap",
           }}
         >
           <Card
             sx={{
-              minWidth: 200,
+              minWidth: { xs: 150, sm: 200 }, // تقليل عرض البطاقة على الأجهزة الصغيرة
               textAlign: "center",
               background: "linear-gradient(135deg, #66bb6a, #43a047)",
               color: "#fff",
@@ -703,7 +704,7 @@ const BudgetItems = () => {
           </Card>
           <Card
             sx={{
-              minWidth: 200,
+              minWidth: { xs: 150, sm: 200 },
               textAlign: "center",
               background: "linear-gradient(135deg, #ef5350, #e53935)",
               color: "#fff",
@@ -722,7 +723,7 @@ const BudgetItems = () => {
           </Card>
           <Card
             sx={{
-              minWidth: 200,
+              minWidth: { xs: 150, sm: 200 },
               textAlign: "center",
               background:
                 balance >= 0
