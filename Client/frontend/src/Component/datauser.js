@@ -96,10 +96,16 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-// مكون جديد لتكبير حجم نافذة تحديث البند فقط
+// تعديل نافذة التحديث لتكون متجاوبة مع جميع الأجهزة بشكل احترافي
 const StyledUpdateDialog = styled(StyledDialog)(({ theme }) => ({
   "& .MuiDialog-paper": {
-    minWidth: "500px", // تم تكبير حجم الديالوج هنا
+    width: "90%",             // يستخدم 90% من عرض الشاشة على الأجهزة الصغيرة
+    maxWidth: "500px",         // عرض أقصى للنافذة
+    margin: "auto",
+    borderRadius: theme.spacing(2),
+    [theme.breakpoints.up("sm")]: {
+      width: "500px",         // على الشاشات الأكبر يتم استخدام العرض الثابت
+    },
   },
 }));
 
@@ -678,14 +684,14 @@ const BudgetItems = () => {
             display: "flex",
             justifyContent: "center",
             gap: 4,
-            flexDirection: "row", // عرض البطاقات جنباً إلى جنب على جميع الأجهزة
+            flexDirection: "row",
             alignItems: "center",
             flexWrap: "wrap",
           }}
         >
           <Card
             sx={{
-              minWidth: { xs: 150, sm: 200 }, // تقليل عرض البطاقة على الأجهزة الصغيرة
+              minWidth: { xs: 150, sm: 200 },
               textAlign: "center",
               background: "linear-gradient(135deg, #66bb6a, #43a047)",
               color: "#fff",
