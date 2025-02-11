@@ -21,6 +21,7 @@ import {
   IconButton,
   Snackbar,
   Alert,
+  useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -99,12 +100,12 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
 // تعديل نافذة التحديث لتكون متجاوبة مع جميع الأجهزة بشكل احترافي
 const StyledUpdateDialog = styled(StyledDialog)(({ theme }) => ({
   "& .MuiDialog-paper": {
-    width: "90%",             // يستخدم 90% من عرض الشاشة على الأجهزة الصغيرة
-    maxWidth: "500px",         // عرض أقصى للنافذة
+    width: "90%", // يستخدم 90% من عرض الشاشة على الأجهزة الصغيرة
+    maxWidth: "500px", // عرض أقصى للنافذة
     margin: "auto",
     borderRadius: theme.spacing(2),
     [theme.breakpoints.up("sm")]: {
-      width: "500px",         // على الشاشات الأكبر يتم استخدام العرض الثابت
+      width: "500px", // على الشاشات الأكبر يتم استخدام العرض الثابت
     },
   },
 }));
@@ -248,6 +249,9 @@ const BudgetItems = () => {
 
   const token = sessionStorage.getItem("jwt");
 
+  // استخدام useMediaQuery للتحقق من عرض الشاشة
+  const isSmallScreen = useMediaQuery("(max-width:450px)");
+
   useEffect(() => {
     fetchBudget();
   }, []);
@@ -255,14 +259,19 @@ const BudgetItems = () => {
   // دالة جلب البيانات مع فلترة العناصر التي ليس لها فئة
   const fetchBudget = async () => {
     try {
-      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getUserBudget", {
-        headers: {
-          Auth: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.get(
+        "https://fin-tracker-ncbx.onrender.com/api/getUserBudget",
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       // فلترة العناصر التي لا تحتوي على CategoriesId لتجنب حدوث الخطأ
-      setBudgetItems((response.data.products || []).filter((item) => item.CategoriesId));
+      setBudgetItems(
+        (response.data.products || []).filter((item) => item.CategoriesId)
+      );
     } catch (error) {
       console.error("Error fetching budget", error);
     } finally {
@@ -287,16 +296,19 @@ const BudgetItems = () => {
     // إغلاق نافذة الحذف فور النقر على زر "Delete"
     handleCloseDeleteDialog();
     try {
-      const response = await axios.delete("https://fin-tracker-ncbx.onrender.com/api/deleteBudget", {
-        headers: {
-          Auth: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        data: {
-          CategoriesId: itemToDelete.CategoriesId._id,
-          date: new Date(itemToDelete.date).toISOString(),
-        },
-      });
+      const response = await axios.delete(
+        "https://fin-tracker-ncbx.onrender.com/api/deleteBudget",
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          data: {
+            CategoriesId: itemToDelete.CategoriesId._id,
+            date: new Date(itemToDelete.date).toISOString(),
+          },
+        }
+      );
       if (response.status === 200) {
         console.log("Item deleted successfully", response.data);
         setBudgetItems((prevItems) =>
@@ -304,7 +316,8 @@ const BudgetItems = () => {
             (budgetItem) =>
               !(
                 budgetItem.CategoriesId._id === itemToDelete.CategoriesId._id &&
-                new Date(budgetItem.date).toISOString() === new Date(itemToDelete.date).toISOString()
+                new Date(budgetItem.date).toISOString() ===
+                  new Date(itemToDelete.date).toISOString()
               )
           )
         );
@@ -312,7 +325,10 @@ const BudgetItems = () => {
         console.error("Failed to delete item", response.data);
       }
     } catch (error) {
-      console.error("Error deleting budget", error.response?.data || error.message);
+      console.error(
+        "Error deleting budget",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -359,7 +375,8 @@ const BudgetItems = () => {
         setBudgetItems((prevItems) =>
           prevItems.map((item) =>
             item.CategoriesId._id === selectedItem.CategoriesId._id &&
-            new Date(item.date).toISOString() === new Date(selectedItem.date).toISOString()
+            new Date(item.date).toISOString() ===
+              new Date(selectedItem.date).toISOString()
               ? { ...item, valueitem: numericValue }
               : item
           )
@@ -368,7 +385,10 @@ const BudgetItems = () => {
         console.error("Failed to update item", response.data);
       }
     } catch (error) {
-      console.error("Error updating budget", error.response?.data || error.message);
+      console.error(
+        "Error updating budget",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -382,7 +402,9 @@ const BudgetItems = () => {
       acc[dateString].push(item);
       return acc;
     }, {});
-    return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+    return Object.entries(grouped).sort(
+      (a, b) => new Date(b[0]) - new Date(a[0])
+    );
   };
 
   // دالة التصفية مع التأكد من وجود بيانات الفئة
@@ -428,11 +450,21 @@ const BudgetItems = () => {
   // تحديث uniqueItems مع فلترة العناصر التي ليس لها CategoriesId
   const uniqueItems =
     filterType === "all"
-      ? [...new Set(budgetItems.filter((item) => item.CategoriesId).map((item) => item.CategoriesId.categoryName))]
+      ? [
+          ...new Set(
+            budgetItems
+              .filter((item) => item.CategoriesId)
+              .map((item) => item.CategoriesId.categoryName)
+          ),
+        ]
       : [
           ...new Set(
             budgetItems
-              .filter((item) => item.CategoriesId && item.CategoriesId.categoryType === filterType)
+              .filter(
+                (item) =>
+                  item.CategoriesId &&
+                  item.CategoriesId.categoryType === filterType
+              )
               .map((item) => item.CategoriesId.categoryName)
           ),
         ];
@@ -513,7 +545,9 @@ const BudgetItems = () => {
 
     const exportData = [...wsData, ...totalsRow];
 
-    const ws = XLSX.utils.json_to_sheet(exportData, { header: ["Date", "Item", "Type", "Value"] });
+    const ws = XLSX.utils.json_to_sheet(exportData, {
+      header: ["Date", "Item", "Type", "Value"],
+    });
 
     ws["!cols"] = [
       { wpx: 100 },
@@ -678,78 +712,149 @@ const BudgetItems = () => {
         )}
 
         {/* بطاقات الإجماليات */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            justifyContent: "center",
-            gap: 4,
-            flexDirection: "row",
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <Card
+        {isSmallScreen ? (
+          <Grid container spacing={2} justifyContent="center" sx={{ marginBottom: 4 }}>
+            <Grid item xs={6}>
+              <Card
+                sx={{
+                  minWidth: { xs: 150, sm: 200 },
+                  textAlign: "center",
+                  background: "linear-gradient(135deg, #66bb6a, #43a047)",
+                  color: "#fff",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Total Revenues
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                    {totals.Revenues.toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={6}>
+              <Card
+                sx={{
+                  minWidth: { xs: 150, sm: 200 },
+                  textAlign: "center",
+                  background: "linear-gradient(135deg, #ef5350, #e53935)",
+                  color: "#fff",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Total Expenses
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                    {totals.Expenses.toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sx={{ display: "flex", justifyContent: "center" }}>
+              <Card
+                sx={{
+                  minWidth: { xs: 150, sm: 200 },
+                  textAlign: "center",
+                  background:
+                    balance >= 0
+                      ? "linear-gradient(135deg, #66bb6a, #43a047)"
+                      : "linear-gradient(135deg, #ef5350, #e53935)",
+                  color: "#fff",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Balance
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                    {balance.toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        ) : (
+          <Box
             sx={{
-              minWidth: { xs: 150, sm: 200 },
-              textAlign: "center",
-              background: "linear-gradient(135deg, #66bb6a, #43a047)",
-              color: "#fff",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              marginBottom: 4,
+              display: "flex",
+              justifyContent: "center",
+              gap: 4,
+              flexDirection: "row",
+              alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Revenues
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {totals.Revenues.toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card
-            sx={{
-              minWidth: { xs: 150, sm: 200 },
-              textAlign: "center",
-              background: "linear-gradient(135deg, #ef5350, #e53935)",
-              color: "#fff",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Expenses
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {totals.Expenses.toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card
-            sx={{
-              minWidth: { xs: 150, sm: 200 },
-              textAlign: "center",
-              background:
-                balance >= 0
-                  ? "linear-gradient(135deg, #66bb6a, #43a047)"
-                  : "linear-gradient(135deg, #ef5350, #e53935)",
-              color: "#fff",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Balance
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {balance.toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
+            <Card
+              sx={{
+                minWidth: { xs: 150, sm: 200 },
+                textAlign: "center",
+                background: "linear-gradient(135deg, #66bb6a, #43a047)",
+                color: "#fff",
+                borderRadius: "16px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Total Revenues
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {totals.Revenues.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card
+              sx={{
+                minWidth: { xs: 150, sm: 200 },
+                textAlign: "center",
+                background: "linear-gradient(135deg, #ef5350, #e53935)",
+                color: "#fff",
+                borderRadius: "16px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Total Expenses
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {totals.Expenses.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card
+              sx={{
+                minWidth: { xs: 150, sm: 200 },
+                textAlign: "center",
+                background:
+                  balance >= 0
+                    ? "linear-gradient(135deg, #66bb6a, #43a047)"
+                    : "linear-gradient(135deg, #ef5350, #e53935)",
+                color: "#fff",
+                borderRadius: "16px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Balance
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {balance.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        )}
 
         {/* قائمة البنود */}
         {loading ? (
