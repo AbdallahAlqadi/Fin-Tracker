@@ -201,7 +201,7 @@ body {
 /* Mobile (Portrait): من 0px إلى 575px */
 @media (min-width: 350px) and (max-width: 575px) {
   .login-box {
-    width: 75%;  /* عرض مرن للشاشات الصغيرة */
+    width: 79%;  /* عرض مرن للشاشات الصغيرة */
     padding: 1.7rem;
   }
   .title {
