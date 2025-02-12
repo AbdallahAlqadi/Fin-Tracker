@@ -24,14 +24,14 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
-// مكوّن لتنسيق الصورة بحيث تكون بأبعاد ثابتة وتغطي الحاوية
+// صورة متجاوبة داخل الحاوية الدائرية
 const StyledImage = styled("img")({
   width: "100%",
   height: "100%",
   objectFit: "cover",
 });
 
-// حاوية الصورة مع تنسيق Flex-center
+// حاوية الصورة بشكل دائري
 const ImageContainer = styled("div")({
   width: "80px",
   height: "80px",
@@ -44,7 +44,7 @@ const ImageContainer = styled("div")({
   justifyContent: "center",
 });
 
-// تنسيق البطاقة (Card)
+// بطاقة الفئة مع حجم ثابت وتأثير hover
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -55,7 +55,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
   width: "200px",
-  height: "230px", // تم تقليل الارتفاع لإزالة سطر التاريخ
+  height: "230px", // ارتفاع ثابت بدون سطر التاريخ
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -63,6 +63,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }));
 
+// تنسيق قائمة الاختيارات مع تأثيرات مخصصة
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
@@ -82,11 +83,11 @@ const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState(new Date());
-  const [filterType, setFilterType] = useState("Revenues"); // افتراضيًا الإيرادات
+  const [filterType, setFilterType] = useState("Revenues"); // إفتراضيًا الإيرادات
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
 
-  // إنشاء مقياس لوني باستخدام أكثر من 40 لونًا مختلفًا
+  // مقياس لوني باستخدام مجموعة ألوان من d3
   const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
 
   useEffect(() => {
@@ -97,12 +98,15 @@ const Graph = () => {
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getUserBudget", {
-        headers: {
-          Auth: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.get(
+        "https://fin-tracker-ncbx.onrender.com/api/getUserBudget",
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       setBudgetItems(response.data.products || []);
       setLoading(false);
     } catch (error) {
@@ -111,20 +115,19 @@ const Graph = () => {
     }
   };
 
-  // دالة لتجميع العناصر بناءً على التصنيف فقط (دمج العناصر المكررة)
+  // تجميع العناصر حسب التصنيف (دمج العناصر المكررة)
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
       const categoryName = item.CategoriesId?.categoryName || "Unknown";
-      const key = categoryName;
-      if (!acc[key]) {
-        // نأخذ باقي بيانات العنصر، لكن سنجمع القيمة فقط
-        acc[key] = { ...item, valueitem: 0 };
+      if (!acc[categoryName]) {
+        acc[categoryName] = { ...item, valueitem: 0 };
       }
-      acc[key].valueitem += parseFloat(item.valueitem);
+      acc[categoryName].valueitem += parseFloat(item.valueitem);
       return acc;
     }, {});
   };
 
+  // تصفية العناصر بناءً على التاريخ والنوع
   const filterItems = (items) => {
     let filteredItems = items;
 
@@ -140,23 +143,21 @@ const Graph = () => {
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
         } else {
-          // في حالة التاريخ الكامل يمكن إرجاع كافة العناصر (أو تعديلها حسب الحاجة)
           return true;
         }
       });
     }
 
-    // التصفية حسب النوع (إيرادات أو مصروفات) إذا لم يكن "All"
     if (filterType !== "All") {
       filteredItems = filteredItems.filter(
         (item) => item.CategoriesId?.categoryType === filterType
       );
     }
 
-    // تجميع العناصر المكررة بناءً على التصنيف فقط
     return Object.values(groupByCategory(filteredItems));
   };
 
+  // حساب المجاميع الإجمالية لكل نوع
   const calculateTotals = (items) => {
     const totals = { Revenues: 0, Expenses: 0 };
     items.forEach((item) => {
@@ -174,19 +175,30 @@ const Graph = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
+  // تحديث الرسم البياني عند تغيير البيانات المفلترة
   useEffect(() => {
     if (filteredItems.length > 0) {
       drawPieChart(filteredItems);
+    } else {
+      // حذف محتويات SVG في حالة عدم وجود بيانات
+      d3.select(svgRef.current).selectAll("*").remove();
     }
   }, [filteredItems]);
 
+  // دالة إنشاء رسم بياني (مخطط دونات) باستخدام d3
   const drawPieChart = (data) => {
     const width = 700;
     const height = 500;
     const radius = Math.min(width, height) / 2 - 50;
 
-    // إزالة المحتوى السابق داخل الـ SVG
-    d3.select(svgRef.current).selectAll("*").remove();
+    // إعداد عنصر SVG مع viewBox لتجاوب أفضل
+    const svg = d3
+      .select(svgRef.current)
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
+
+    // حذف أي عناصر سابقة داخل الـ SVG
+    svg.selectAll("*").remove();
 
     // إنشاء تلميح (tooltip)
     let tooltip = d3.select("#tooltip");
@@ -205,10 +217,8 @@ const Graph = () => {
         .style("opacity", 0);
     }
 
-    const svg = d3
-      .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height)
+    // إنشاء مجموعة (group) مع تموضع مركزي
+    const g = svg
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
@@ -217,19 +227,17 @@ const Graph = () => {
       .value((d) => parseFloat(d.valueitem))
       .sort(null);
 
-    // إنشاء مخطط دونات
     const arc = d3
       .arc()
       .innerRadius(radius * 0.6)
       .outerRadius(radius);
 
-    // تكبير الشريحة عند المرور بالفأرة
     const arcHover = d3
       .arc()
       .innerRadius(radius * 0.6)
       .outerRadius(radius + 10);
 
-    const arcs = svg
+    const arcs = g
       .selectAll(".arc")
       .data(pie(data))
       .enter()
@@ -263,12 +271,12 @@ const Graph = () => {
           .duration(200)
           .attr("d", arcHover);
       })
-      .on("mousemove", function (event, d) {
+      .on("mousemove", function (event) {
         tooltip
           .style("left", event.pageX + 10 + "px")
           .style("top", event.pageY - 28 + "px");
       })
-      .on("mouseout", function (event, d) {
+      .on("mouseout", function () {
         tooltip.transition().duration(500).style("opacity", 0);
         d3.select(this)
           .transition()
@@ -278,15 +286,18 @@ const Graph = () => {
       .transition()
       .duration(1000)
       .attrTween("d", function (d) {
-        const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+        const interpolate = d3.interpolate(
+          { startAngle: 0, endAngle: 0 },
+          d
+        );
         return function (t) {
-          return arc(i(t));
+          return arc(interpolate(t));
         };
       });
 
-    // إضافة نص في منتصف المخطط لإظهار الإجمالي
+    // إضافة نص في منتصف الرسم لإظهار الإجمالي
     const totalValue = d3.sum(data, (d) => parseFloat(d.valueitem));
-    svg
+    g
       .append("text")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
@@ -297,11 +308,31 @@ const Graph = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
+      <Box
+        sx={{
+          padding: { xs: 2, sm: 4 },
+          background: "#f5f5f5",
+          minHeight: "100vh",
+        }}
+      >
+        {/* عناصر التصفية */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: "center",
+            gap: 2,
+            justifyContent: "center",
+          }}
+        >
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
-            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
+            <StyledSelect
+              value={dateType}
+              onChange={(e) => setDateType(e.target.value)}
+              label="Date Type"
+            >
               <MenuItem value="full">Full Date</MenuItem>
               <MenuItem value="month">Month</MenuItem>
               <MenuItem value="year">Year</MenuItem>
@@ -324,12 +355,17 @@ const Graph = () => {
             }
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
-            renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
+            renderInput={(params) => (
+              <TextField {...params} sx={{ minWidth: 180 }} />
+            )}
           />
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
-            <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              {/* أضفنا خيار "All" للسماح بعرض كافة العناصر */}
+            <StyledSelect
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              label="Type"
+            >
               <MenuItem value="All">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
               <MenuItem value="Expenses">Expenses</MenuItem>
@@ -337,8 +373,24 @@ const Graph = () => {
           </FormControl>
         </Box>
 
-        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: "#4CAF50", color: "#fff" }}>
+        {/* بطاقات الإجماليات */}
+        <Box
+          sx={{
+            marginBottom: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: { xs: 2, md: 4 }, // فجوة أقل على الشاشات الصغيرة
+          }}
+        >
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background: "#4CAF50",
+              color: "#fff",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Total Revenues
@@ -348,7 +400,14 @@ const Graph = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ minWidth: 200, textAlign: "center", background: "#F44336", color: "#fff" }}>
+          <Card
+            sx={{
+              minWidth: 200,
+              textAlign: "center",
+              background: "#F44336",
+              color: "#fff",
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Total Expenses
@@ -378,20 +437,57 @@ const Graph = () => {
         </Box>
 
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="80vh"
+          >
             <CircularProgress size={60} />
           </Box>
         ) : filteredItems.length === 0 ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="80vh"
+          >
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
           <>
-            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
-              <svg ref={svgRef}></svg>
-              <List sx={{ marginLeft: "20px", width: "300px", marginTop: "120px" }}>
+            {/* الرسم البياني والوسيلة التوضيحية (Legend) */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 4,
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: "100%", md: "700px" },
+                  height: { xs: "auto", md: "500px" },
+                  overflow: "hidden",
+                }}
+              >
+                <svg
+                  ref={svgRef}
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </Box>
+              <List
+                sx={{
+                  marginLeft: { md: "20px", xs: 0 },
+                  width: "300px",
+                  marginTop: { xs: "20px", md: 0 },
+                }}
+              >
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
@@ -405,7 +501,8 @@ const Graph = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                        (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
+                        (item.valueitem /
+                          d3.sum(filteredItems.map((i) => i.valueitem))) *
                         100
                       ).toFixed(2)}%)`}
                     />
@@ -413,9 +510,20 @@ const Graph = () => {
                 ))}
               </List>
             </Box>
-            <Grid container spacing={3} justifyContent="center">
+
+            {/* شبكة بطاقات الفئات */}
+            <Grid container spacing={2} justifyContent="center">
               {filteredItems.map((item, index) => (
-                <Grid item key={index}>
+                <Grid
+                  item
+                  key={index}
+                  xs={6}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  xl={2}
+                  sx={{ display: "flex", justifyContent: "center" }}
+                >
                   <StyledCard>
                     <ImageContainer>
                       <StyledImage
@@ -426,7 +534,10 @@ const Graph = () => {
                       />
                     </ImageContainer>
                     <CardContent sx={{ textAlign: "center" }}>
-                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#007BFF" }}>
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: "bold", color: "#007BFF" }}
+                      >
                         {item.CategoriesId?.categoryName || "Unknown"}
                       </Typography>
                       <Typography
@@ -446,7 +557,8 @@ const Graph = () => {
                         {item.CategoriesId?.categoryType &&
                         totals[item.CategoriesId.categoryType]
                           ? (
-                              (item.valueitem / totals[item.CategoriesId.categoryType]) *
+                              (item.valueitem /
+                                totals[item.CategoriesId.categoryType]) *
                               100
                             ).toFixed(2)
                           : "0.00"}
