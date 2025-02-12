@@ -203,6 +203,7 @@ body {
   .login-box {
     width: 79%;  /* عرض مرن للشاشات الصغيرة */
     padding: 1.7rem;
+    margin-left: -3%;
   }
   .title {
     font-size: 2.8rem !important; /* تقليل حجم العنوان للأجهزة الصغيرة */
