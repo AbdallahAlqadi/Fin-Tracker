@@ -205,7 +205,7 @@ body {
     padding: 1.7rem;
   }
   .title {
-    font-size:xx-large !important;
+    font-size: 2.8rem !important; /* تقليل حجم العنوان للأجهزة الصغيرة */
   }
   .login-box h2 {
     font-size: 1.5rem;
@@ -224,12 +224,9 @@ body {
     width: 30%;
   }
 
-
   .login-container {
-   
     width: 90%;
     height: 90%;
-   
     margin-left: 4.3%;
   }
 }

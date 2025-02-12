@@ -1,3 +1,4 @@
+/* ========== Base Styles (Desktop Default) ========== */
 body {
     margin: 0;
     font-family: 'Arial', sans-serif;
@@ -23,6 +24,7 @@ body {
     }
 }
 
+/* ---------- عنوان الصفحة ---------- */
 .title-container {
     text-align: center;
     margin-bottom: 25px;
@@ -51,6 +53,7 @@ body {
     }
 }
 
+/* ---------- حاوية التسجيل ---------- */
 .signup-container {
     display: flex;
     justify-content: center;
@@ -63,12 +66,13 @@ body {
     margin-bottom: 25px;
 }
 
+/* ---------- صندوق التسجيل ---------- */
 .signup-box {
     background: rgba(255, 255, 255, 0.95);
     padding: 1.8rem;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    width: 340px;
+    width: 100%;  /* عرض الصندوق يصبح 100% من الحاوية */
     text-align: center;
     border: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -86,6 +90,7 @@ body {
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
+/* ---------- المجموعات الخاصة بالحقول ---------- */
 .input-group {
     margin-bottom: 1.2rem;
     text-align: left;
@@ -121,6 +126,7 @@ body {
     box-shadow: 0 0 0 3px rgba(163, 184, 255, 0.1); /* لون فاتح */
 }
 
+/* ---------- زر التسجيل ---------- */
 .signup-button {
     width: 100%;
     padding: 0.6rem;
@@ -143,6 +149,7 @@ body {
     transform: translateY(0);
 }
 
+/* ---------- التسجيل عبر وسائل التواصل ---------- */
 .social-signup {
     margin-top: 1.2rem;
 }
@@ -195,57 +202,121 @@ body {
     color: #8fa3e6; /* لون فاتح */
 }
 
-@media (max-width: 768px) {
+/* ========== Media Queries ========== */
 
+/* ---- Mobile Portrait (0px - 575px) ---- */
+@media (max-width: 575px) {
     .signup-container {
-        width: 120%;
-margin-left: -10%;
-        height: 100%;
-      
-    }
-
-    .signup-box {
-        width: 90%;
-        padding: 1.5rem;
-    }
-
-    .title {
-        font-size: 2.2rem;
-    }
-
-    .signup-box h2 {
-        font-size: 1.6rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .signup-container {
-        width: 90%;
-margin-left: 5%;
-        height: 64%;
-      
+        width: 80%;
+        margin: 0 auto;
+        height: 80%;
+        padding: 1rem;
+        margin-left: 3.5%;
     }
     .signup-box {
-        padding: 1.2rem;
+        width: 100%;
+        padding: 1rem;
     }
-
     .title {
         font-size: 2rem;
     }
-
     .signup-box h2 {
         font-size: 1.4rem;
     }
-
     .input-group input {
         padding: 0.65rem;
-
         font-size: 0.9rem;
+        width: 95%;
     }
-
     .signup-button {
         padding: 0.7rem;
-        font-size: 1.3rem;
+        font-size: 1rem;
         width: 60%;
+        margin: 0 auto;
+    }
+}
+
+/* ---- Mobile Landscape (576px - 767px) ---- */
+@media (min-width: 576px) and (max-width: 767px) {
+    .signup-container {
+        width: 100%;
+        margin: 0 auto;
+        height: auto;
+        padding: 1rem;
+    }
+    .signup-box {
+        width: 100%;
+        padding: 1.2rem;
+    }
+    .title {
+        font-size: 2.2rem;
+    }
+    .signup-box h2 {
+        font-size: 1.6rem;
+    }
+    .input-group input {
+        padding: 0.7rem;
+        font-size: 1rem;
+    }
+    .signup-button {
+        padding: 0.75rem;
+        font-size: 1.4rem;
+        width: 70%;
+        margin: 0 auto;
+    }
+}
+
+/* ---- Tablet (768px - 991px) ---- */
+@media (min-width: 768px) and (max-width: 991px) {
+    .signup-container {
+        width: 100%;
+        margin: 0 auto;
+        height: auto;
+    }
+    .signup-box {
+        width: 100%;  /* عرض الصندوق يصبح 100% من الحاوية */
+        padding: 1.5rem;
+    }
+    .title {
+        font-size: 2.5rem;
+    }
+    .signup-box h2 {
+        font-size: 1.8rem;
+    }
+}
+
+/* ---- Laptop (992px - 1199px) ---- */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .signup-container {
+        width: 90%;
+        margin: 0 auto;
+    }
+    .signup-box {
+        width: 100%;  /* عرض الصندوق يصبح 100% من الحاوية */
+        padding: 1.8rem;
+    }
+    .title {
+        font-size: 3rem;
+    }
+    .signup-box h2 {
+        font-size: 1.9rem;
+    }
+}
+
+/* ---- Desktop (1200px and above) ---- */
+@media (min-width: 1200px) {
+    .signup-container {
+        /* يمكن ترك العرض افتراضياً أو تحديد max-width حسب الرغبة */
+        width: auto;
+    }
+    .signup-box {
+        width: 100%;  /* عرض الصندوق يصبح 100% من الحاوية */
+        padding: 1.8rem;
+    }
+    .title {
+        font-size: 3.5rem;
+    }
+    .signup-box h2 {
+        font-size: 1.9rem;
     }
 }
