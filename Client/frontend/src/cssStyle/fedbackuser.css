@@ -56,8 +56,8 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   max-width: 600px; /* تقليل عرض الرسالة */
   width: 500px;
-  margin: 0 auto;   /* توسيط الرسالة داخل الحاوية */
-}
+margin-bottom: 3.5px;
+margin-left: 9%;}
 
 .feedback-message:hover {
   transform: translateX(5px);
