@@ -24,15 +24,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
-// تعريف النطاقات (breakpoints) حسب المتطلبات
-const breakpoints = {
-  mobilePortrait: "@media (max-width:575px)",
-  mobileLandscape: "@media (min-width:576px) and (max-width:767px)",
-  tablet: "@media (min-width:768px) and (max-width:991px)",
-  laptop: "@media (min-width:992px) and (max-width:1199px)",
-  desktop: "@media (min-width:1200px)",
-};
-
 // مكوّن لتنسيق الصورة بحيث تكون بأبعاد ثابتة وتغطي الحاوية
 const StyledImage = styled("img")({
   width: "100%",
@@ -40,7 +31,7 @@ const StyledImage = styled("img")({
   objectFit: "cover",
 });
 
-// حاوية الصورة مع تنسيق Flex-center وتعديل الأبعاد على الشاشات الصغيرة
+// حاوية الصورة مع تنسيق Flex-center
 const ImageContainer = styled("div")({
   width: "80px",
   height: "80px",
@@ -51,17 +42,9 @@ const ImageContainer = styled("div")({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  [breakpoints.mobilePortrait]: {
-    width: "60px",
-    height: "60px",
-  },
-  [breakpoints.mobileLandscape]: {
-    width: "70px",
-    height: "70px",
-  },
 });
 
-// تنسيق البطاقة (Card) مع ضبط العرض والارتفاع حسب حجم الشاشة
+// تنسيق البطاقة (Card)
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -72,20 +55,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
   background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
   width: "200px",
-  height: "230px", // الحجم الأصلي
-  [breakpoints.mobilePortrait]: {
-    width: "150px",
-    height: "190px",
-  },
-  [breakpoints.mobileLandscape]: {
-    width: "160px",
-    height: "200px",
-  },
-  [breakpoints.tablet]: {
-    width: "180px",
-    height: "220px",
-  },
-  // تبقى مقاسات Laptop و Desktop كما هي
+  height: "230px", // تم تقليل الارتفاع لإزالة سطر التاريخ
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -127,15 +97,12 @@ const Graph = () => {
 
   const fetchBudget = async () => {
     try {
-      const response = await axios.get(
-        "https://fin-tracker-ncbx.onrender.com/api/getUserBudget",
-        {
-          headers: {
-            Auth: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getUserBudget", {
+        headers: {
+          Auth: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       setBudgetItems(response.data.products || []);
       setLoading(false);
     } catch (error) {
@@ -218,14 +185,8 @@ const Graph = () => {
     const height = 500;
     const radius = Math.min(width, height) / 2 - 50;
 
-    // إزالة المحتوى السابق داخل الـ SVG وتعيين viewBox للتجاوب
-    const svgSelection = d3.select(svgRef.current);
-    svgSelection.selectAll("*").remove();
-    svgSelection
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .style("maxWidth", "700px")
-      .style("width", "100%")
-      .style("height", "auto");
+    // إزالة المحتوى السابق داخل الـ SVG
+    d3.select(svgRef.current).selectAll("*").remove();
 
     // إنشاء تلميح (tooltip)
     let tooltip = d3.select("#tooltip");
@@ -244,7 +205,10 @@ const Graph = () => {
         .style("opacity", 0);
     }
 
-    const svg = svgSelection
+    const svg = d3
+      .select(svgRef.current)
+      .attr("width", width)
+      .attr("height", height)
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
 
@@ -333,30 +297,11 @@ const Graph = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box
-        sx={{
-          padding: { xs: 2, sm: 4, md: 6 },
-          background: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        {/* مجموعة أدوات التصفية */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-          }}
-        >
+      <Box sx={{ padding: 4, background: "#f5f5f5", minHeight: "100vh" }}>
+        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 2 }}>
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
-            <StyledSelect
-              value={dateType}
-              onChange={(e) => setDateType(e.target.value)}
-            >
+            <StyledSelect value={dateType} onChange={(e) => setDateType(e.target.value)}>
               <MenuItem value="full">Full Date</MenuItem>
               <MenuItem value="month">Month</MenuItem>
               <MenuItem value="year">Year</MenuItem>
@@ -379,16 +324,11 @@ const Graph = () => {
             }
             value={filterDate}
             onChange={(newValue) => setFilterDate(newValue)}
-            renderInput={(params) => (
-              <TextField {...params} sx={{ minWidth: 180 }} />
-            )}
+            renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
           />
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Type</InputLabel>
-            <StyledSelect
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
+            <StyledSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               {/* أضفنا خيار "All" للسماح بعرض كافة العناصر */}
               <MenuItem value="All">All</MenuItem>
               <MenuItem value="Revenues">Revenues</MenuItem>
@@ -397,25 +337,8 @@ const Graph = () => {
           </FormControl>
         </Box>
 
-        {/* عرض المجاميع (الإيرادات، المصروفات، الرصيد) */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-          }}
-        >
-          <Card
-            sx={{
-              minWidth: 200,
-              textAlign: "center",
-              background: "#4CAF50",
-              color: "#fff",
-            }}
-          >
+        <Box sx={{ marginBottom: 4, display: "flex", justifyContent: "center", gap: 4 }}>
+          <Card sx={{ minWidth: 200, textAlign: "center", background: "#4CAF50", color: "#fff" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Total Revenues
@@ -425,14 +348,7 @@ const Graph = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card
-            sx={{
-              minWidth: 200,
-              textAlign: "center",
-              background: "#F44336",
-              color: "#fff",
-            }}
-          >
+          <Card sx={{ minWidth: 200, textAlign: "center", background: "#F44336", color: "#fff" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Total Expenses
@@ -462,45 +378,20 @@ const Graph = () => {
         </Box>
 
         {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="80vh"
-          >
+          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <CircularProgress size={60} />
           </Box>
         ) : filteredItems.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="80vh"
-          >
+          <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <Typography variant="h4" color="textSecondary">
               No Items
             </Typography>
           </Box>
         ) : (
           <>
-            {/* الرسم البياني وعرض القائمة */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                justifyContent: "center",
-                alignItems: "center",
-                marginBottom: 4,
-              }}
-            >
+            <Box sx={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
               <svg ref={svgRef}></svg>
-              <List
-                sx={{
-                  marginLeft: { xs: 0, md: "20px" },
-                  width: "300px",
-                  marginTop: { xs: 2, md: "120px" },
-                }}
-              >
+              <List sx={{ marginLeft: "20px", width: "300px", marginTop: "120px" }}>
                 {filteredItems.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
@@ -514,8 +405,7 @@ const Graph = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                        (item.valueitem /
-                          d3.sum(filteredItems.map((i) => i.valueitem))) *
+                        (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem))) *
                         100
                       ).toFixed(2)}%)`}
                     />
@@ -523,15 +413,9 @@ const Graph = () => {
                 ))}
               </List>
             </Box>
-
-            {/* شبكة البطاقات التفصيلية */}
             <Grid container spacing={3} justifyContent="center">
               {filteredItems.map((item, index) => (
-                <Grid
-                  item
-                  key={index}
-                  sx={{ display: "flex", justifyContent: "center" }}
-                >
+                <Grid item key={index}>
                   <StyledCard>
                     <ImageContainer>
                       <StyledImage
@@ -542,10 +426,7 @@ const Graph = () => {
                       />
                     </ImageContainer>
                     <CardContent sx={{ textAlign: "center" }}>
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold", color: "#007BFF" }}
-                      >
+                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#007BFF" }}>
                         {item.CategoriesId?.categoryName || "Unknown"}
                       </Typography>
                       <Typography
@@ -565,8 +446,7 @@ const Graph = () => {
                         {item.CategoriesId?.categoryType &&
                         totals[item.CategoriesId.categoryType]
                           ? (
-                              (item.valueitem /
-                                totals[item.CategoriesId.categoryType]) *
+                              (item.valueitem / totals[item.CategoriesId.categoryType]) *
                               100
                             ).toFixed(2)
                           : "0.00"}
