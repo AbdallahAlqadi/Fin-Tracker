@@ -1,4 +1,6 @@
-/* Modern Finance-Themed Form Styling */
+/* ================================
+   Modern Finance-Themed Form Styling
+==================================== */
 .form-container {
   max-width: 500px;
   padding: 35px;
@@ -105,9 +107,10 @@
 }
 
 
-/* CategoryList.css */
+/* ================================
+         CategoryList.css
+==================================== */
 /* هذه الأنماط تمثل عرض الفئات (الأيقونات) التي يختار منها المستخدم مصروفاته وإيراداته في صفحة الإدارة */
-
 .category-list-container {
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -235,8 +238,9 @@
   background-color: #c53030;
 }
 
-/* تحسين تصميم المودال */
-
+/* ================================
+       تحسين تصميم المودال
+==================================== */
 /* طبقة الخلفية للمودال */
 .modal-overlay {
   position: fixed;
@@ -330,4 +334,88 @@
 .cancel-button {
   background-color: #f44336;
   color: #fff;
+}
+
+
+/* =======================================
+   استعلامات الوسائط لجعل التصميم متجاوب
+========================================== */
+
+/* Mobile (portrait): 0px - 575px */
+@media (max-width: 575px) {
+  .form-container {
+    max-width: 88%;
+    padding: 20px;
+    margin: 40px auto;
+  }
+  
+  .form-container h2 {
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+  }
+  
+  /* تعديل تخطيط الفئات لتقليل عدد الأعمدة */
+  .category-chunk {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  /* تعديل حجم المودال */
+  .modal-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+}
+
+/* Mobile (landscape): 576px - 767px */
+@media (min-width: 576px) and (max-width: 767px) {
+  .form-container {
+    max-width: 95%;
+    padding: 25px;
+    margin: 50px auto;
+  }
+  
+  .category-chunk {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+}
+
+/* Tablet: 768px - 991px */
+@media (min-width: 768px) and (max-width: 991px) {
+  /* يمكن الحفاظ على حجم النموذج كما هو أو تعديل الحد الأقصى حسب الحاجة */
+  .form-container {
+    max-width: 500px;
+    padding: 30px;
+  }
+  
+  .category-chunk {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Laptop: 992px - 1199px */
+@media (min-width: 992px) and (max-width: 1199px) {
+  /* النموذج يبقى بنفس الحجم الأصلي */
+  .form-container {
+    max-width: 500px;
+  }
+  
+  .category-chunk {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Desktop: 1200px and above */
+/* التصميم الأصلي مناسب؛ يمكن تعديل بعض التفاصيل الدقيقة إن رغبت */
+@media (min-width: 1200px) {
+  /* مثال: يمكن زيادة هامش النموذج في الشاشات الكبيرة */
+  .form-container {
+    margin: 80px auto;
+  }
+  
+  .category-chunk {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
