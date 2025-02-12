@@ -4,7 +4,6 @@
   font-family: 'Roboto', sans-serif;
   min-height: 100vh;
   background: #f9f9f9;
-  
 }
 
 /* تصميم الهيدر العنوان في أعلى الصفحة */
@@ -87,4 +86,97 @@
 .message-text {
   color: #555;
   line-height: 1.5;
+}
+
+/* ============================
+   وسائط التجاوب حسب حجم الشاشة
+   ============================ */
+
+/* Mobile (portrait): 0px - 575px */
+@media (max-width: 575px) {
+  .page-header h1 {
+    font-size: 1.5em;
+  }
+  .feedback-container {
+    width: 95%;
+    margin: 10px auto;
+    padding: 10px;
+  }
+  .feedback-window {
+    width: 95%;
+  }
+  .feedback-message {
+    width: 90%;
+    max-width: 90%;
+    padding: 10px;
+    gap: 10px;
+  }
+  .message-avatar img {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Mobile (landscape): 576px - 767px */
+@media (min-width: 576px) and (max-width: 767px) {
+  .page-header h1 {
+    font-size: 1.75em;
+  }
+  .feedback-container {
+    width: 90%;
+    padding: 10px;
+  }
+  .feedback-window {
+    width: 90%;
+  }
+  .feedback-message {
+    width: 90%;
+    max-width: 90%;
+    padding: 12px;
+    gap: 12px;
+  }
+  .message-avatar img {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* Tablet: 768px - 991px */
+@media (min-width: 768px) and (max-width: 991px) {
+  .feedback-container {
+    width: 90%;
+    padding: 15px;
+  }
+  .feedback-window {
+    width: 90%;
+  }
+  .feedback-message {
+    width: 90%;
+    max-width: 600px;
+  }
+  .page-header h1 {
+    font-size: 2em;
+  }
+}
+
+/* Laptop: 992px - 1199px */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .feedback-container {
+    width: 800px;
+  }
+  .feedback-message {
+    width: 500px;
+    max-width: 600px;
+  }
+}
+
+/* Desktop: 1200px and above */
+@media (min-width: 1200px) {
+  .feedback-container {
+    width: 800px; /* أو يمكن استخدام max-width: 1000px حسب الرغبة */
+  }
+  .feedback-message {
+    width: 500px;
+    max-width: 600px;
+  }
 }
