@@ -1,3 +1,4 @@
+/* ====== الأنماط الأساسية ====== */
 .calculator-container {
   width: 800px;
   margin: 100px auto;
@@ -30,7 +31,6 @@
 .calculate-button:active {
   transform: scale(0.95); /* تأثير ضغط عند النقر */
 }
-
 
 .open-dialog-button {
   width: 100%;
@@ -95,7 +95,6 @@
   transition: background 0.3s ease;
 }
 
-
 .custom-select {
   width: 100%;
   padding: 10px;
@@ -104,8 +103,8 @@
   background-color: #f9f9f9;
   font-size: 16px;
   color: #333;
-  appearance: none; /* لإزالة السهم الافتراضي */
-  -webkit-appearance: none; /* للتأكد من التوافق مع المتصفحات المختلفة */
+  appearance: none; /* إزالة السهم الافتراضي */
+  -webkit-appearance: none;
   -moz-appearance: none;
   background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
   background-repeat: no-repeat;
@@ -118,7 +117,6 @@
   border-color: #66afe9;
   box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
 }
-
 
 .error-text {
   color: red;
@@ -136,11 +134,8 @@ table {
   margin-top: 15px;
 }
 
-
-
-
-
-table th, table td {
+table th,
+table td {
   border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
@@ -169,4 +164,134 @@ table tr:nth-child(even) {
 
 .export-button:hover {
   background-color: darkgreen;
+}
+
+/* ====== الأنماط التكيفية (Responsive) ====== */
+
+/* Mobile (portrait): 0px - 575px */
+@media (max-width: 575px) {
+  .calculator-container {
+    width: 95%;
+    margin: 20px auto;
+    padding: 20px;
+  }
+  .calculate-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+  .open-dialog-button,
+  .close-button {
+    padding: 10px;
+    font-size: 14px;
+  }
+  .custom-select {
+    font-size: 14px;
+  }
+  .dialog-content {
+    width: 90%;
+    padding: 20px;
+  }
+  table th,
+  table td {
+    padding: 8px;
+    font-size: 14px;
+  }
+}
+
+/* Mobile (landscape): 576px - 767px */
+@media (min-width: 576px) and (max-width: 767px) {
+  .calculator-container {
+    width: 90%;
+    margin: 30px auto;
+    padding: 25px;
+  }
+  .calculate-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+  .open-dialog-button,
+  .close-button {
+    padding: 10px;
+    font-size: 15px;
+  }
+  .custom-select {
+    font-size: 15px;
+  }
+  .dialog-content {
+    width: 80%;
+    padding: 25px;
+  }
+  table th,
+  table td {
+    padding: 9px;
+    font-size: 15px;
+  }
+}
+
+/* Tablet: 768px - 991px */
+@media (min-width: 768px) and (max-width: 991px) {
+  .calculator-container {
+    width: 90%;
+    margin: 50px auto;
+    padding: 25px;
+  }
+  .calculate-button {
+    width: 100%;
+    font-size: 17px;
+    padding: 11px 22px;
+  }
+  .open-dialog-button,
+  .close-button {
+    padding: 11px;
+    font-size: 16px;
+  }
+  .custom-select {
+    font-size: 16px;
+  }
+  .dialog-content {
+    width: 80%;
+    padding: 30px;
+  }
+  table th,
+  table td {
+    padding: 10px;
+    font-size: 16px;
+  }
+}
+
+/* Laptop: 992px - 1199px */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .calculator-container {
+    width: 800px;
+    margin: 80px auto;
+    padding: 30px;
+  }
+  .calculate-button {
+    width: 390px;
+  }
+  .dialog-content {
+    width: 450px;
+  }
+  table th,
+  table td {
+    padding: 10px;
+    font-size: 16px;
+  }
+}
+
+/* Desktop: 1200px and above */
+@media (min-width: 1200px) {
+  .calculator-container {
+    width: 800px;
+    margin: 100px auto;
+    padding: 30px;
+  }
+  .calculate-button {
+    width: 390px;
+  }
+  .dialog-content {
+    width: 450px;
+  }
 }
