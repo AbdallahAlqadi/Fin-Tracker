@@ -207,11 +207,11 @@ body {
 /* ---- Mobile Portrait (0px - 575px) ---- */
 @media (max-width: 575px) {
     .signup-container {
-        width: 80%;
+        width: 90%;
         margin: 0 auto;
-        height: 80%;
+        height: 70%;
         padding: 1rem;
-        margin-left: 3.5%;
+        margin-left: .7%;
     }
     .signup-box {
         width: 100%;

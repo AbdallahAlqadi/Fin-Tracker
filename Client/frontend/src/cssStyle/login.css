@@ -237,9 +237,10 @@ body {
     width: 320px; /* يبقى العرض كما في الشكل الأصلي */
     padding: 1.8rem;
   }
-  .title {
-    font-size: 3rem !important;
-  }
+  .title {  
+    font-size: 2rem !important;  
+}
+
   .login-box h2 {
     font-size: 1.6rem;
   }
@@ -272,9 +273,3 @@ body {
 }
 
 /* استعلام وسائط للأجهزة التي يقل عرضها عن 450px */
-@media (max-width: 450px) {
-  .login-box {
-    width: 85%;  /* تقليل العرض بشكل بسيط للأجهزة الأصغر */
-    /* يمكنك تعديل padding أيضاً إذا لزم الأمر */
-  }
-}
