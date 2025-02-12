@@ -1,3 +1,4 @@
+/* الأنماط الأساسية لجميع الأجهزة */
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
@@ -62,7 +63,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 40px;
-  
 }
 
 .login-box {
@@ -70,7 +70,7 @@ body {
   padding: 2.5rem;
   border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  width: 320px;
+  width: 320px; /* عرض ثابت كما هو في الشكل الأصلي للأجهزة الأكبر */
   text-align: center;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -98,7 +98,6 @@ body {
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
   color: #4a5568;
-  text-align: left;
 }
 
 .input-group input {
@@ -118,8 +117,8 @@ body {
 
 .input-group input:focus {
   outline: none;
-  border-color: #a3b8ff; /* لون فاتح */
-  box-shadow: 0 0 0 3px rgba(163, 184, 255, 0.1); /* لون فاتح */
+  border-color: #a3b8ff;
+  box-shadow: 0 0 0 3px rgba(163, 184, 255, 0.1);
 }
 
 .login-button {
@@ -127,7 +126,7 @@ body {
   padding: 0.75rem;
   border: none;
   border-radius: 10px;
-  background: #6687f1; /* لون فاتح */
+  background: #6687f1;
   color: #fff;
   font-size: 1rem;
   font-weight: 600;
@@ -136,7 +135,7 @@ body {
 }
 
 .login-button:hover {
-  background: #8fa3e6; /* لون فاتح */
+  background: #8fa3e6;
   transform: translateY(-2px);
 }
 
@@ -161,12 +160,12 @@ body {
 }
 
 .social-login button.google {
-  background: #ff6b6b; /* لون فاتح */
+  background: #ff6b6b;
   color: #fff;
 }
 
 .social-login button.facebook {
-  background: #6b9bff; /* لون فاتح */
+  background: #6b9bff;
   color: #fff;
 }
 
@@ -186,17 +185,89 @@ body {
 }
 
 .login-box .footer a {
-  color: #a3b8ff; /* لون فاتح */
+  color: #a3b8ff;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .login-box .footer a:hover {
-  color: #8fa3e6; /* لون فاتح */
+  color: #8fa3e6;
 }
 
 
+/* استعلامات الوسائط */
 
+/* Mobile (Portrait): من 0px إلى 575px */
+@media (max-width: 575px) {
+  .login-box {
+    width: 75%;  /* عرض مرن للشاشات الصغيرة */
+    padding: 1.9rem;
+  }
+  .title {
+    font-size: 2.5rem !important;
+  }
+  .login-box h2 {
+    font-size: 1.5rem;
+  }
+  .input-group input {
+    font-size: 0.9rem;
+    padding: 0.65rem;
+  }
+  .login-button {
+    font-size: 0.9rem;
+    padding: 0.65rem;
+  }
+  .social-login button {
+    font-size: 0.9rem;
+    padding: 0.65rem;
+  }
+}
 
+/* Mobile (Landscape): من 576px إلى 767px */
+@media (min-width: 576px) and (max-width: 767px) {
+  .login-box {
+    width: 320px; /* يبقى العرض كما في الشكل الأصلي */
+    padding: 1.8rem;
+  }
+  .title {
+    font-size: 3rem !important;
+  }
+  .login-box h2 {
+    font-size: 1.6rem;
+  }
+  .input-group input {
+    font-size: 1rem;
+    padding: 0.7rem;
+  }
+  .login-button {
+    font-size: 1rem;
+    padding: 0.7rem;
+  }
+  .social-login button {
+    font-size: 1rem;
+    padding: 0.7rem;
+  }
+}
 
+/* Tablet والأجهزة الأكبر (من 768px فما فوق) */
+@media (min-width: 768px) {
+  .login-box {
+    width: 320px; /* يبقى العرض كما هو دون زيادة */
+    padding: 2.5rem;
+  }
+  .title {
+    font-size: 3.7rem !important;
+  }
+  .login-box h2 {
+    font-size: 2rem;
+  }
+}
+
+/* استعلام وسائط للأجهزة التي يقل عرضها عن 450px */
+@media (max-width: 450px) {
+  .login-box {
+    width: 85%;  /* تقليل العرض بشكل بسيط للأجهزة الأصغر */
+    /* يمكنك تعديل padding أيضاً إذا لزم الأمر */
+  }
+}
