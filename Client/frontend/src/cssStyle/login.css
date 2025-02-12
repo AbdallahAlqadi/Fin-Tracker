@@ -199,13 +199,13 @@ body {
 /* استعلامات الوسائط */
 
 /* Mobile (Portrait): من 0px إلى 575px */
-@media (max-width: 575px) {
+@media (min-width: 350px) and (max-width: 575px) {
   .login-box {
     width: 75%;  /* عرض مرن للشاشات الصغيرة */
-    padding: 1.9rem;
+    padding: 1.7rem;
   }
   .title {
-    font-size: 2.5rem !important;
+    font-size:xx-large !important;
   }
   .login-box h2 {
     font-size: 1.5rem;
@@ -221,6 +221,16 @@ body {
   .social-login button {
     font-size: 0.9rem;
     padding: 0.65rem;
+    width: 30%;
+  }
+
+
+  .login-container {
+   
+    width: 90%;
+    height: 90%;
+   
+    margin-left: 4.3%;
   }
 }
 
