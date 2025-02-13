@@ -104,12 +104,17 @@ margin-left: 9%;}
   }
   .feedback-window {
     width: 95%;
+    margin-left: -4.5%;
+
+
   }
   .feedback-message {
     width: 90%;
     max-width: 90%;
     padding: 10px;
     gap: 10px;
+
+
   }
   .message-avatar img {
     width: 40px;
@@ -125,9 +130,11 @@ margin-left: 9%;}
   .feedback-container {
     width: 90%;
     padding: 10px;
+
   }
   .feedback-window {
     width: 90%;
+
   }
   .feedback-message {
     width: 90%;
