@@ -115,7 +115,7 @@ exports.Updatecategory = async (req, res) => {
 
     // إذا تم رفع ملف جديد، يتم استخدام المسار الذي أنشأه multer في مجلد uploads
     if (req.file) {
-      updateData.image = req.file.path; // سيصبح المسار مثلاً: "uploads/1634567890123.jpg"
+      updateData.image = `uploads/${req.file.filename}`;
     }
 
     const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
