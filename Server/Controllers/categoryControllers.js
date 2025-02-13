@@ -98,6 +98,7 @@ exports.Deletecategory = async (req, res) => {
 };
 
 // تحديث التصنيف (مع إمكانية تغيير الصورة)
+// تحديث التصنيف (مع إمكانية تغيير الصورة)
 exports.Updatecategory = async (req, res) => {
   try {
     // معالجة رفع الملف (إن وُجد)
@@ -111,27 +112,28 @@ exports.Updatecategory = async (req, res) => {
     });
 
     const id = req.params.id;
+    // البحث عن التصنيف الحالي للحصول على البيانات القديمة
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    // تجميع البيانات المحدثة (النصية)
     let updateData = req.body;
 
-    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
+    // إذا تم رفع صورة جديدة
     if (req.file) {
-      // المسار المؤقت الذي يوجد به الملف
-      const tempPath = req.file.path;
-      // تحديد المسار النهائي في مجلد "uploads"
-      const targetPath = path.join(uploadsFolder, req.file.filename);
-
-      // نقل الملف من المجلد المؤقت إلى الدائم
-      fs.renameSync(tempPath, targetPath);
-
-      // تحديث مسار الصورة في البيانات
+      // حذف الصورة القديمة إن وُجدت
+      if (category.image && fs.existsSync(category.image)) {
+        fs.unlinkSync(category.image);
+      }
+      // تحديث مسار الصورة باستخدام الملف الجديد
       updateData.image = `uploads/${req.file.filename}`;
     }
 
-    const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatecategory) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-    res.status(200).json(updatecategory);
+    // تحديث التصنيف في قاعدة البيانات
+    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
+    res.status(200).json(updatedCategory);
   } catch (error) {
     if (error instanceof multer.MulterError) {
       return res.status(400).json({ message: 'Error uploading file', error: error.message });
