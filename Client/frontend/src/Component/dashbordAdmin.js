@@ -101,7 +101,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null); // لتخزين الصورة الجديدة عند التحديث
+  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -320,9 +320,8 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
-        // يتم استخدام response.data.data لأننا قمنا بتغليف الرد في update route
         setCategories(categories.map((cat) =>
-          cat._id === id ? response.data.data : cat
+          cat._id === id ? response.data : cat
         ));
       }
     } catch (error) {

@@ -98,45 +98,46 @@ exports.Deletecategory = async (req, res) => {
 };
 
 // تحديث التصنيف (مع إمكانية تغيير الصورة)
-// يتم استخدام multer كـ middleware داخل الدالة للتعامل مع رفع الملف
-exports.Updatecategory = (req, res) => {
-  uploadSingle(req, res, async (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ message: 'Error uploading file', error: err.message });
-      } else if (err.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
-        return res.status(400).json({ message: err.message });
-      } else {
-        return res.status(500).json({ message: 'Error processing file', error: err.message });
-      }
-    }
+exports.Updatecategory = async (req, res) => {
+  try {
+    // معالجة رفع الملف (إن وُجد)
+    await new Promise((resolve, reject) => {
+      uploadSingle(req, res, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
 
     const id = req.params.id;
     let updateData = req.body;
 
-    try {
-      // إيجاد التصنيف الحالي للتأكد من وجوده والحصول على مسار الصورة القديمة
-      const existingCategory = await Category.findById(id);
-      if (!existingCategory) {
-        return res.status(404).json({ message: 'Category not found' });
-      }
+    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
+    if (req.file) {
+      // المسار المؤقت الذي يوجد به الملف
+      const tempPath = req.file.path;
+      // تحديد المسار النهائي في مجلد "uploads"
+      const targetPath = path.join(uploadsFolder, req.file.filename);
 
-      // إذا تم رفع ملف جديد، نحدث مسار الصورة ونحذف القديمة إن وُجدت
-      if (req.file) {
-        updateData.image = `uploads/${req.file.filename}`;
-        if (existingCategory.image && fs.existsSync(existingCategory.image)) {
-          fs.unlink(existingCategory.image, (unlinkErr) => {
-            if (unlinkErr) {
-              console.error('Error deleting old image:', unlinkErr);
-            }
-          });
-        }
-      }
+      // نقل الملف من المجلد المؤقت إلى الدائم
+      fs.renameSync(tempPath, targetPath);
 
-      const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
-      return res.status(200).json({ message: 'Category updated successfully', data: updatedCategory });
-    } catch (error) {
-      return res.status(500).json({ message: 'Error updating category', error: error.message });
+      // تحديث مسار الصورة في البيانات
+      updateData.image = `uploads/${req.file.filename}`;
     }
-  });
+
+    const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updatecategory) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+    res.status(200).json(updatecategory);
+  } catch (error) {
+    if (error instanceof multer.MulterError) {
+      return res.status(400).json({ message: 'Error uploading file', error: error.message });
+    } else if (error.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error updating category', error: error.message });
+  }
 };
