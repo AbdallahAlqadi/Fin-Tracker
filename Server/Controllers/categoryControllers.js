@@ -1,78 +1,70 @@
 // controllers/categoryController.js
 const Category = require('../models/categoryData');
-const multer = require('multer');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
-// تكوين multer لتحديد مكان حفظ الملفات وتسميتها
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // حفظ الملفات في مجلد 'uploads'
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // إضافة توقيت لاسم الملف لتجنب التكرار
-  }
-});
+/**
+ * دالة مساعدة للتحقق من صحة صورة DataURL واستخلاص البيانات
+ * تتوقع السلسلة بصيغة: data:image/jpeg;base64,........
+ */
+function parseImageData(dataUrl) {
+  // التعبير النظامي للتحقق من صيغة الصورة (jpeg, jpg, png, gif)
+  const regex = /^data:(image\/(jpeg|jpg|png|gif));base64,(.+)$/;
+  const matches = dataUrl.match(regex);
+  if (!matches) return null;
+  return {
+    mimeType: matches[1],
+    extension: matches[2] === 'jpeg' || matches[2] === 'jpg' ? '.jpg'
+               : matches[2] === 'png' ? '.png'
+               : '.gif',
+    base64Data: matches[3]
+  };
+}
 
-// تكوين multer لتحميل ملف واحد فقط
-const uploadSingle = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // الحد الأقصى لحجم الملف 5MB
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|gif/; // السماح بأنواع الصور
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only images (jpeg, jpg, png, gif) are allowed!'));
-    }
-  }
-}).single('image'); // 'image' هو اسم الحقل الذي يحتوي على الملف
-
-// إنشاء تصنيف جديد
+// إنشاء تصنيف جديد باستخدام JSON (مع صورة DataURL)
 exports.createCategory = async (req, res) => {
   try {
-    // رفع الملف باستخدام multer
-    await new Promise((resolve, reject) => {
-      uploadSingle(req, res, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    // استخراج البيانات من الطلب
-    const { categoryName, categoryType } = req.body;
-    const image = req.file ? `uploads/${req.file.filename}` : null;
+    const { categoryName, categoryType, image } = req.body;
 
     // التحقق من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'يرجى ملء جميع الحقول' });
     }
 
-    // إنشاء كائن جديد من التصنيف
+    // التحقق من صحة صيغة الصورة
+    const parsedImage = parseImageData(image);
+    if (!parsedImage) {
+      return res.status(400).json({ message: 'صيغة الصورة غير صحيحة' });
+    }
+
+    // تحويل البيانات المشفرة إلى Buffer
+    const imageBuffer = Buffer.from(parsedImage.base64Data, 'base64');
+
+    // (اختياري) التحقق من حجم الصورة (مثلاً أقل من 50 ميجابايت)
+    if (imageBuffer.length > 50 * 1024 * 1024) {
+      return res.status(400).json({ message: 'حجم الصورة يجب أن يكون أقل من 50 ميجابايت' });
+    }
+
+    // إنشاء اسم فريد للصورة وتحديد المسار
+    const filename = Date.now() + parsedImage.extension;
+    const relativePath = `images/${filename}`;
+    const absolutePath = path.join(__dirname, '..', 'public', 'images', filename);
+
+    // حفظ الصورة على القرص
+    fs.writeFileSync(absolutePath, imageBuffer);
+
+    // إنشاء التصنيف مع تخزين الرابط النسبي للصورة
     const newCategory = new Category({
       categoryName,
       categoryType,
-      image,
+      image: relativePath,
     });
 
-    // حفظ التصنيف في قاعدة البيانات
     await newCategory.save();
 
-    res.status(201).json({ message: 'Category created successfully', data: newCategory });
+    res.status(201).json({ message: 'تم إنشاء التصنيف بنجاح', data: newCategory });
   } catch (err) {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ message: 'Error uploading file', error: err.message });
-    } else if (err.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
-      return res.status(400).json({ message: err.message });
-    } else {
-      res.status(500).json({ message: 'Error creating category', error: err.message });
-    }
+    res.status(500).json({ message: 'حدث خطأ أثناء إنشاء التصنيف', error: err.message });
   }
 };
 
@@ -80,9 +72,9 @@ exports.createCategory = async (req, res) => {
 exports.getCategories = async (req, res) => {
   try {
     const categories = await Category.find();
-    res.status(200).json({ message: 'Categories retrieved successfully', data: categories });
+    res.status(200).json({ message: 'تم جلب التصنيفات بنجاح', data: categories });
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving categories', error: error.message });
+    res.status(500).json({ message: 'حدث خطأ أثناء جلب التصنيفات', error: error.message });
   }
 };
 
@@ -90,54 +82,45 @@ exports.getCategories = async (req, res) => {
 exports.Deletecategory = async (req, res) => {
   try {
     const id = req.params.id;
-    const deletcategory = await Category.findOneAndDelete({ _id: id });
-    res.status(200).json(deletcategory);
+    const deletedCategory = await Category.findOneAndDelete({ _id: id });
+    res.status(200).json(deletedCategory);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'حدث خطأ أثناء حذف التصنيف', error: error.message });
   }
 };
 
-// تحديث التصنيف (مع إمكانية تغيير الصورة)
+// تحديث التصنيف (مع إمكانية تعديل الصورة)
 exports.Updatecategory = async (req, res) => {
   try {
-    // معالجة رفع الملف (إن وُجد)
-    await new Promise((resolve, reject) => {
-      uploadSingle(req, res, (err) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve();
-      });
-    });
-
     const id = req.params.id;
-    let updateData = req.body;
+    let updateData = { ...req.body };
 
-    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
-    if (req.file) {
-      // المسار المؤقت الذي يوجد به الملف
-      const tempPath = req.file.path;
-      // تحديد المسار النهائي في مجلد "uploads"
-      const targetPath = path.join(uploadsFolder, req.file.filename);
+    // إذا تم إرسال بيانات صورة جديدة، نقوم بمعالجتها
+    if (updateData.image) {
+      const parsedImage = parseImageData(updateData.image);
+      if (!parsedImage) {
+        return res.status(400).json({ message: 'صيغة الصورة غير صحيحة' });
+      }
 
-      // نقل الملف من المجلد المؤقت إلى الدائم
-      fs.renameSync(tempPath, targetPath);
+      const imageBuffer = Buffer.from(parsedImage.base64Data, 'base64');
+      if (imageBuffer.length > 50 * 1024 * 1024) {
+        return res.status(400).json({ message: 'حجم الصورة يجب أن يكون أقل من 50 ميجابايت' });
+      }
 
-      // تحديث مسار الصورة في البيانات
-      updateData.image = `uploads/${req.file.filename}`;
+      const filename = Date.now() + parsedImage.extension;
+      const relativePath = `images/${filename}`;
+      const absolutePath = path.join(__dirname, '..', 'public', 'images', filename);
+
+      fs.writeFileSync(absolutePath, imageBuffer);
+      updateData.image = relativePath;
     }
 
-    const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatecategory) {
-      return res.status(404).json({ message: 'Category not found' });
+    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updatedCategory) {
+      return res.status(404).json({ message: 'التصنيف غير موجود' });
     }
-    res.status(200).json(updatecategory);
+    res.status(200).json(updatedCategory);
   } catch (error) {
-    if (error instanceof multer.MulterError) {
-      return res.status(400).json({ message: 'Error uploading file', error: error.message });
-    } else if (error.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
-      return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: 'Error updating category', error: error.message });
+    res.status(500).json({ message: 'حدث خطأ أثناء تحديث التصنيف', error: error.message });
   }
 };
