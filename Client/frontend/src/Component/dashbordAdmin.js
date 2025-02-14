@@ -101,7 +101,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
+  const [newImage, setNewImage] = useState(null);
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -168,6 +168,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
+                            // يتم بناء الرابط باستخدام عنوان الخادم ورابط الصورة المخزن في قاعدة البيانات
                             src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
