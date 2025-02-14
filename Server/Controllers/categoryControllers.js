@@ -1,3 +1,4 @@
+// categoryController.js
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
@@ -15,6 +16,7 @@ if (!fs.existsSync(uploadsDir)) {
 // تكوين multer لتحديد مكان حفظ الملفات وتسميتها
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    // استخدام المسار المطلق للمجلد
     cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
@@ -42,7 +44,7 @@ const uploadSingle = multer({
 // إنشاء تصنيف جديد
 exports.createCategory = async (req, res) => {
   try {
-    // استخدام Promise لانتظار انتهاء تحميل الملف
+    // تحميل الملف باستخدام multer
     await new Promise((resolve, reject) => {
       uploadSingle(req, res, (err) => {
         if (err) {
@@ -52,21 +54,26 @@ exports.createCategory = async (req, res) => {
       });
     });
 
+    // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
     const image = req.file ? `uploads/${req.file.filename}` : null;
 
+    // التأكد من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    // إنشاء كائن جديد من نموذج Category
     const newCategory = new Category({
       categoryName,
       categoryType,
       image,
     });
 
+    // حفظ الكائن في قاعدة البيانات
     await newCategory.save();
 
+    // إرسال استجابة موحدة مع بيانات التصنيف الجديد
     res.status(201).json({ message: 'Category created successfully', data: newCategory });
   } catch (err) {
     if (err instanceof multer.MulterError) {
@@ -93,7 +100,7 @@ exports.getCategories = async (req, res) => {
 exports.Deletecategory = async (req, res) => {
   try {
     const id = req.params.id;
-    const deletedCategory = await Category.findOneAndDelete({ _id: id });
+    const deletedCategory = await Category.findOneAndDelete({ _id: id }); // حذف بناءً على _id
     res.status(200).json(deletedCategory);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -101,18 +108,19 @@ exports.Deletecategory = async (req, res) => {
 };
 
 // تحديث تصنيف
-exports.Updatecategory = async (req, res) => {
-  try {
-    // انتظار انتهاء عملية تحميل الملف
-    await new Promise((resolve, reject) => {
-      uploadSingle(req, res, (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+exports.Updatecategory = (req, res) => {
+  uploadSingle(req, res, async function(err) {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ message: 'Error uploading file', error: err.message });
+      } else if (err.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
+        return res.status(400).json({ message: err.message });
+      } else {
+        return res.status(500).json({ message: 'Error uploading file', error: err.message });
+      }
+    }
 
     const id = req.params.id;
-    // استخراج البيانات مع استبعاد _id إذا وُجد
     const { _id, ...updateData } = req.body;
 
     // إذا تم رفع صورة جديدة، تحديث مسار الصورة
@@ -120,17 +128,15 @@ exports.Updatecategory = async (req, res) => {
       updateData.image = `uploads/${req.file.filename}`;
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatedCategory) {
-      return res.status(404).json({ message: 'Category not found' });
+    try {
+      const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
+      if (!updatedCategory) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+      res.status(200).json({ message: 'Category updated successfully', data: updatedCategory });
+    } catch (error) {
+      console.error("updateCategory error:", error);
+      res.status(500).json({ message: 'Error updating category', error: error.message });
     }
-    res.status(200).json({ message: 'Category updated successfully', data: updatedCategory });
-  } catch (error) {
-    if (error instanceof multer.MulterError) {
-      return res.status(400).json({ message: 'Error uploading file', error: error.message });
-    } else if (error.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
-      return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: 'Error updating category', error: error.message });
-  }
+  });
 };
