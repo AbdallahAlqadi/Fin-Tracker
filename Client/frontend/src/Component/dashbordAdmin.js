@@ -11,8 +11,9 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // التأكد من أن حجم الصورة أقل من 10 ميجابايت
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -49,7 +50,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
       setCategoryType('');
       setImage(null);
 
-      // إعلام الصفحة الرئيسية بوجود تصنيف جديد
+      // إعلام الصفحة الرئيسية بتواجد تصنيف جديد
       onCategoryAdded(response.data.data);
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -101,7 +102,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
+  const [newImage, setNewImage] = useState(null);
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -124,7 +125,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -138,7 +139,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
 
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
-    // إنشاء FormData يتضمن _id وبيانات التعديل والصورة الجديدة (إن وُجدت)
+    // تجهيز بيانات التحديث في FormData
     const formData = new FormData();
     formData.append('_id', selectedCategory._id);
     formData.append('categoryName', selectedCategory.categoryName);
@@ -149,6 +150,12 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     onUpdate(formData);
     setNewImage(null);
     setIsModalOpen(false);
+  };
+
+  // دالة مساعدة للحصول على مصدر الصورة بشكل صحيح
+  const getImageSrc = (image) => {
+    if (!image) return '';
+    return image.startsWith('data:') ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
   };
 
   return (
@@ -168,7 +175,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
-                            src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
+                            src={getImageSrc(category.image)}
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
                           />
@@ -320,8 +327,9 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
+        // تحديث التصنيف باستخدام response.data.data
         setCategories(categories.map((cat) =>
-          cat._id === id ? response.data : cat
+          cat._id === id ? response.data.data : cat
         ));
       }
     } catch (error) {
