@@ -1,21 +1,31 @@
-// controllers/categoryController.js
+// Controllers/categoryController.js
+
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// تكوين multer لتحديد مكان حفظ الملفات وتسميتها
+// تحديد المسار الفعلي لمجلد uploads بحيث يكون في المستوى الأعلى من مجلد Controllers
+const uploadsFolder = path.join(__dirname, '../uploads');
+
+// التأكد من وجود مجلد uploads وإنشاؤه إذا لم يكن موجودًا
+if (!fs.existsSync(uploadsFolder)) {
+  fs.mkdirSync(uploadsFolder, { recursive: true });
+}
+
+// تكوين multer لتخزين الصور في مجلد uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '../uploads/'); // حفظ الملفات في مجلد 'uploads'
+    cb(null, uploadsFolder); // حفظ الملفات في مجلد 'uploads'
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // إضافة توقيت لاسم الملف لتجنب التكرار
+    // إضافة توقيت لاسم الملف لتجنب التكرار
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
 
-// تكوين multer لتحميل ملف واحد فقط
-const uploadSingle = multer({ 
+// إعدادات رفع ملف واحد فقط باسم الحقل "image"
+const uploadSingle = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // الحد الأقصى لحجم الملف 5MB
   fileFilter: function (req, file, cb) {
@@ -47,7 +57,7 @@ exports.createCategory = async (req, res) => {
 
     // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
-    const image = req.file ? `./uploads/${req.file.filename}` : null;
+    const image = req.file ? `uploads/${req.file.filename}` : null;
 
     // التحقق من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
@@ -100,7 +110,7 @@ exports.Deletecategory = async (req, res) => {
 // تحديث التصنيف (مع إمكانية تغيير الصورة)
 exports.Updatecategory = async (req, res) => {
   try {
-    // معالجة رفع الملف (إن وُجد)
+    // رفع الملف باستخدام multer (إن وُجد ملف جديد)
     await new Promise((resolve, reject) => {
       uploadSingle(req, res, (err) => {
         if (err) {
@@ -113,20 +123,12 @@ exports.Updatecategory = async (req, res) => {
     const id = req.params.id;
     let updateData = req.body;
 
-    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
+    // إذا تم رفع ملف جديد، يتم تحديث حقل الصورة
     if (req.file) {
-      // المسار المؤقت الذي يوجد به الملف
-      const tempPath = req.file.path;
-      // تحديد المسار النهائي في مجلد "uploads"
-      const targetPath = path.join(uploadsFolder, req.file.filename);
-
-      // نقل الملف من المجلد المؤقت إلى الدائم
-      fs.renameSync(tempPath, targetPath);
-
-      // تحديث مسار الصورة في البيانات
-      updateData.image = `../uploads/${req.file.filename}`;
+      updateData.image = `uploads/${req.file.filename}`;
     }
 
+    // تحديث بيانات التصنيف
     const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
     if (!updatecategory) {
       return res.status(404).json({ message: 'Category not found' });
