@@ -2,25 +2,24 @@
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// تكوين multer لتخزين الملفات في مجلد "public/images"
+// تكوين multer لتحديد مكان حفظ الملفات وتسميتها
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/images/'); // حفظ الصور في مجلد "public/images"
+    cb(null, 'uploads/'); // حفظ الملفات في مجلد 'uploads'
   },
   filename: function (req, file, cb) {
-    // إنشاء اسم فريد للصورة باستخدام الوقت الحالي وامتداد الملف
-    const filename = Date.now() + path.extname(file.originalname);
-    cb(null, filename);
+    cb(null, Date.now() + path.extname(file.originalname)); // إضافة توقيت لاسم الملف لتجنب التكرار
   }
 });
 
-// تكوين multer لتحميل ملف واحد فقط مع التحقق من نوع الصورة وحجمها
-const uploadSingle = multer({
+// تكوين multer لتحميل ملف واحد فقط
+const uploadSingle = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // الحد الأقصى 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // الحد الأقصى لحجم الملف 5MB
   fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|gif/;
+    const filetypes = /jpeg|jpg|png|gif/; // السماح بأنواع الصور
     const mimetype = filetypes.test(file.mimetype);
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
 
@@ -30,39 +29,39 @@ const uploadSingle = multer({
       cb(new Error('Only images (jpeg, jpg, png, gif) are allowed!'));
     }
   }
-}).single('image'); // "image" هو اسم الحقل في الطلب
+}).single('image'); // 'image' هو اسم الحقل الذي يحتوي على الملف
 
 // إنشاء تصنيف جديد
 exports.createCategory = async (req, res) => {
   try {
-    // رفع الصورة باستخدام multer
+    // رفع الملف باستخدام multer
     await new Promise((resolve, reject) => {
       uploadSingle(req, res, (err) => {
         if (err) {
-          return reject(err);
+          reject(err);
+        } else {
+          resolve();
         }
-        resolve();
       });
     });
 
+    // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
+    const image = req.file ? `uploads/${req.file.filename}` : null;
 
-    if (!categoryName || !categoryType) {
+    // التحقق من وجود جميع الحقول المطلوبة
+    if (!categoryName || !categoryType || !image) {
       return res.status(400).json({ message: 'All fields are required' });
     }
-    if (!req.file) {
-      return res.status(400).json({ message: 'Image is required' });
-    }
 
-    // يتم تخزين الرابط النسبي للصورة فقط، مثل "images/filename.jpg"
-    const imageLink = `images/${req.file.filename}`;
-
+    // إنشاء كائن جديد من التصنيف
     const newCategory = new Category({
       categoryName,
       categoryType,
-      image: imageLink,
+      image,
     });
 
+    // حفظ التصنيف في قاعدة البيانات
     await newCategory.save();
 
     res.status(201).json({ message: 'Category created successfully', data: newCategory });
@@ -91,8 +90,8 @@ exports.getCategories = async (req, res) => {
 exports.Deletecategory = async (req, res) => {
   try {
     const id = req.params.id;
-    const deletedCategory = await Category.findOneAndDelete({ _id: id });
-    res.status(200).json(deletedCategory);
+    const deletcategory = await Category.findOneAndDelete({ _id: id });
+    res.status(200).json(deletcategory);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -101,7 +100,7 @@ exports.Deletecategory = async (req, res) => {
 // تحديث التصنيف (مع إمكانية تغيير الصورة)
 exports.Updatecategory = async (req, res) => {
   try {
-    // معالجة رفع الصورة (إن وُجد)
+    // معالجة رفع الملف (إن وُجد)
     await new Promise((resolve, reject) => {
       uploadSingle(req, res, (err) => {
         if (err) {
@@ -114,16 +113,25 @@ exports.Updatecategory = async (req, res) => {
     const id = req.params.id;
     let updateData = req.body;
 
-    // إذا تم رفع صورة جديدة، نقوم بتحديث حقل الصورة بالرابط الجديد
+    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
     if (req.file) {
-      updateData.image = `images/${req.file.filename}`;
+      // المسار المؤقت الذي يوجد به الملف
+      const tempPath = req.file.path;
+      // تحديد المسار النهائي في مجلد "uploads"
+      const targetPath = path.join(uploadsFolder, req.file.filename);
+
+      // نقل الملف من المجلد المؤقت إلى الدائم
+      fs.renameSync(tempPath, targetPath);
+
+      // تحديث مسار الصورة في البيانات
+      updateData.image = `uploads/${req.file.filename}`;
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatedCategory) {
+    const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updatecategory) {
       return res.status(404).json({ message: 'Category not found' });
     }
-    res.status(200).json(updatedCategory);
+    res.status(200).json(updatecategory);
   } catch (error) {
     if (error instanceof multer.MulterError) {
       return res.status(400).json({ message: 'Error uploading file', error: error.message });

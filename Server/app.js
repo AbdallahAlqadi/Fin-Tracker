@@ -12,8 +12,6 @@ const fedbackRoutes= require('./Routes/fedbackRoutes');
 dotenv.config();
 const app = express();
 connectDB();
-//
-app.use(express.static('public'));
 
 app.use(bodyParser.json());
 app.use(cors());

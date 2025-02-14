@@ -12,7 +12,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -101,7 +101,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null);
+  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -124,7 +124,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -168,7 +168,6 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
-                            // يتم بناء الرابط باستخدام عنوان الخادم ورابط الصورة المخزن في قاعدة البيانات
                             src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
