@@ -60,7 +60,7 @@ const DashboardUser = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  // حالة لتتبع العناصر التي تم إضافتها اليوم (يتم جلبها من الخادم)
+  // حالة لتتبع العناصر التي تم إضافة قيمتها اليوم (يتم جلبها من الخادم)
   const [addedItems, setAddedItems] = useState([]);
   // حالة لتتبع عملية الإرسال
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -223,7 +223,7 @@ const DashboardUser = () => {
   return (
     <Box
       sx={{
-        p: { xs: 2, sm: 4 },
+        p: { xs: 2, sm: 4 }, // تعديل الحواف لتكون استجابة لمختلف الشاشات
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
         fontFamily: 'Arial, sans-serif',
@@ -300,14 +300,21 @@ const DashboardUser = () => {
                           }}
                         >
                           {category.image && (
-                            <img
+                            <Box
+                              component="img"
                               src={
-                                category.image.startsWith("http") || category.image.startsWith("data:")
+                                category.image.startsWith("data:")
                                   ? category.image
-                                  : `https://fin-tracker-ncbx.onrender.com${category.image.startsWith('/') ? '' : '/'}${category.image}`
+                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
                               }
                               alt={category.categoryName}
-                              className="category-image"
+                              sx={{
+                                width: { xs: 50, sm: 70 },
+                                height: { xs: 50, sm: 70 },
+                                borderRadius: '50%',
+                                mb: 1,
+                                objectFit: 'cover',
+                              }}
                             />
                           )}
                           <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
@@ -377,18 +384,19 @@ const DashboardUser = () => {
         </DialogTitle>
         <DialogContent sx={{ p: 3, textAlign: 'center' }}>
           {selectedCategory?.image && (
-            <img
+            <Box
+              component="img"
               src={
-                selectedCategory.image.startsWith("http") || selectedCategory.image.startsWith("data:")
+                selectedCategory.image.startsWith("data:")
                   ? selectedCategory.image
-                  : `https://fin-tracker-ncbx.onrender.com${selectedCategory.image.startsWith('/') ? '' : '/'}${selectedCategory.image}`
+                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
               }
               alt={selectedCategory.categoryName}
-              style={{
-                width: '100px',
-                height: '100px',
+              sx={{
+                width: 100,
+                height: 100,
                 borderRadius: '50%',
-                marginBottom: '16px',
+                mb: 2,
                 objectFit: 'cover',
               }}
             />
