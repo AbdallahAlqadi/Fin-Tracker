@@ -56,7 +56,7 @@ exports.createCategory = async (req, res) => {
 
     // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
-    const image = req.file ? `uploads/${req.file.filename}` : null;
+    const image = req.file ? `../uploads/${req.file.filename}` : null;
 
     // التأكد من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
@@ -125,7 +125,7 @@ exports.Updatecategory = (req, res) => {
 
     // إذا تم رفع صورة جديدة، تحديث مسار الصورة
     if (req.file) {
-      updateData.image = `uploads/${req.file.filename}`;
+      updateData.image = `../uploads/${req.file.filename}`;
     }
 
     try {
