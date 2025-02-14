@@ -50,6 +50,12 @@ const CategoryCard = styled(Box)(({ theme }) => ({
   },
 }));
 
+// دالة مساعدة للتعامل مع عرض الصورة بشكل مشابه للكود السابق
+const getImageUrl = (image) => {
+  if (!image) return '';
+  return image.startsWith('data:') ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+};
+
 const DashboardUser = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +73,7 @@ const DashboardUser = () => {
 
   // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
   const getTodayDate = () => {
-    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
   };
 
   // جلب التصنيفات من الخادم
@@ -290,7 +296,7 @@ const DashboardUser = () => {
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
+                    <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
                       <Box>
                         <CategoryCard
                           onClick={() => handleClickOpen(category)}
@@ -299,14 +305,10 @@ const DashboardUser = () => {
                             pointerEvents: isAdded ? 'none' : 'auto',
                           }}
                         >
-                          {category.image && (
+                          {category.image ? (
                             <Box
                               component="img"
-                              src={
-                                category.image.startsWith("data:")
-                                  ? category.image
-                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
-                              }
+                              src={getImageUrl(category.image)}
                               alt={category.categoryName}
                               sx={{
                                 width: { xs: 50, sm: 70 },
@@ -316,6 +318,8 @@ const DashboardUser = () => {
                                 objectFit: 'cover',
                               }}
                             />
+                          ) : (
+                            <span style={{ fontSize: '28px', color: '#a0aec0' }}>💰</span>
                           )}
                           <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
                             {category.categoryName}
@@ -386,11 +390,7 @@ const DashboardUser = () => {
           {selectedCategory?.image && (
             <Box
               component="img"
-              src={
-                selectedCategory.image.startsWith("data:")
-                  ? selectedCategory.image
-                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
-              }
+              src={getImageUrl(selectedCategory.image)}
               alt={selectedCategory.categoryName}
               sx={{
                 width: 100,
@@ -409,7 +409,7 @@ const DashboardUser = () => {
             margin="dense"
             label="Value"
             type="number"
-            inputProps={{ step: "0.01", min: "0" }}
+            inputProps={{ step: '0.01', min: '0' }}
             fullWidth
             variant="outlined"
             value={value}
