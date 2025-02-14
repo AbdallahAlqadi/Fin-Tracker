@@ -1,37 +1,17 @@
 // categoryController.js
 const Category = require('../models/categoryData');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
-// التأكد من وجود مجلد uploads، وإن لم يكن موجودًا يتم إنشاؤه
-const uploadsDir = path.join(__dirname, './uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-  console.log('uploads folder created');
-} else {
-  console.log('uploads folder exists');
-}
+// استخدام التخزين في الذاكرة لتحويل الصورة إلى base64
+const storage = multer.memoryStorage();
 
-// تكوين multer لتحديد مكان حفظ الملفات وتسميتها
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // استخدام المسار المطلق للمجلد
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // إضافة توقيت لاسم الملف لتجنب التكرار
-  }
-});
-
-// تكوين multer مع حد حجم 10 ميجابايت وتحديد أنواع الصور المسموحة
 const uploadSingle = multer({ 
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif/; // السماح بأنواع محددة من الصور
     const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = filetypes.test(file.originalname.toLowerCase());
 
     if (mimetype && extname) {
       return cb(null, true);
@@ -56,7 +36,8 @@ exports.createCategory = async (req, res) => {
 
     // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
-    const image = req.file ? `./uploads/${req.file.filename}` : null;
+    // تحويل الصورة إلى سلسلة base64 إذا تم رفعها
+    const image = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null;
 
     // التأكد من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
@@ -100,7 +81,7 @@ exports.getCategories = async (req, res) => {
 exports.Deletecategory = async (req, res) => {
   try {
     const id = req.params.id;
-    const deletedCategory = await Category.findOneAndDelete({ _id: id }); // حذف بناءً على _id
+    const deletedCategory = await Category.findOneAndDelete({ _id: id });
     res.status(200).json(deletedCategory);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -123,9 +104,9 @@ exports.Updatecategory = (req, res) => {
     const id = req.params.id;
     const { _id, ...updateData } = req.body;
 
-    // إذا تم رفع صورة جديدة، تحديث مسار الصورة
+    // إذا تم رفع صورة جديدة، تحويلها إلى base64 وتحديث مسار الصورة
     if (req.file) {
-      updateData.image = `../uploads/${req.file.filename}`;
+      updateData.image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
 
     try {

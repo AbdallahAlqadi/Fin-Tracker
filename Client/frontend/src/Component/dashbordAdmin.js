@@ -1,4 +1,3 @@
-// CombinedPage.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/dashbord.css';
@@ -152,10 +151,9 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     setIsModalOpen(false);
   };
 
-  // دالة مساعدة للحصول على مصدر الصورة بشكل صحيح
+  // تعديل دالة getImageSrc لإعادة قيمة الصورة مباشرةً (كونها محفوظة بصيغة base64)
   const getImageSrc = (image) => {
-    if (!image) return '';
-    return image.startsWith('data:') ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+    return image || '';
   };
 
   return (
@@ -327,7 +325,7 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
-        // تحديث التصنيف باستخدام response.data.data
+        // تحديث التصنيف باستخدام البيانات المحدثة من السيرفر
         setCategories(categories.map((cat) =>
           cat._id === id ? response.data.data : cat
         ));
