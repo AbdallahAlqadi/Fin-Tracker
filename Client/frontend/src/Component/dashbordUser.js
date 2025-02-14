@@ -304,7 +304,7 @@ const DashboardUser = () => {
                               src={
                                 category.image.startsWith("http") || category.image.startsWith("data:")
                                   ? category.image
-                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                                  : `https://fin-tracker-ncbx.onrender.com${category.image.startsWith('/') ? '' : '/'}${category.image}`
                               }
                               alt={category.categoryName}
                               className="category-image"
@@ -381,7 +381,7 @@ const DashboardUser = () => {
               src={
                 selectedCategory.image.startsWith("http") || selectedCategory.image.startsWith("data:")
                   ? selectedCategory.image
-                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+                  : `https://fin-tracker-ncbx.onrender.com${selectedCategory.image.startsWith('/') ? '' : '/'}${selectedCategory.image}`
               }
               alt={selectedCategory.categoryName}
               style={{
