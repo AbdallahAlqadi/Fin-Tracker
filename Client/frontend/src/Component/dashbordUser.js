@@ -50,16 +50,6 @@ const CategoryCard = styled(Box)(({ theme }) => ({
   },
 }));
 
-// دالة مساعدة للتعامل مع عرض الصورة بشكل مشابه للكود السابق
-const getImageUrl = (image) => {
-  if (!image) return '';
-  // التحقق مما إذا كانت الصورة تبدأ بـ "data:" أو "http://" أو "https://"
-  if (image.startsWith('data:') || image.startsWith('http://') || image.startsWith('https://')) {
-    return image;
-  }
-  return `https://fin-tracker-ncbx.onrender.com/${image}`;
-};
-
 const DashboardUser = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +67,7 @@ const DashboardUser = () => {
 
   // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
   const getTodayDate = () => {
-    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
+    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
   };
 
   // جلب التصنيفات من الخادم
@@ -233,7 +223,7 @@ const DashboardUser = () => {
   return (
     <Box
       sx={{
-        p: { xs: 2, sm: 4 }, // تعديل الحواف لتكون استجابة لمختلف الشاشات
+        p: { xs: 2, sm: 4 },
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
         fontFamily: 'Arial, sans-serif',
@@ -300,7 +290,7 @@ const DashboardUser = () => {
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
+                    <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
                       <Box>
                         <CategoryCard
                           onClick={() => handleClickOpen(category)}
@@ -309,21 +299,16 @@ const DashboardUser = () => {
                             pointerEvents: isAdded ? 'none' : 'auto',
                           }}
                         >
-                          {category.image ? (
-                            <Box
-                              component="img"
-                              src={getImageUrl(category.image)}
+                          {category.image && (
+                            <img
+                              src={
+                                category.image.startsWith("data:")
+                                  ? category.image
+                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                              }
                               alt={category.categoryName}
-                              sx={{
-                                width: { xs: 50, sm: 70 },
-                                height: { xs: 50, sm: 70 },
-                                borderRadius: '50%',
-                                mb: 1,
-                                objectFit: 'cover',
-                              }}
+                              className="category-image" // تأكد من تعريف الأنماط المناسبة في ملف CSS
                             />
-                          ) : (
-                            <span style={{ fontSize: '28px', color: '#a0aec0' }}>💰</span>
                           )}
                           <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
                             {category.categoryName}
@@ -392,15 +377,18 @@ const DashboardUser = () => {
         </DialogTitle>
         <DialogContent sx={{ p: 3, textAlign: 'center' }}>
           {selectedCategory?.image && (
-            <Box
-              component="img"
-              src={getImageUrl(selectedCategory.image)}
+            <img
+              src={
+                selectedCategory.image.startsWith("data:")
+                  ? selectedCategory.image
+                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+              }
               alt={selectedCategory.categoryName}
-              sx={{
-                width: 100,
-                height: 100,
+              style={{
+                width: '100px',
+                height: '100px',
                 borderRadius: '50%',
-                mb: 2,
+                marginBottom: '16px',
                 objectFit: 'cover',
               }}
             />
@@ -413,7 +401,7 @@ const DashboardUser = () => {
             margin="dense"
             label="Value"
             type="number"
-            inputProps={{ step: '0.01', min: '0' }}
+            inputProps={{ step: "0.01", min: "0" }}
             fullWidth
             variant="outlined"
             value={value}
