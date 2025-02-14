@@ -2,6 +2,7 @@
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // تكوين multer لتحديد مكان حفظ الملفات وتسميتها
 const storage = multer.diskStorage({
@@ -14,10 +15,9 @@ const storage = multer.diskStorage({
 });
 
 // تكوين multer لتحميل ملف واحد فقط
-// تم توحيد الحد الأقصى إلى 50 ميجابايت كمثال (يمكنك تغييره كما تريد)
 const uploadSingle = multer({ 
   storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // الحد الأقصى لحجم الملف 50MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // الحد الأقصى لحجم الملف 5MB
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif/; // السماح بأنواع الصور
     const mimetype = filetypes.test(file.mimetype);
@@ -113,8 +113,17 @@ exports.Updatecategory = async (req, res) => {
     const id = req.params.id;
     let updateData = req.body;
 
-    // إذا تم رفع ملف جديد، سيكون الملف جاهزًا في مجلد 'uploads'
+    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
     if (req.file) {
+      // المسار المؤقت الذي يوجد به الملف
+      const tempPath = req.file.path;
+      // تحديد المسار النهائي في مجلد "uploads"
+      const targetPath = path.join(uploadsFolder, req.file.filename);
+
+      // نقل الملف من المجلد المؤقت إلى الدائم
+      fs.renameSync(tempPath, targetPath);
+
+      // تحديث مسار الصورة في البيانات
       updateData.image = `uploads/${req.file.filename}`;
     }
 

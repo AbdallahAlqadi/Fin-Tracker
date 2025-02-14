@@ -11,8 +11,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // توحيد الحد الأقصى للحجم إلى 50 ميجابايت
-      if (file.size > 50 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) {
         alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
@@ -124,8 +123,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const handleUpdateImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // نفس التحقق من الحجم والصيغة كما في الإضافة
-      if (file.size > 50 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) {
         alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
