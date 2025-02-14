@@ -47,7 +47,7 @@ exports.createCategory = async (req, res) => {
 
     // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
-    const image = req.file ? `uploads/${req.file.filename}` : null;
+    const image = req.file ? `./uploads/${req.file.filename}` : null;
 
     // التحقق من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
