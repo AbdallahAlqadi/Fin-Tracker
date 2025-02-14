@@ -60,7 +60,7 @@ const DashboardUser = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  // حالة لتتبع العناصر التي تم إضافة قيمتها اليوم (يتم جلبها من الخادم)
+  // حالة لتتبع العناصر التي تم إضافتها اليوم (يتم جلبها من الخادم)
   const [addedItems, setAddedItems] = useState([]);
   // حالة لتتبع عملية الإرسال
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -302,12 +302,12 @@ const DashboardUser = () => {
                           {category.image && (
                             <img
                               src={
-                                category.image.startsWith("data:")
+                                category.image.startsWith("http") || category.image.startsWith("data:")
                                   ? category.image
                                   : `https://fin-tracker-ncbx.onrender.com/${category.image}`
                               }
                               alt={category.categoryName}
-                              className="category-image" // تأكد من تعريف الأنماط المناسبة في ملف CSS
+                              className="category-image"
                             />
                           )}
                           <Typography variant="h6" sx={{ color: '#4A90E2', fontWeight: 600 }}>
@@ -379,7 +379,7 @@ const DashboardUser = () => {
           {selectedCategory?.image && (
             <img
               src={
-                selectedCategory.image.startsWith("data:")
+                selectedCategory.image.startsWith("http") || selectedCategory.image.startsWith("data:")
                   ? selectedCategory.image
                   : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
               }
