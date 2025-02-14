@@ -53,7 +53,11 @@ const CategoryCard = styled(Box)(({ theme }) => ({
 // دالة مساعدة للتعامل مع عرض الصورة بشكل مشابه للكود السابق
 const getImageUrl = (image) => {
   if (!image) return '';
-  return image.startsWith('data:') ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+  // التحقق مما إذا كانت الصورة تبدأ بـ "data:" أو "http://" أو "https://"
+  if (image.startsWith('data:') || image.startsWith('http://') || image.startsWith('https://')) {
+    return image;
+  }
+  return `https://fin-tracker-ncbx.onrender.com/${image}`;
 };
 
 const DashboardUser = () => {
