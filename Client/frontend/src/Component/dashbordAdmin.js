@@ -1,3 +1,4 @@
+// CombinedPage.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/dashbord.css';
@@ -10,9 +11,8 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // التأكد من أن حجم الصورة أقل من 10 ميجابايت
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -49,7 +49,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
       setCategoryType('');
       setImage(null);
 
-      // إعلام الصفحة الرئيسية بتواجد تصنيف جديد
+      // إعلام الصفحة الرئيسية بوجود تصنيف جديد
       onCategoryAdded(response.data.data);
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -101,7 +101,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null);
+  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -124,7 +124,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -138,7 +138,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
 
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
-    // تجهيز بيانات التحديث في FormData
+    // إنشاء FormData يتضمن _id وبيانات التعديل والصورة الجديدة (إن وُجدت)
     const formData = new FormData();
     formData.append('_id', selectedCategory._id);
     formData.append('categoryName', selectedCategory.categoryName);
@@ -149,11 +149,6 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     onUpdate(formData);
     setNewImage(null);
     setIsModalOpen(false);
-  };
-
-  // تعديل دالة getImageSrc لإعادة قيمة الصورة مباشرةً (كونها محفوظة بصيغة base64)
-  const getImageSrc = (image) => {
-    return image || '';
   };
 
   return (
@@ -173,7 +168,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
-                            src={getImageSrc(category.image)}
+                            src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
                           />
@@ -325,9 +320,8 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
-        // تحديث التصنيف باستخدام البيانات المحدثة من السيرفر
         setCategories(categories.map((cat) =>
-          cat._id === id ? response.data.data : cat
+          cat._id === id ? response.data : cat
         ));
       }
     } catch (error) {
