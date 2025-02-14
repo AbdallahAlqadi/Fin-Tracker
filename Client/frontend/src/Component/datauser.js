@@ -96,15 +96,14 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-// تعديل نافذة التحديث لتكون متجاوبة مع جميع الأجهزة بشكل احترافي
 const StyledUpdateDialog = styled(StyledDialog)(({ theme }) => ({
   "& .MuiDialog-paper": {
-    width: "90%",             // يستخدم 90% من عرض الشاشة على الأجهزة الصغيرة
-    maxWidth: "500px",         // عرض أقصى للنافذة
+    width: "90%",
+    maxWidth: "500px",
     margin: "auto",
     borderRadius: theme.spacing(2),
     [theme.breakpoints.up("sm")]: {
-      width: "500px",         // على الشاشات الأكبر يتم استخدام العرض الثابت
+      width: "500px",
     },
   },
 }));
@@ -129,7 +128,6 @@ const DeleteDialogTitle = styled(DialogTitle)(({ theme }) => ({
   position: "relative",
 }));
 
-// رأس الحوار الموحد مع أيقونة الإغلاق
 const DialogHeader = ({ children, onClose }) => (
   <StyledDialogTitle>
     {children}
@@ -150,7 +148,6 @@ const DialogHeader = ({ children, onClose }) => (
   </StyledDialogTitle>
 );
 
-// رأس الحوار الخاص بالحذف
 const DeleteDialogHeader = ({ children, onClose }) => (
   <DeleteDialogTitle>
     {children}
@@ -222,6 +219,12 @@ const ExportButton = styled(StyledButton)(({ theme }) => ({
   gap: "8px",
 }));
 
+// دالة مساعدة لبناء رابط الصورة بشكل صحيح
+const getImageUrl = (image) => {
+  if (!image) return "";
+  return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+};
+
 // ==========================
 // المكون الرئيسي BudgetItems
 // ==========================
@@ -284,7 +287,6 @@ const BudgetItems = () => {
   // دالة تأكيد الحذف واستدعاء API الحذف
   const confirmDelete = async () => {
     if (!itemToDelete) return;
-    // إغلاق نافذة الحذف فور النقر على زر "Delete"
     handleCloseDeleteDialog();
     try {
       const response = await axios.delete("https://fin-tracker-ncbx.onrender.com/api/deleteBudget", {
@@ -336,7 +338,6 @@ const BudgetItems = () => {
       alert("Please enter a valid number.");
       return;
     }
-    // إغلاق نافذة التحديث فور النقر على زر "Save"
     handleCloseDialog();
     try {
       const response = await axios.put(
@@ -425,10 +426,13 @@ const BudgetItems = () => {
     return filteredItems;
   };
 
-  // تحديث uniqueItems مع فلترة العناصر التي ليس لها CategoriesId
   const uniqueItems =
     filterType === "all"
-      ? [...new Set(budgetItems.filter((item) => item.CategoriesId).map((item) => item.CategoriesId.categoryName))]
+      ? [
+          ...new Set(
+            budgetItems.filter((item) => item.CategoriesId).map((item) => item.CategoriesId.categoryName)
+          ),
+        ]
       : [
           ...new Set(
             budgetItems
@@ -456,7 +460,6 @@ const BudgetItems = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
-  // useEffect لمراقبة الـ balance وعرض شريط التنبيه المناسب
   useEffect(() => {
     if (balance < 0) {
       setShowError(true);
@@ -522,7 +525,6 @@ const BudgetItems = () => {
       { wpx: 100 },
     ];
 
-    // تطبيق نمط للعنوان (قد لا تعمل تنسيقات الخلايا بشكل مثالي مع مكتبة XLSX في جميع الحالات)
     const headerCellStyle = {
       font: { bold: true },
       fill: { fgColor: { rgb: "FFFF00" } },
@@ -543,7 +545,6 @@ const BudgetItems = () => {
       }
     });
 
-    // تحديث سريع لتقدم العملية قبل بدء التصدير
     setExportProgress(50);
 
     setTimeout(() => {
@@ -558,7 +559,6 @@ const BudgetItems = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      {/* شريط التنبيه عند كون النفقات أكبر من الإيرادات (باللون الأحمر وبحجم أكبر) */}
       <Snackbar
         open={showError}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
@@ -574,7 +574,6 @@ const BudgetItems = () => {
         </Alert>
       </Snackbar>
 
-      {/* شريط التنبيه عند كون الإيرادات أكبر من النفقات (باللون الأخضر وبحجم أكبر) */}
       <Snackbar
         open={showSuccess}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
@@ -591,7 +590,6 @@ const BudgetItems = () => {
       </Snackbar>
 
       <Box sx={{ padding: { xs: 2, sm: 4 }, background: "#f5f5f5", minHeight: "100vh" }}>
-        {/* عناصر التحكم */}
         <Box
           sx={{
             marginBottom: 4,
@@ -677,7 +675,6 @@ const BudgetItems = () => {
           <LinearProgress variant="determinate" value={exportProgress} sx={{ marginBottom: 2 }} />
         )}
 
-        {/* بطاقات الإجماليات */}
         <Box
           sx={{
             marginBottom: 4,
@@ -751,7 +748,6 @@ const BudgetItems = () => {
           </Card>
         </Box>
 
-        {/* قائمة البنود */}
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
             <CircularProgress size={60} />
@@ -789,7 +785,7 @@ const BudgetItems = () => {
                       <StyledCard>
                         <ImageContainer>
                           <img
-                            src={`https://fin-tracker-ncbx.onrender.com/${item.CategoriesId.image}`}
+                            src={getImageUrl(item.CategoriesId.image)}
                             alt="Category"
                             style={{
                               width: "100%",
@@ -858,7 +854,6 @@ const BudgetItems = () => {
           ))
         )}
 
-        {/* نافذة تحديث البند */}
         <StyledUpdateDialog open={openDialog} onClose={handleCloseDialog}>
           <DialogHeader onClose={handleCloseDialog}>
             Update Budget Item
@@ -887,7 +882,6 @@ const BudgetItems = () => {
           </StyledDialogActions>
         </StyledUpdateDialog>
 
-        {/* نافذة تأكيد الحذف */}
         <StyledDialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
           <DeleteDialogHeader onClose={handleCloseDeleteDialog}>
             Confirm Deletion

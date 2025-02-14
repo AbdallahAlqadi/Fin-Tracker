@@ -243,7 +243,7 @@ const DashboardUser = () => {
           transform: `scale(${scale})`,
           cursor: 'pointer',
           mb: 4,
-          fontSize: { xs: '2rem', md: '3rem' } // ضبط حجم الخط ليكون استجابة
+          fontSize: { xs: '2rem', md: '3rem' },
         }}
         onMouseEnter={() => setScale(1.1)}
         onMouseLeave={() => setScale(1)}
@@ -302,7 +302,11 @@ const DashboardUser = () => {
                           {category.image && (
                             <Box
                               component="img"
-                              src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
+                              src={
+                                category.image.startsWith("data:")
+                                  ? category.image
+                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                              }
                               alt={category.categoryName}
                               sx={{
                                 width: { xs: 50, sm: 70 },
@@ -382,7 +386,11 @@ const DashboardUser = () => {
           {selectedCategory?.image && (
             <Box
               component="img"
-              src={`https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`}
+              src={
+                selectedCategory.image.startsWith("data:")
+                  ? selectedCategory.image
+                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+              }
               alt={selectedCategory.categoryName}
               sx={{
                 width: 100,
@@ -401,7 +409,7 @@ const DashboardUser = () => {
             margin="dense"
             label="Value"
             type="number"
-            inputProps={{ step: "0.01", min: "0" }}  // للسماح بالأرقام العشرية ومنع الأرقام السالبة
+            inputProps={{ step: "0.01", min: "0" }}
             fullWidth
             variant="outlined"
             value={value}

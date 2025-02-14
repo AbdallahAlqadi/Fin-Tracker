@@ -24,6 +24,12 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
+// دالة مساعدة لبناء رابط الصورة بشكل صحيح
+const getImageUrl = (image) => {
+  if (!image) return "fallback-image.png"; // في حال عدم وجود صورة يمكن استبدالها بصورة بديلة محلياً
+  return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+};
+
 // صورة متجاوبة داخل الحاوية الدائرية
 const StyledImage = styled("img")({
   width: "100%",
@@ -380,7 +386,7 @@ const Graph = () => {
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "center",
-            gap: { xs: 2, md: 4 }, // فجوة أقل على الشاشات الصغيرة
+            gap: { xs: 2, md: 4 },
           }}
         >
           <Card
@@ -476,10 +482,7 @@ const Graph = () => {
                   overflow: "hidden",
                 }}
               >
-                <svg
-                  ref={svgRef}
-                  style={{ width: "100%", height: "100%" }}
-                />
+                <svg ref={svgRef} style={{ width: "100%", height: "100%" }} />
               </Box>
               <List
                 sx={{
@@ -501,8 +504,9 @@ const Graph = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                        (item.valueitem /
-                          d3.sum(filteredItems.map((i) => i.valueitem))) *
+                        (item.valueitem / d3.sum(
+                          filteredItems.map((i) => i.valueitem)
+                        )) *
                         100
                       ).toFixed(2)}%)`}
                     />
@@ -527,9 +531,7 @@ const Graph = () => {
                   <StyledCard>
                     <ImageContainer>
                       <StyledImage
-                        src={`https://fin-tracker-ncbx.onrender.com/${
-                          item.CategoriesId?.image || "fallback-image.png"
-                        }`}
+                        src={getImageUrl(item.CategoriesId?.image)}
                         alt="Category"
                       />
                     </ImageContainer>
