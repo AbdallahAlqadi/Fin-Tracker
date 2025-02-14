@@ -113,8 +113,17 @@ exports.Updatecategory = async (req, res) => {
     const id = req.params.id;
     let updateData = req.body;
 
+    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
     if (req.file) {
-      // بما أن multer حفظ الملف بالفعل في uploads، فقط حدث مسار الصورة
+      // المسار المؤقت الذي يوجد به الملف
+      const tempPath = req.file.path;
+      // تحديد المسار النهائي في مجلد "uploads"
+      const targetPath = path.join(uploadsFolder, req.file.filename);
+
+      // نقل الملف من المجلد المؤقت إلى الدائم
+      fs.renameSync(tempPath, targetPath);
+
+      // تحديث مسار الصورة في البيانات
       updateData.image = `../uploads/${req.file.filename}`;
     }
 
