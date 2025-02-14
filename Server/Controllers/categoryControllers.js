@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 
 // التأكد من وجود مجلد uploads، وإن لم يكن موجودًا يتم إنشاؤه
-const uploadsDir = path.join(__dirname, '../uploads');
+const uploadsDir = path.join(__dirname, './uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
   console.log('uploads folder created');
@@ -56,7 +56,7 @@ exports.createCategory = async (req, res) => {
 
     // استخراج البيانات من الطلب
     const { categoryName, categoryType } = req.body;
-    const image = req.file ? `../uploads/${req.file.filename}` : null;
+    const image = req.file ? `./uploads/${req.file.filename}` : null;
 
     // التأكد من وجود جميع الحقول المطلوبة
     if (!categoryName || !categoryType || !image) {
