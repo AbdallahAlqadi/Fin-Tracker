@@ -12,7 +12,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -124,7 +124,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+        alert('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];

@@ -2,7 +2,6 @@
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
 // تكوين multer لتحديد مكان حفظ الملفات وتسميتها
 const storage = multer.diskStorage({
@@ -113,17 +112,8 @@ exports.Updatecategory = async (req, res) => {
     const id = req.params.id;
     let updateData = req.body;
 
-    // إذا تم رفع ملف جديد، ننقل الملف من المجلد المؤقت إلى المجلد الدائم ونحدّث حقل الصورة
+    // إذا تم رفع ملف جديد، نقوم بتحديث مسار الصورة مباشرةً
     if (req.file) {
-      // المسار المؤقت الذي يوجد به الملف
-      const tempPath = req.file.path;
-      // تحديد المسار النهائي في مجلد "uploads"
-      const targetPath = path.join(uploadsFolder, req.file.filename);
-
-      // نقل الملف من المجلد المؤقت إلى الدائم
-      fs.renameSync(tempPath, targetPath);
-
-      // تحديث مسار الصورة في البيانات
       updateData.image = `uploads/${req.file.filename}`;
     }
 
