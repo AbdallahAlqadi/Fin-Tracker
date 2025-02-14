@@ -169,7 +169,11 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       <div className="category-image-container">
                         {category.image ? (
                           <img
-                            src={`https://fin-tracker-ncbx.onrender.com/${category.image}`}
+                            src={
+                              category.image.startsWith("data:")
+                                ? category.image
+                                : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                            }
                             alt={category.categoryName || "Category Image"}
                             className="category-image"
                           />
@@ -321,7 +325,6 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
-        // استخدام response.data.data لتحديث العنصر المعدل بشكل متسق
         setCategories(categories.map((cat) =>
           cat._id === id ? response.data.data : cat
         ));
