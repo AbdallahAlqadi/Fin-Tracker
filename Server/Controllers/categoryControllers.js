@@ -7,7 +7,7 @@ const fs = require('fs');
 // تكوين multer لتحديد مكان حفظ الملفات وتسميتها
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // حفظ الملفات في مجلد 'uploads'
+    cb(null, '../uploads/'); // حفظ الملفات في مجلد 'uploads'
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname)); // إضافة توقيت لاسم الملف لتجنب التكرار
@@ -115,7 +115,7 @@ exports.Updatecategory = async (req, res) => {
 
     if (req.file) {
       // بما أن multer حفظ الملف بالفعل في uploads، فقط حدث مسار الصورة
-      updateData.image = `uploads/${req.file.filename}`;
+      updateData.image = `../uploads/${req.file.filename}`;
     }
 
     const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
