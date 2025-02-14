@@ -1,4 +1,3 @@
-// CombinedPage.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/dashbord.css';
@@ -327,7 +326,6 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
-        // تحديث التصنيف باستخدام response.data.data
         setCategories(categories.map((cat) =>
           cat._id === id ? response.data.data : cat
         ));
