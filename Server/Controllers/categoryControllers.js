@@ -1,4 +1,4 @@
-//item يلي بضيفها المستخدم
+// categoryController.js
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
@@ -13,10 +13,10 @@ const storage = multer.diskStorage({
   }
 });
 
-// تكوين multer لتحميل ملف واحد فقط
+// تكوين multer لتحميل ملف واحد فقط مع تحديد حجم الملف بحد أقصى 5MB
 const uploadSingle = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // تحديد حجم الملف بحد أقصى 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif/; // السماح بأنواع محددة من الملفات
     const mimetype = filetypes.test(file.mimetype);
@@ -88,7 +88,7 @@ exports.getCategories = async (req, res) => {
 exports.Deletecategory = async (req, res) => {
   try {
     const id = req.params.id;
-    const deletcategory = await Category.findOneAndDelete({ _id: id }); // شرط الحذف بناءً على id
+    const deletcategory = await Category.findOneAndDelete({ _id: id });
     res.status(200).json(deletcategory);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -97,16 +97,36 @@ exports.Deletecategory = async (req, res) => {
 
 exports.Updatecategory = async (req, res) => {
   try {
-    const id = req.params.id;
-    const body = req.body;
-    console.log(body);
+    // استخدام multer لمعالجة الصورة في حالة وجودها
+    await new Promise((resolve, reject) => {
+      uploadSingle(req, res, (err) => {
+        if (err && err.code !== 'LIMIT_UNEXPECTED_FILE') {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
 
-    const updatecategory = await Category.findByIdAndUpdate(id, body, { new: true });
+    const id = req.params.id;
+    const { categoryName, categoryType } = req.body;
+    let updateData = {
+      categoryName,
+      categoryType
+    };
+
+    if (req.file) {
+      updateData.image = `uploads/${req.file.filename}`;
+    }
+
+    const updatecategory = await Category.findByIdAndUpdate(id, updateData, { new: true });
     if (!updatecategory) {
       return res.status(404).json({ message: 'Category not found' });
     }
-    res.status(200).json(updatecategory);
+    res.status(200).json({ message: 'Category updated successfully', data: updatecategory });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof multer.MulterError) {
+      return res.status(400).json({ message: 'Error uploading file', error: error.message });
+    }
+    res.status(500).json({ message: 'Error updating category', error: error.message });
   }
 };

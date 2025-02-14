@@ -11,8 +11,9 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+      // استخدام حد 5 ميجابايت بما يتماشى مع الخادم
+      if (file.size > 5 * 1024 * 1024) {
+        alert('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -101,7 +102,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null); // حالة لتخزين الصورة الجديدة عند التحديث
+  const [newImage, setNewImage] = useState(null); // لتخزين الصورة الجديدة عند التحديث
 
   const categorizedData = categories.reduce((acc, category) => {
     const type = category.categoryType || "Uncategorized";
@@ -123,8 +124,8 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const handleUpdateImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 50 ميجابايت');
+      if (file.size > 5 * 1024 * 1024) {
+        alert('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
         return;
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -320,8 +321,9 @@ const CombinedPage = () => {
         }
       );
       if (response.status === 200) {
+        // استخدام response.data.data لتحديث العنصر المعدل بشكل متسق
         setCategories(categories.map((cat) =>
-          cat._id === id ? response.data : cat
+          cat._id === id ? response.data.data : cat
         ));
       }
     } catch (error) {
