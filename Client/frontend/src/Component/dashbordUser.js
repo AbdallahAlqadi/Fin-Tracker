@@ -284,14 +284,25 @@ const DashboardUser = () => {
             >
               {getCategoryIcon(type)} {type}
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
+            {/* تغيير تخطيط العناصر إلى Grid بحيث تعرض عنصرين في الصف على الشاشات الصغيرة */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)',
+                  sm: 'repeat(auto-fit, minmax(180px, 1fr))',
+                },
+                gap: 3,
+                justifyContent: 'center',
+              }}
+            >
               {groupedCategories[type]
                 .slice(0, visibleItems[type])
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
                     <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
-                      <Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <CategoryCard
                           onClick={() => handleClickOpen(category)}
                           sx={{
