@@ -1,3 +1,4 @@
+
 // // CombinedPage.jsx
 // import React, { useState, useEffect } from 'react';
 // import axios from 'axios';
@@ -8,31 +9,30 @@
 //   const [categoryType, setCategoryType] = useState('');
 //   const [image, setImage] = useState(null);
 
-//   // التعامل مع تغيير الصورة والتحقق من نوعها وحجمها
+//   // التعامل مع تغيير الصورة والتحقق من حجمها ونوعها
 //   const handleImageChange = (e) => {
 //     const file = e.target.files[0];
 //     if (file) {
 //       if (file.size > 5 * 1024 * 1024) {
-//         alert('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+//         alert('Image size must be less than 5 MB');
 //         return;
 //       }
 //       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 //       if (!allowedTypes.includes(file.type)) {
-//         alert('يرجى تحميل صورة بصيغة JPEG أو PNG أو GIF فقط');
+//         alert('Please upload an image in JPEG, PNG, or GIF format only');
 //         return;
 //       }
 //       setImage(file);
 //     }
 //   };
 
-//   // إرسال البيانات إلى الخادم
+//   // إرسال بيانات النموذج إلى الخادم
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     if (!categoryName || !categoryType || !image) {
-//       alert('يرجى ملء جميع الحقول');
+//       alert('Please fill in all fields');
 //       return;
 //     }
-
 //     const formData = new FormData();
 //     formData.append('categoryName', categoryName);
 //     formData.append('categoryType', categoryType);
@@ -43,16 +43,16 @@
 //         'https://fin-tracker-ncbx.onrender.com/api/category',
 //         formData
 //       );
-//       console.log('تم الإرسال بنجاح:', response.data);
+//       console.log('Successfully submitted:', response.data);
 //       // إعادة تعيين الحقول بعد النجاح
 //       setCategoryName('');
 //       setCategoryType('');
 //       setImage(null);
 //       onCategoryAdded(response.data.data);
 //     } catch (error) {
-//       console.error('حدث خطأ أثناء الإرسال:', error);
+//       console.error('Error submitting form:', error);
 //       alert(
-//         'حدث خطأ أثناء الإرسال: ' +
+//         'Error submitting form: ' +
 //           (error.response?.data?.message || error.message)
 //       );
 //     }
@@ -62,33 +62,36 @@
 //     <div className="form-container">
 //       <form onSubmit={handleSubmit} className="category-form">
 //         <div className="input-group">
-//           <label htmlFor="categoryName">اسم التصنيف:</label>
+//           <label htmlFor="categoryName">Category Name:</label>
 //           <input
 //             type="text"
 //             id="categoryName"
 //             value={categoryName}
 //             onChange={(e) => setCategoryName(e.target.value)}
 //             required
+//             placeholder="Enter category name"
 //           />
 //         </div>
 //         <div className="input-group">
-//           <label htmlFor="categoryType">نوع التصنيف:</label>
+//           <label htmlFor="categoryType">Category Type:</label>
 //           <select
 //             id="categoryType"
 //             value={categoryType}
 //             onChange={(e) => setCategoryType(e.target.value)}
 //             required
 //           >
-//             <option value="">اختر نوع التصنيف</option>
-//             <option value="Expenses">مصروفات</option>
-//             <option value="Revenues">إيرادات</option>
+//             <option value="">Select Category Type</option>
+//             <option value="Expenses">Expenses</option>
+//             <option value="Revenues">Revenues</option>
 //           </select>
 //         </div>
 //         <div className="input-group">
-//           <label htmlFor="image">تحميل الصورة:</label>
+//           <label htmlFor="image">Upload Image:</label>
 //           <input type="file" id="image" onChange={handleImageChange} required />
 //         </div>
-//         <button type="submit" className="submit-btn">إرسال</button>
+//         <button type="submit" className="submit-btn">
+//           Submit
+//         </button>
 //       </form>
 //     </div>
 //   );
@@ -99,7 +102,7 @@
 //   const [selectedCategory, setSelectedCategory] = useState(null);
 //   const [newImage, setNewImage] = useState(null);
 
-//   // تصنيف التصنيفات إلى مصروفات وإيرادات
+//   // فصل التصنيفات إلى Expenses و Revenues
 //   const expenses = categories.filter((cat) => cat.categoryType === 'Expenses');
 //   const revenues = categories.filter((cat) => cat.categoryType === 'Revenues');
 
@@ -108,19 +111,19 @@
 //     const file = e.target.files[0];
 //     if (file) {
 //       if (file.size > 5 * 1024 * 1024) {
-//         alert('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+//         alert('Image size must be less than 5 MB');
 //         return;
 //       }
 //       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 //       if (!allowedTypes.includes(file.type)) {
-//         alert('يرجى تحميل صورة بصيغة JPEG أو PNG أو GIF فقط');
+//         alert('Please upload an image in JPEG, PNG, or GIF format only');
 //         return;
 //       }
 //       setNewImage(file);
 //     }
 //   };
 
-//   // إرسال بيانات التعديل إلى الخادم
+//   // إرسال بيانات التحديث إلى الخادم
 //   const handleModalSubmit = (e) => {
 //     e.preventDefault();
 //     const formData = new FormData();
@@ -135,15 +138,15 @@
 //     setNewImage(null);
 //   };
 
-//   // مكون البطاقة الخاص بكل تصنيف
+//   // عرض بطاقة التصنيف
 //   const renderCategoryCard = (cat) => (
 //     <div key={cat._id} className="category-card">
 //       <div className="card-image">
 //         {cat.image ? (
 //           <img
 //             src={
-//               cat.image.startsWith('data:')
-//                 ? cat.image
+//               cat.image.startsWith('data:') 
+//                 ? cat.image 
 //                 : `https://fin-tracker-ncbx.onrender.com/${cat.image}`
 //             }
 //             alt={cat.categoryName}
@@ -163,10 +166,10 @@
 //             setIsModalOpen(true);
 //           }}
 //         >
-//           تعديل
+//           Edit
 //         </button>
 //         <button className="delete-btn" onClick={() => onDelete(cat._id)}>
-//           حذف
+//           Delete
 //         </button>
 //       </div>
 //     </div>
@@ -174,11 +177,11 @@
 
 //   return (
 //     <div className="category-list-container">
-//       {categories.length === 0 && <p>لا توجد تصنيفات</p>}
+//       {categories.length === 0 && <p>No Categories</p>}
 
 //       {expenses.length > 0 && (
 //         <div className="category-section">
-//           <h2 className="section-title">مصروفات</h2>
+//           <h2 className="section-title">Expenses</h2>
 //           <div className="category-cards">
 //             {expenses.map((cat) => renderCategoryCard(cat))}
 //           </div>
@@ -187,7 +190,7 @@
 
 //       {revenues.length > 0 && (
 //         <div className="category-section">
-//           <h2 className="section-title">إيرادات</h2>
+//           <h2 className="section-title">Revenues</h2>
 //           <div className="category-cards">
 //             {revenues.map((cat) => renderCategoryCard(cat))}
 //           </div>
@@ -198,11 +201,11 @@
 //         <div className="modal">
 //           <div className="modal-content">
 //             <button className="modal-close" onClick={() => setIsModalOpen(false)}>
-//               إغلاق
+//               &times;
 //             </button>
 //             <form onSubmit={handleModalSubmit} className="modal-form">
 //               <div className="input-group">
-//                 <label>اسم التصنيف:</label>
+//                 <label>Category Name:</label>
 //                 <input
 //                   type="text"
 //                   value={selectedCategory.categoryName}
@@ -216,7 +219,7 @@
 //                 />
 //               </div>
 //               <div className="input-group">
-//                 <label>نوع التصنيف:</label>
+//                 <label>Category Type:</label>
 //                 <select
 //                   value={selectedCategory.categoryType}
 //                   onChange={(e) =>
@@ -227,17 +230,17 @@
 //                   }
 //                   required
 //                 >
-//                   <option value="">اختر النوع</option>
-//                   <option value="Expenses">مصروفات</option>
-//                   <option value="Revenues">إيرادات</option>
+//                   <option value="">Select Type</option>
+//                   <option value="Expenses">Expenses</option>
+//                   <option value="Revenues">Revenues</option>
 //                 </select>
 //               </div>
 //               <div className="input-group">
-//                 <label>تحديث الصورة (اختياري):</label>
+//                 <label>Update Image (Optional):</label>
 //                 <input type="file" onChange={handleUpdateImageChange} />
 //               </div>
 //               <button type="submit" className="save-btn">
-//                 حفظ
+//                 Save
 //               </button>
 //             </form>
 //           </div>
@@ -271,7 +274,7 @@
 //     fetchCategories();
 //   }, []);
 
-//   // إضافة تصنيف جديد إلى القائمة
+//   // إضافة تصنيف جديد
 //   const handleCategoryAdded = (newCategory) => {
 //     setCategories([...categories, newCategory]);
 //   };
@@ -305,7 +308,7 @@
 //       }
 //     } catch (err) {
 //       alert(
-//         'خطأ في تحديث التصنيف: ' +
+//         'Error updating category: ' +
 //           (err.response?.data?.message || err.message)
 //       );
 //     }
@@ -314,8 +317,8 @@
 //   return (
 //     <div className="combined-page">
 //       <CategoryForm onCategoryAdded={handleCategoryAdded} />
-//       {loading && <p>جارِ تحميل التصنيفات...</p>}
-//       {error && <p>خطأ: {error}</p>}
+//       {loading && <p>Loading categories...</p>}
+//       {error && <p>Error: {error}</p>}
 //       <CategoryList
 //         categories={categories}
 //         onDelete={handleDelete}
@@ -328,7 +331,8 @@
 // export default CombinedPage;
 
 
-// CombinedPage.jsx
+
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/dashbord.css';
