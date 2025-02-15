@@ -369,7 +369,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
 
     try {
       const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/category',
+        'http://127.0.0.1:5002/api/category',
         formData
       );
       console.log('Successfully submitted:', response.data);
