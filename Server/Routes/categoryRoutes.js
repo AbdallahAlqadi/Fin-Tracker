@@ -8,10 +8,10 @@ const {createCategory, getCategories,Deletecategory,Updatecategory } = require('
 
 
 
-routes.post('/category',upload.single('image'),createCategory);
+routes.post('/category',createCategory);
 routes.get('/getcategories',getCategories);
 routes.delete('/deletecategory/:id',Deletecategory);
-routes.put('/updatecategory/:id',upload.single('image'),Updatecategory);
+routes.put('/updatecategory/:id',Updatecategory);
 
 
 module.exports = routes;

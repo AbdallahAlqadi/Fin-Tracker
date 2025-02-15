@@ -4,16 +4,30 @@ const multer = require('multer');
 const path = require('path');
 const Category = require('../models/categoryData'); // تأكد من صحة مسار ملف الموديل
 
-/*** إعداد Multer ***/
+
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // تأكد من وجود مجلد "uploads" في جذر المشروع
+    // __dirname يُشير إلى "server/controllers"، لذا نعود خطوة للخلف للوصول إلى "server/uploads"
+    cb(null, path.join(__dirname, '../uploads'));
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
+    // إنشاء اسم فريد للملف باستخدام الوقت الحالي
     cb(null, Date.now() + ext);
   },
 });
+
+/*** إعداد Multer ***/
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads/'); // تأكد من وجود مجلد "uploads" في جذر المشروع
+//   },
+//   filename: (req, file, cb) => {
+//     const ext = path.extname(file.originalname);
+//     cb(null, Date.now() + ext);
+//   },
+// });
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
