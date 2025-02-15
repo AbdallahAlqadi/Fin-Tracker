@@ -37,6 +37,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
     formData.append('categoryName', categoryName);
     formData.append('categoryType', categoryType);
     formData.append('image', image);
+    console.log(formData)
 
     try {
       const response = await axios.post('https://fin-tracker-ncbx.onrender.com/api/category', formData, {
@@ -45,7 +46,6 @@ const CategoryForm = ({ onCategoryAdded }) => {
         }
       });
       console.log('Success:', response.data);
-
       setCategoryName('');
       setCategoryType('');
       setImage(null);
