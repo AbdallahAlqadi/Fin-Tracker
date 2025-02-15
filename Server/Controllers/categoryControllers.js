@@ -2,23 +2,30 @@
 const Category = require('../models/categoryData');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// تكوين multer لتحديد مكان حفظ الملفات وتسميتها
+// التأكد من وجود مجلد 'uploads' وإنشاؤه إذا لم يكن موجوداً
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
+// تكوين multer مع استخدام مسار مطلق لمجلد 'uploads'
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // يتم حفظ الملفات في مجلد 'uploads'
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // إضافة تاريخ لاسم الملف لتجنب التكرار
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
 
-// تكوين multer لتحميل ملف واحد فقط مع تحديد حجم الملف بحد أقصى 5MB
+// تكوين multer لتحميل ملف واحد مع تحديد حجم الملف ونوعه
 const uploadSingle = multer({ 
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|gif/; // السماح بأنواع محددة من الملفات
+    const filetypes = /jpeg|jpg|png|gif/;
     const mimetype = filetypes.test(file.mimetype);
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
 
@@ -30,16 +37,16 @@ const uploadSingle = multer({
   }
 }).single('image'); // 'image' هو اسم الحقل الذي يحتوي على الملف
 
+// إنشاء فئة جديدة
 exports.createCategory = async (req, res) => {
   try {
-    // تحميل الملف باستخدام multer
+    // تحميل الصورة باستخدام multer
     await new Promise((resolve, reject) => {
       uploadSingle(req, res, (err) => {
         if (err) {
-          reject(err);
-        } else {
-          resolve();
+          return reject(err);
         }
+        resolve();
       });
     });
 
@@ -47,12 +54,12 @@ exports.createCategory = async (req, res) => {
     const { categoryName, categoryType } = req.body;
     const image = req.file ? `uploads/${req.file.filename}` : null;
 
-    // التحقق من أن جميع الحقول مطلوبة موجودة
+    // التأكد من أن جميع الحقول مطلوبة موجودة
     if (!categoryName || !categoryType || !image) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // إنشاء كائن جديد من النموذج Category
+    // إنشاء الكائن الجديد من النموذج
     const newCategory = new Category({
       categoryName,
       categoryType,
@@ -62,10 +69,8 @@ exports.createCategory = async (req, res) => {
     // حفظ الكائن في قاعدة البيانات
     await newCategory.save();
 
-    // إرسال الرد بنجاح العملية
     res.status(201).json({ message: 'Category created successfully', data: newCategory });
   } catch (err) {
-    // معالجة الأخطاء
     if (err instanceof multer.MulterError) {
       return res.status(400).json({ message: 'Error uploading file', error: err.message });
     } else if (err.message === 'Only images (jpeg, jpg, png, gif) are allowed!') {
@@ -76,6 +81,7 @@ exports.createCategory = async (req, res) => {
   }
 };
 
+// جلب جميع الفئات
 exports.getCategories = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -85,6 +91,7 @@ exports.getCategories = async (req, res) => {
   }
 };
 
+// حذف فئة بناءً على معرفها
 exports.Deletecategory = async (req, res) => {
   try {
     const id = req.params.id;
@@ -95,6 +102,7 @@ exports.Deletecategory = async (req, res) => {
   }
 };
 
+// تعديل فئة
 exports.Updatecategory = async (req, res) => {
   try {
     // استخدام multer لمعالجة الصورة في حالة وجودها
@@ -109,10 +117,7 @@ exports.Updatecategory = async (req, res) => {
 
     const id = req.params.id;
     const { categoryName, categoryType } = req.body;
-    let updateData = {
-      categoryName,
-      categoryType
-    };
+    let updateData = { categoryName, categoryType };
 
     if (req.file) {
       updateData.image = `uploads/${req.file.filename}`;
