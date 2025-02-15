@@ -16,8 +16,6 @@ connectDB();
 app.use(bodyParser.json());
 app.use(cors());
 app.use('/api', userRoutes);
-app.use(express.json({ limit: '10mb' })); // يمكن زيادة الحد إذا كانت الصور كبيرة
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.urlencoded({ extended: true }));
 
