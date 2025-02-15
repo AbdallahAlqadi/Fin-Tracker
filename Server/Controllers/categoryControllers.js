@@ -6,7 +6,7 @@ const fs = require('fs');
 
 // التأكد من وجود مجلد "uploads" وإنشاؤه إذا لم يكن موجوداً
 
-const uploadDir = path.join(__dirname, './uploads');
+const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log('تم إنشاء مجلد uploads:', uploadDir);
