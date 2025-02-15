@@ -8,15 +8,14 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const [categoryType, setCategoryType] = useState('');
   const [image, setImage] = useState(null);
 
+  // التعامل مع تغيير الصورة والتحقق من نوعها وحجمها
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // التحقق من حجم الصورة (يجب أن يكون أقل من 5 ميجابايت)
       if (file.size > 5 * 1024 * 1024) {
         alert('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
         return;
       }
-      // التحقق من نوع الصورة (jpeg, png, gif)
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
         alert('يرجى تحميل صورة بصيغة JPEG أو PNG أو GIF فقط');
@@ -26,10 +25,9 @@ const CategoryForm = ({ onCategoryAdded }) => {
     }
   };
 
+  // إرسال البيانات إلى الخادم
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // التأكد من ملء جميع الحقول
     if (!categoryName || !categoryType || !image) {
       alert('يرجى ملء جميع الحقول');
       return;
@@ -40,31 +38,21 @@ const CategoryForm = ({ onCategoryAdded }) => {
     formData.append('categoryType', categoryType);
     formData.append('image', image);
 
-    // (للتأكد يمكنك التحقق من محتويات formData عبر الكود التالي قبل الإرسال)
-    // for (let [key, value] of formData.entries()) {
-    //   console.log(`${key}: ${value}`);
-    // }
-
     try {
       const response = await axios.post(
         'https://fin-tracker-ncbx.onrender.com/api/category',
         formData
-        // تمت إزالة تعيين header "Content-Type" يدويًا؛
-        // سيقوم axios بتعيينه تلقائيًا مع الـ boundary الصحيح.
       );
-      console.log('Success:', response.data);
-
-      // إعادة تعيين القيم بعد النجاح
+      console.log('تم الإرسال بنجاح:', response.data);
+      // إعادة تعيين الحقول بعد النجاح
       setCategoryName('');
       setCategoryType('');
       setImage(null);
-
-      // إعلام الصفحة الرئيسية بوجود تصنيف جديد
       onCategoryAdded(response.data.data);
     } catch (error) {
-      console.error('Error submitting data:', error);
+      console.error('حدث خطأ أثناء الإرسال:', error);
       alert(
-        'حدث خطأ أثناء إرسال البيانات: ' +
+        'حدث خطأ أثناء الإرسال: ' +
           (error.response?.data?.message || error.message)
       );
     }
@@ -74,7 +62,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
     <div className="form-container">
       <form onSubmit={handleSubmit}>
         <div className="input-group">
-          <label htmlFor="categoryName">Category Name:</label>
+          <label htmlFor="categoryName">اسم التصنيف:</label>
           <input
             type="text"
             id="categoryName"
@@ -84,28 +72,23 @@ const CategoryForm = ({ onCategoryAdded }) => {
           />
         </div>
         <div className="input-group">
-          <label htmlFor="categoryType">Category Type:</label>
+          <label htmlFor="categoryType">نوع التصنيف:</label>
           <select
             id="categoryType"
             value={categoryType}
             onChange={(e) => setCategoryType(e.target.value)}
             required
           >
-            <option value="">Select a type</option>
-            <option value="Expenses">Expenses</option>
-            <option value="Revenues">Revenues</option>
+            <option value="">اختر نوع التصنيف</option>
+            <option value="Expenses">مصروفات</option>
+            <option value="Revenues">إيرادات</option>
           </select>
         </div>
         <div className="input-group">
-          <label htmlFor="image">Upload Image:</label>
-          <input
-            type="file"
-            id="image"
-            onChange={handleImageChange}
-            required
-          />
+          <label htmlFor="image">تحميل الصورة:</label>
+          <input type="file" id="image" onChange={handleImageChange} required />
         </div>
-        <button type="submit">Submit</button>
+        <button type="submit">إرسال</button>
       </form>
     </div>
   );
@@ -114,25 +97,9 @@ const CategoryForm = ({ onCategoryAdded }) => {
 const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newImage, setNewImage] = useState(null); // لتخزين الصورة الجديدة عند التحديث
+  const [newImage, setNewImage] = useState(null);
 
-  const categorizedData = categories.reduce((acc, category) => {
-    const type = category.categoryType || "Uncategorized";
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(category);
-    return acc;
-  }, {});
-
-  const chunkArray = (array, size) => {
-    const result = [];
-    for (let i = 0; i < array.length; i += size) {
-      result.push(array.slice(i, i + size));
-    }
-    return result;
-  };
-
+  // التعامل مع تغيير الصورة في حالة التعديل
   const handleUpdateImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -149,9 +116,9 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     }
   };
 
-  const handleUpdateSubmit = (e) => {
+  // إرسال بيانات التعديل إلى الخادم
+  const handleModalSubmit = (e) => {
     e.preventDefault();
-    // إنشاء FormData يتضمن _id وبيانات التعديل والصورة الجديدة (إن وُجدت)
     const formData = new FormData();
     formData.append('_id', selectedCategory._id);
     formData.append('categoryName', selectedCategory.categoryName);
@@ -160,79 +127,51 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
       formData.append('image', newImage);
     }
     onUpdate(formData);
-    setNewImage(null);
     setIsModalOpen(false);
+    setNewImage(null);
   };
 
   return (
     <div className="category-list-container">
-      {categories.length === 0 && (
-        <p className="no-categories-text">No categories found.</p>
-      )}
-      {Object.keys(categorizedData).length > 0 && (
-        <div>
-          {Object.entries(categorizedData).map(([type, items]) => (
-            <div key={type} className="category-type-container">
-              <h2 className="category-type-title">{type}</h2>
-              {chunkArray(items, 5).map((chunk, index) => (
-                <div key={index} className="category-chunk">
-                  {chunk.map((category) => (
-                    <div key={category._id} className="category-item">
-                      <div className="category-image-container">
-                        {category.image ? (
-                          <img
-                            src={
-                              category.image.startsWith("data:")
-                                ? category.image
-                                : `https://fin-tracker-ncbx.onrender.com/${category.image}`
-                            }
-                            alt={category.categoryName || "Category Image"}
-                            className="category-image"
-                          />
-                        ) : (
-                          <span style={{ fontSize: "28px", color: "#a0aec0" }}>💰</span>
-                        )}
-                      </div>
-                      <p className="category-name">{category.categoryName}</p>
-                      <button
-                        className="update-button"
-                        onClick={() => {
-                          setSelectedCategory(category);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        Update
-                      </button>
-                      <button
-                        className="delete-button"
-                        onClick={() => onDelete(category._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ))}
+      {categories.length === 0 && <p>لا توجد تصنيفات</p>}
+      {categories.map((cat) => (
+        <div key={cat._id} className="category-item">
+          <div className="category-image">
+            {cat.image ? (
+              <img
+                src={
+                  cat.image.startsWith('data:')
+                    ? cat.image
+                    : `https://fin-tracker-ncbx.onrender.com/${cat.image}`
+                }
+                alt={cat.categoryName}
+              />
+            ) : (
+              <span>💰</span>
+            )}
+          </div>
+          <p>{cat.categoryName}</p>
+          <button
+            onClick={() => {
+              setSelectedCategory(cat);
+              setIsModalOpen(true);
+            }}
+          >
+            تعديل
+          </button>
+          <button onClick={() => onDelete(cat._id)}>حذف</button>
         </div>
-      )}
+      ))}
+
       {isModalOpen && selectedCategory && (
-        <div className="modal-overlay">
+        <div className="modal">
           <div className="modal-content">
-            <button
-              className="modal-close-button"
-              onClick={() => setIsModalOpen(false)}
-            >
-              ×
-            </button>
-            <h2 className="modal-title">Edit Category</h2>
-            <form onSubmit={handleUpdateSubmit}>
+            <button onClick={() => setIsModalOpen(false)}>إغلاق</button>
+            <form onSubmit={handleModalSubmit}>
               <div className="input-group">
-                <label htmlFor="updateCategoryName">Category Name:</label>
+                <label>اسم التصنيف:</label>
                 <input
                   type="text"
-                  id="updateCategoryName"
                   value={selectedCategory.categoryName}
                   onChange={(e) =>
                     setSelectedCategory({
@@ -240,50 +179,31 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
                       categoryName: e.target.value,
                     })
                   }
-                  placeholder="Category Name"
-                  className="modal-input"
                   required
                 />
               </div>
               <div className="input-group">
-                <label htmlFor="updateCategoryType">Category Type:</label>
+                <label>نوع التصنيف:</label>
                 <select
-                  id="updateCategoryType"
-                  value={selectedCategory.categoryType || ""}
+                  value={selectedCategory.categoryType}
                   onChange={(e) =>
                     setSelectedCategory({
                       ...selectedCategory,
                       categoryType: e.target.value,
                     })
                   }
-                  className="modal-select"
                   required
                 >
-                  <option value="">Select Type</option>
-                  <option value="Revenues">Revenues</option>
-                  <option value="Expenses">Expenses</option>
+                  <option value="">اختر النوع</option>
+                  <option value="Expenses">مصروفات</option>
+                  <option value="Revenues">إيرادات</option>
                 </select>
               </div>
               <div className="input-group">
-                <label htmlFor="updateImage">Update Image (optional):</label>
-                <input
-                  type="file"
-                  id="updateImage"
-                  onChange={handleUpdateImageChange}
-                />
+                <label>تحديث الصورة (اختياري):</label>
+                <input type="file" onChange={handleUpdateImageChange} />
               </div>
-              <div className="modal-buttons">
-                <button type="submit" className="save-button">
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="cancel-button"
-                >
-                  Cancel
-                </button>
-              </div>
+              <button type="submit">حفظ</button>
             </form>
           </div>
         </div>
@@ -297,16 +217,16 @@ const CombinedPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // جلب التصنيفات من الخادم
   const fetchCategories = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const response = await axios.get(
-        "https://fin-tracker-ncbx.onrender.com/api/getcategories"
+      setLoading(true);
+      const res = await axios.get(
+        'https://fin-tracker-ncbx.onrender.com/api/getcategories'
       );
-      setCategories(response.data.data);
-    } catch (error) {
-      setError(error.message);
+      setCategories(res.data.data);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -316,61 +236,59 @@ const CombinedPage = () => {
     fetchCategories();
   }, []);
 
+  // إضافة تصنيف جديد إلى القائمة
   const handleCategoryAdded = (newCategory) => {
     setCategories([...categories, newCategory]);
   };
 
+  // حذف تصنيف
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(
+      const res = await axios.delete(
         `https://fin-tracker-ncbx.onrender.com/api/deletecategory/${id}`
       );
-      if (response.status === 200) {
-        setCategories(categories.filter((category) => category._id !== id));
+      if (res.status === 200) {
+        setCategories(categories.filter((cat) => cat._id !== id));
       }
-    } catch (error) {
-      alert(error.message);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
+  // تحديث التصنيف
   const handleUpdate = async (formData) => {
     try {
       const id = formData.get('_id');
-      const response = await axios.put(
+      const res = await axios.put(
         `https://fin-tracker-ncbx.onrender.com/api/updatecategory/${id}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        formData
       );
-      if (response.status === 200) {
+      if (res.status === 200) {
         setCategories(
           categories.map((cat) =>
-            cat._id === id ? response.data.data : cat
+            cat._id === id ? res.data.data : cat
           )
         );
       }
-    } catch (error) {
+    } catch (err) {
       alert(
-        'Error updating category: ' +
-          (error.response?.data?.message || error.message)
+        'خطأ في تحديث التصنيف: ' +
+          (err.response?.data?.message || err.message)
       );
     }
   };
 
   return (
-    <>
+    <div>
       <CategoryForm onCategoryAdded={handleCategoryAdded} />
-      {loading && <p className="loading-text">Loading categories...</p>}
-      {error && <p className="error-text">Error: {error}</p>}
+      {loading && <p>جارِ تحميل التصنيفات...</p>}
+      {error && <p>خطأ: {error}</p>}
       <CategoryList
         categories={categories}
         onDelete={handleDelete}
         onUpdate={handleUpdate}
       />
-    </>
+    </div>
   );
 };
 
