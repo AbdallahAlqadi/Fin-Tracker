@@ -11,11 +11,12 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // استخدام حد 5 ميجابايت بما يتماشى مع الخادم
+      // التحقق من حجم الصورة (يجب أن يكون أقل من 5 ميجابايت)
       if (file.size > 5 * 1024 * 1024) {
         alert('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
         return;
       }
+      // التحقق من نوع الصورة (jpeg, png, gif)
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
         alert('يرجى تحميل صورة بصيغة JPEG أو PNG أو GIF فقط');
@@ -28,6 +29,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // التأكد من ملء جميع الحقول
     if (!categoryName || !categoryType || !image) {
       alert('يرجى ملء جميع الحقول');
       return;
@@ -38,14 +40,21 @@ const CategoryForm = ({ onCategoryAdded }) => {
     formData.append('categoryType', categoryType);
     formData.append('image', image);
 
+    // (للتأكد يمكنك التحقق من محتويات formData عبر الكود التالي قبل الإرسال)
+    // for (let [key, value] of formData.entries()) {
+    //   console.log(`${key}: ${value}`);
+    // }
+
     try {
-      const response = await axios.post('https://fin-tracker-ncbx.onrender.com/api/category', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await axios.post(
+        'https://fin-tracker-ncbx.onrender.com/api/category',
+        formData
+        // تمت إزالة تعيين header "Content-Type" يدويًا؛
+        // سيقوم axios بتعيينه تلقائيًا مع الـ boundary الصحيح.
+      );
       console.log('Success:', response.data);
 
+      // إعادة تعيين القيم بعد النجاح
       setCategoryName('');
       setCategoryType('');
       setImage(null);
@@ -54,7 +63,10 @@ const CategoryForm = ({ onCategoryAdded }) => {
       onCategoryAdded(response.data.data);
     } catch (error) {
       console.error('Error submitting data:', error);
-      alert('حدث خطأ أثناء إرسال البيانات: ' + (error.response?.data?.message || error.message));
+      alert(
+        'حدث خطأ أثناء إرسال البيانات: ' +
+          (error.response?.data?.message || error.message)
+      );
     }
   };
 
@@ -208,7 +220,12 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
       {isModalOpen && selectedCategory && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <button className="modal-close-button" onClick={() => setIsModalOpen(false)}>×</button>
+            <button
+              className="modal-close-button"
+              onClick={() => setIsModalOpen(false)}
+            >
+              ×
+            </button>
             <h2 className="modal-title">Edit Category</h2>
             <form onSubmit={handleUpdateSubmit}>
               <div className="input-group">
@@ -284,7 +301,9 @@ const CombinedPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getcategories");
+      const response = await axios.get(
+        "https://fin-tracker-ncbx.onrender.com/api/getcategories"
+      );
       setCategories(response.data.data);
     } catch (error) {
       setError(error.message);
@@ -303,7 +322,9 @@ const CombinedPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(`https://fin-tracker-ncbx.onrender.com/api/deletecategory/${id}`);
+      const response = await axios.delete(
+        `https://fin-tracker-ncbx.onrender.com/api/deletecategory/${id}`
+      );
       if (response.status === 200) {
         setCategories(categories.filter((category) => category._id !== id));
       }
@@ -320,17 +341,22 @@ const CombinedPage = () => {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
       if (response.status === 200) {
-        setCategories(categories.map((cat) =>
-          cat._id === id ? response.data.data : cat
-        ));
+        setCategories(
+          categories.map((cat) =>
+            cat._id === id ? response.data.data : cat
+          )
+        );
       }
     } catch (error) {
-      alert('Error updating category: ' + (error.response?.data?.message || error.message));
+      alert(
+        'Error updating category: ' +
+          (error.response?.data?.message || error.message)
+      );
     }
   };
 
