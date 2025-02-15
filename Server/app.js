@@ -16,7 +16,7 @@ connectDB();
 app.use(bodyParser.json());
 app.use(cors());
 app.use('/api', userRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('../Server/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', categoryRoutes);
