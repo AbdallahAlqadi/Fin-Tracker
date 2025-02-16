@@ -114,7 +114,7 @@ const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState(new Date());
-  // إفتراضيًا يتم اختيار الإيرادات
+  // إفتراضيًا يتم اختيار الإيرادات، ويمكن اختيار "ALL" لعرض الكل
   const [filterType, setFilterType] = useState("Revenues");
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
@@ -154,6 +154,7 @@ const Graph = () => {
   // تجميع العناصر حسب التصنيف (دمج العناصر المكررة)
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
+      // الحصول على اسم الفئة أو تعيين "Unknown" إذا لم يكن موجودًا
       const categoryName = item.CategoriesId?.categoryName || "Unknown";
       if (!acc[categoryName]) {
         acc[categoryName] = { ...item, valueitem: 0 };
@@ -163,7 +164,7 @@ const Graph = () => {
     }, {});
   };
 
-  // تصفية العناصر بناءً على التاريخ والنوع
+  // تصفية العناصر بناءً على التاريخ والنوع واستبعاد العناصر غير المعروفة
   const filterItems = (items) => {
     let filteredItems = items;
 
@@ -184,13 +185,23 @@ const Graph = () => {
       });
     }
 
-    // تصفية العناصر بناءً على النوع (Revenues أو Expenses)
-    filteredItems = filteredItems.filter(
-      (item) => item.CategoriesId?.categoryType === filterType
-    );
+    // إذا كان النوع المحدد ليس "ALL" يتم تصفية العناصر بناءً على النوع
+    if (filterType !== "ALL") {
+      filteredItems = filteredItems.filter(
+        (item) => item.CategoriesId?.categoryType === filterType
+      );
+    }
 
-    return Object.values(groupByCategory(filteredItems));
+    // تجميع العناصر ثم استبعاد العناصر التي تحمل اسم "Unknown"
+    const grouped = groupByCategory(filteredItems);
+    const groupedArray = Object.values(grouped).filter(
+      (item) =>
+        item.CategoriesId?.categoryName && item.CategoriesId?.categoryName !== "Unknown"
+    );
+    return groupedArray;
   };
+
+  const filteredItems = filterItems(budgetItems);
 
   // حساب المجاميع الإجمالية لكل نوع
   const calculateTotals = (items) => {
@@ -206,7 +217,6 @@ const Graph = () => {
     return totals;
   };
 
-  const filteredItems = filterItems(budgetItems);
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
@@ -421,6 +431,8 @@ const Graph = () => {
                 onChange={(e) => setFilterType(e.target.value)}
                 label="Type"
               >
+                {/* إضافة خيار ALL إلى جانب Revenues و Expenses */}
+                <MenuItem value="ALL">ALL</MenuItem>
                 <MenuItem value="Revenues">Revenues</MenuItem>
                 <MenuItem value="Expenses">Expenses</MenuItem>
               </StyledSelect>
@@ -543,7 +555,8 @@ const Graph = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                          (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem)) *
+                          (item.valueitem /
+                            d3.sum(filteredItems.map((i) => i.valueitem)) *
                             100) || 0
                         ).toFixed(2)}%)`}
                       />
@@ -596,7 +609,8 @@ const Graph = () => {
                           {item.CategoriesId?.categoryType &&
                           totals[item.CategoriesId.categoryType]
                             ? (
-                                (item.valueitem / totals[item.CategoriesId.categoryType]) *
+                                (item.valueitem /
+                                  totals[item.CategoriesId.categoryType]) *
                                 100
                               ).toFixed(2)
                             : "0.00"}
