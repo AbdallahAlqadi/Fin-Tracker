@@ -1,4 +1,3 @@
-
 // CombinedPage.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -258,9 +257,7 @@ const CombinedPage = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        'http://127.0.0.1:5004/api/getcategories'
-      );
+      const res = await axios.get('http://127.0.0.1:5004/api/getcategories');
       setCategories(res.data.data);
     } catch (err) {
       setError(err.message);
