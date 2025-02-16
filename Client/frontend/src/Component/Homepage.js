@@ -82,7 +82,7 @@ export default function HomePage() {
     April: "أبريل"
   };
 
-  // إذا كانت اللغة العربية مختارة نقوم بترجمة أسماء الأشهر في البيانات
+  // ترجمة أسماء الأشهر في البيانات عند اختيار اللغة العربية
   const translatedData = data.map(item => ({
     ...item,
     period: language === 'ar' ? (arabicMonths[item.period] || item.period) : item.period
@@ -95,7 +95,7 @@ export default function HomePage() {
         <select 
           value={language} 
           onChange={(e) => setLanguage(e.target.value)}
-          className="chart-button"
+          className="language-dropdown"
         >
           <option value="en">English</option>
           <option value="ar">العربية</option>
@@ -126,10 +126,16 @@ export default function HomePage() {
       <div className="chart-container">
         <h2 className="chart-title">{translations[language].chartTitle}</h2>
         <div className="chart-buttons">
-          <button className="chart-button" onClick={() => setChartType('bar')}>
+          <button 
+            className={`chart-button ${chartType === 'bar' ? 'active' : ''}`}
+            onClick={() => setChartType('bar')}
+          >
             {translations[language].chartButtons.bar}
           </button>
-          <button className="chart-button" onClick={() => setChartType('line')}>
+          <button 
+            className={`chart-button ${chartType === 'line' ? 'active' : ''}`}
+            onClick={() => setChartType('line')}
+          >
             {translations[language].chartButtons.line}
           </button>
         </div>
