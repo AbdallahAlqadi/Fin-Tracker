@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  ButtonGroup,
   TextField,
   Box,
   Typography,
@@ -70,6 +71,8 @@ const DashboardUser = () => {
   const [addedItems, setAddedItems] = useState([]);
   // حالة لتتبع عملية الإرسال
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // حالة لتصفية التصنيفات: الكل - الدخل - المصروفات
+  const [filterType, setFilterType] = useState('all');
 
   // استخدام useMediaQuery للتحقق مما إذا كان عرض الشاشة أقل من 370px
   const isSmallDevice = useMediaQuery('(max-width:370px)');
@@ -210,9 +213,20 @@ const DashboardUser = () => {
   }
 
   // تصفية التصنيفات بناءً على قيمة البحث (غير حساس لحالة الأحرف)
-  const filteredCategories = categories.filter((category) =>
+  let filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // تطبيق التصفية الإضافية بناءً على نوع التصنيف
+  if (filterType === 'income') {
+    filteredCategories = filteredCategories.filter(
+      (category) => !category.categoryType.toLowerCase().startsWith('expens')
+    );
+  } else if (filterType === 'expenses') {
+    filteredCategories = filteredCategories.filter((category) =>
+      category.categoryType.toLowerCase().startsWith('expens')
+    );
+  }
 
   // تجميع التصنيفات بحسب النوع بعد التصفية
   const groupedCategories = filteredCategories.reduce((acc, category) => {
@@ -257,7 +271,7 @@ const DashboardUser = () => {
         Finance Tracker
       </Typography>
 
-      {/* استخدام Autocomplete كحقل بحث متميز مع تأثيرات وإقتراحات تلقائية */}
+      {/* حقل البحث مع اقتراحات تلقائية */}
       <Autocomplete
         freeSolo
         options={categoryOptions}
@@ -307,6 +321,69 @@ const DashboardUser = () => {
         )}
       />
 
+      {/* مجموعة أزرار لتصفية التصنيفات (بحجم أكبر) */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+        <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden' }}>
+          <Button
+            onClick={() => setFilterType('all')}
+            variant={filterType === 'all' ? 'contained' : 'outlined'}
+            sx={{
+              borderRadius: '20px 0 0 20px',
+              textTransform: 'none',
+              fontWeight: filterType === 'all' ? 'bold' : 'normal',
+              borderColor: '#4A90E2',
+              color: filterType === 'all' ? '#fff' : '#4A90E2',
+              backgroundColor: filterType === 'all' ? '#4A90E2' : 'transparent',
+              '&:hover': {
+                backgroundColor: filterType === 'all' ? '#357ABD' : '#E6F2FF',
+                borderColor: '#357ABD',
+              },
+              px: 3,
+              py: 1.5,
+            }}
+          >
+All          </Button>
+          <Button
+            onClick={() => setFilterType('income')}
+            variant={filterType === 'income' ? 'contained' : 'outlined'}
+            sx={{
+              textTransform: 'none',
+              fontWeight: filterType === 'income' ? 'bold' : 'normal',
+              borderColor: '#4A90E2',
+              color: filterType === 'income' ? '#fff' : '#4A90E2',
+              backgroundColor: filterType === 'income' ? '#4A90E2' : 'transparent',
+              '&:hover': {
+                backgroundColor: filterType === 'income' ? '#357ABD' : '#E6F2FF',
+                borderColor: '#357ABD',
+              },
+              px: 3,
+              py: 1.5,
+            }}
+          >
+            Revenues
+          </Button>
+          <Button
+            onClick={() => setFilterType('expenses')}
+            variant={filterType === 'expenses' ? 'contained' : 'outlined'}
+            sx={{
+              borderRadius: '0 20px 20px 0',
+              textTransform: 'none',
+              fontWeight: filterType === 'expenses' ? 'bold' : 'normal',
+              borderColor: '#4A90E2',
+              color: filterType === 'expenses' ? '#fff' : '#4A90E2',
+              backgroundColor: filterType === 'expenses' ? '#4A90E2' : 'transparent',
+              '&:hover': {
+                backgroundColor: filterType === 'expenses' ? '#357ABD' : '#E6F2FF',
+                borderColor: '#357ABD',
+              },
+              px: 3,
+              py: 1.5,
+            }}
+          >
+Expenses          </Button>
+        </ButtonGroup>
+      </Box>
+
       {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: '#666', mt: 2 }}>
           No Item found.
@@ -330,7 +407,7 @@ const DashboardUser = () => {
             >
               {getCategoryIcon(type)} {type}
             </Typography>
-            {/* استخدام Flex layout للشاشات الأكبر، و Grid عند الأجهزة الصغيرة */}
+            {/* عرض البطاقات بطريقة Grid للأجهزة الصغيرة و Flex للشاشات الأكبر */}
             {isSmallDevice ? (
               <Box
                 sx={{

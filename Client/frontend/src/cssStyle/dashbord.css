@@ -33,13 +33,14 @@ body {
   background: var(--card-bg);
   backdrop-filter: blur(5px);
   border-radius: var(--border-radius);
-  box-shadow: 0 20px 30px var(--shadow-color);
+  box-shadow: 0 25px 45px var(--shadow-color); /* ظل مُعزز */
   padding: 30px;
   margin-bottom: 40px;
   width: 50%;
   margin-left: 23%;
   transition: transform var(--transition-speed);
 }
+
 .form-container:hover {
   transform: translateY(-3px);
 }
