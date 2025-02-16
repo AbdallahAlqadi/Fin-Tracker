@@ -136,42 +136,54 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     setNewImage(null);
   };
 
-  // عرض بطاقة التصنيف
-  const renderCategoryCard = (cat) => (
-    <div key={cat._id} className="category-card">
-      <div className="card-image">
-        {cat.image ? (
-          <img
-            src={
-              cat.image.startsWith('data:') 
-                ? cat.image 
-                : `http://127.0.0.1:5004/${cat.image}`
-            }
-            alt={cat.categoryName}
-          />
-        ) : (
-          <span className="placeholder-icon">💰</span>
-        )}
+  // عرض بطاقة التصنيف مع تعديل التنسيق بناءً على النوع
+  const renderCategoryCard = (cat) => {
+    // إذا كان النوع Expenses يكون اللون أحمر وإلا أزرق
+    const color = cat.categoryType === 'Expenses' ? 'red' : 'blue';
+    return (
+      <div
+        key={cat._id}
+        className="category-card"
+        style={{ border: `2px solid ${color}` }}
+      >
+        <div className="card-image">
+          {cat.image ? (
+            <img
+              src={
+                cat.image.startsWith('data:')
+                  ? cat.image
+                  : `http://127.0.0.1:5004/${cat.image}`
+              }
+              alt={cat.categoryName}
+            />
+          ) : (
+            <span className="placeholder-icon">💰</span>
+          )}
+        </div>
+        <div className="card-content">
+          <h3>{cat.categoryName}</h3>
+          {/* عرض نوع التصنيف مع تلوين النص */}
+          <p style={{ color: color, fontWeight: 'bold' }}>
+            {cat.categoryType}
+          </p>
+        </div>
+        <div className="card-actions">
+          <button
+            className="edit-btn"
+            onClick={() => {
+              setSelectedCategory(cat);
+              setIsModalOpen(true);
+            }}
+          >
+            Edit
+          </button>
+          <button className="delete-btn" onClick={() => onDelete(cat._id)}>
+            Delete
+          </button>
+        </div>
       </div>
-      <div className="card-content">
-        <h3>{cat.categoryName}</h3>
-      </div>
-      <div className="card-actions">
-        <button
-          className="edit-btn"
-          onClick={() => {
-            setSelectedCategory(cat);
-            setIsModalOpen(true);
-          }}
-        >
-          Edit
-        </button>
-        <button className="delete-btn" onClick={() => onDelete(cat._id)}>
-          Delete
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="category-list-container">
