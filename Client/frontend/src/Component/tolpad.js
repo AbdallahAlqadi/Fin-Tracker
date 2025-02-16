@@ -141,7 +141,7 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'logout',
       title: 'logout',
-      icon: <ChatIcon />
+      icon: <ExitToAppIcon />
     },
   ]);
 
@@ -214,7 +214,7 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'logout',
               title: 'logout',
-              icon: <ChatIcon />
+              icon: <ExitToAppIcon />
             },
           ]);
         }
