@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -17,9 +11,14 @@ import {
   Typography,
   Tooltip,
   CircularProgress,
+  InputAdornment,
+  IconButton,
+  useMediaQuery,
 } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
 import { styled, keyframes } from '@mui/system';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 
 // حركة انسيابية للبطاقات
 const floatAnimation = keyframes`
@@ -72,12 +71,12 @@ const DashboardUser = () => {
   // حالة لتتبع عملية الإرسال
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // نستخدم useMediaQuery للتحقق مما إذا كان عرض الشاشة أقل من 370px
+  // استخدام useMediaQuery للتحقق مما إذا كان عرض الشاشة أقل من 370px
   const isSmallDevice = useMediaQuery('(max-width:370px)');
 
   // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
   const getTodayDate = () => {
-    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
   };
 
   // جلب التصنيفات من الخادم
@@ -199,6 +198,9 @@ const DashboardUser = () => {
     }));
   };
 
+  // استخدام قائمة خيارات لحقل البحث بناءً على أسماء التصنيفات
+  const categoryOptions = categories.map((cat) => cat.categoryName);
+
   if (loading) {
     return (
       <Typography variant="h6" align="center" sx={{ mt: 4 }}>
@@ -221,8 +223,9 @@ const DashboardUser = () => {
     return acc;
   }, {});
 
-  // دالة لإرجاع أيقونة التصنيف حسب النوع
-  const getCategoryIcon = (type) => (type === 'Expense' ? '💸' : '💰');
+  // دالة لإرجاع أيقونة التصنيف حسب النوع (مع مقارنة غير حساسة لحالة الأحرف)
+  const getCategoryIcon = (type) =>
+    type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
 
   return (
     <Box
@@ -254,13 +257,54 @@ const DashboardUser = () => {
         Finance Tracker
       </Typography>
 
-      <TextField
-        label="Search Item"
-        variant="outlined"
-        fullWidth
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ mb: 4 }}
+      {/* استخدام Autocomplete كحقل بحث متميز مع تأثيرات وإقتراحات تلقائية */}
+      <Autocomplete
+        freeSolo
+        options={categoryOptions}
+        onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            placeholder="ابحث عن صنف..."
+            variant="outlined"
+            sx={{
+              mb: 4,
+              backgroundColor: '#fff',
+              borderRadius: '50px',
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '50px',
+                transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                },
+                '&.Mui-focused': {
+                  boxShadow: '0 0 8px rgba(74,144,226,0.6)',
+                  borderColor: '#4A90E2',
+                },
+              },
+            }}
+            InputProps={{
+              ...params.InputProps,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <>
+                  {params.InputProps.endAdornment}
+                  {searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setSearchQuery('')} edge="end">
+                        <ClearIcon color="action" />
+                      </IconButton>
+                    </InputAdornment>
+                  )}
+                </>
+              ),
+            }}
+          />
+        )}
       />
 
       {Object.keys(groupedCategories).length === 0 ? (
@@ -286,7 +330,7 @@ const DashboardUser = () => {
             >
               {getCategoryIcon(type)} {type}
             </Typography>
-            {/* نستخدم Flex layout كالمعتاد للشاشات الأكبر، ونستخدم Grid (عنصرين بالصف) فقط عند الأجهزة الصغيرة */}
+            {/* استخدام Flex layout للشاشات الأكبر، و Grid عند الأجهزة الصغيرة */}
             {isSmallDevice ? (
               <Box
                 sx={{
@@ -301,7 +345,7 @@ const DashboardUser = () => {
                   .map((category) => {
                     const isAdded = addedItems.includes(category._id);
                     return (
-                      <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
+                      <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                           <CategoryCard
                             onClick={() => handleClickOpen(category)}
@@ -314,7 +358,7 @@ const DashboardUser = () => {
                               <Box
                                 component="img"
                                 src={
-                                  category.image.startsWith("data:")
+                                  category.image.startsWith('data:')
                                     ? category.image
                                     : `http://127.0.0.1:5004/${category.image}`
                                 }
@@ -349,7 +393,7 @@ const DashboardUser = () => {
                   .map((category) => {
                     const isAdded = addedItems.includes(category._id);
                     return (
-                      <Tooltip key={category._id} title={isAdded ? "تمت الإضافة اليوم" : ""}>
+                      <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
                         <Box>
                           <CategoryCard
                             onClick={() => handleClickOpen(category)}
@@ -362,7 +406,7 @@ const DashboardUser = () => {
                               <Box
                                 component="img"
                                 src={
-                                  category.image.startsWith("data:")
+                                  category.image.startsWith('data:')
                                     ? category.image
                                     : `http://127.0.0.1:5004/${category.image}`
                                 }
@@ -446,7 +490,7 @@ const DashboardUser = () => {
             <Box
               component="img"
               src={
-                selectedCategory.image.startsWith("data:")
+                selectedCategory.image.startsWith('data:')
                   ? selectedCategory.image
                   : `http://127.0.0.1:5004/${selectedCategory.image}`
               }
@@ -468,7 +512,7 @@ const DashboardUser = () => {
             margin="dense"
             label="Value"
             type="number"
-            inputProps={{ step: "0.01", min: "0" }}
+            inputProps={{ step: '0.01', min: '0' }}
             fullWidth
             variant="outlined"
             value={value}
