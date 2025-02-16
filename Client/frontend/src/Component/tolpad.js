@@ -26,6 +26,9 @@ import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage';
 import InstallmentCalculator from '../Component/Installments';
 import AcountUser from '../Component/AcountUser';
+import LogOut from '../Component/LogOut';
+
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const demoTheme = createTheme({
   palette: {
@@ -99,6 +102,7 @@ function DashboardLayoutBasic(props) {
     { path: '/homepage', component: <HomePage /> },
     { path: '/installment', component: <InstallmentCalculator /> },
     { path: '/alluser', component: <AcountUser /> },
+    { path: '/logout', component: <LogOut /> },
 
   ];
 
@@ -135,20 +139,9 @@ function DashboardLayoutBasic(props) {
       icon: <ChatIcon />,
     },
     {
-      segment: 'LogOut',
-      title: '',
-      icon: (
-        <Box
-          onClick={() => {
-            sessionStorage.removeItem('jwt');
-            navigate('/login');
-          }}
-          sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-        >
-          <ExitToAppIcon />
-          <Typography sx={{ ml: 1 }}>LogOut</Typography>
-        </Box>
-      ),
+      segment: 'logout',
+      title: 'logout',
+      icon: <ChatIcon />
     },
   ]);
 
@@ -206,7 +199,7 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'alluser',
               title: 'AllUserAcount',
-              icon: <ChatIcon />,
+              icon: <AccountCircleIcon />,
             },
             {
               segment: 'fedbackuser',
@@ -219,20 +212,9 @@ function DashboardLayoutBasic(props) {
               icon: <ChatIcon />,
             },
             {
-              segment: 'LogOut',
-              title: '',
-              icon: (
-                <Box
-                  onClick={() => {
-                    sessionStorage.removeItem('jwt');
-                    navigate('/login');
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                >
-                  <ExitToAppIcon />
-                  <Typography sx={{ ml: 1 }}>LogOut</Typography>
-                </Box>
-              ),
+              segment: 'logout',
+              title: 'logout',
+              icon: <ChatIcon />
             },
           ]);
         }
