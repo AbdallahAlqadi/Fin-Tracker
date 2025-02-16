@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import '../cssStyle/Homepage.css'
+import '../cssStyle/Homepage.css';
 
 const data = [
   { period: 'January', Revenue: 4000, Expenses: 2400 },
@@ -10,40 +10,132 @@ const data = [
 ];
 
 export default function HomePage() {
+  // قراءة اللغة من localStorage إذا كانت موجودة، والاستخدام الافتراضي للغة الإنجليزية
+  const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
   const [chartType, setChartType] = useState('bar');
 
+  // تحديث localStorage عند تغيير اللغة
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
+
+  const translations = {
+    en: {
+      title: "Website Overview",
+      features: {
+        dataExport: {
+          title: "Data Export",
+          description: "Easily export data in multiple formats."
+        },
+        financialReports: {
+          title: "Financial Reports",
+          description: "Detailed and accurate financial reporting."
+        },
+        customExpenseCategories: {
+          title: "Custom Expense Categories",
+          description: "Tailor expense categories to your needs."
+        },
+        incomeExpenseTracking: {
+          title: "Income & Expense Tracking",
+          description: "Manage and track revenues and expenses efficiently."
+        }
+      },
+      chartTitle: "Revenue vs. Expenses",
+      chartButtons: {
+        bar: "Bar Chart",
+        line: "Line Chart"
+      },
+    },
+    ar: {
+      title: "نظرة عامة على الموقع",
+      features: {
+        dataExport: {
+          title: "تصدير البيانات",
+          description: "يمكنك تصدير البيانات بسهولة بصيغ متعددة."
+        },
+        financialReports: {
+          title: "التقارير المالية",
+          description: "تقارير مالية مفصلة ودقيقة."
+        },
+        customExpenseCategories: {
+          title: "فئات المصاريف المخصصة",
+          description: "تخصيص فئات المصاريف لتناسب احتياجاتك."
+        },
+        incomeExpenseTracking: {
+          title: "متابعة الدخل والمصاريف",
+          description: "إدارة وتتبع الإيرادات والمصاريف بكفاءة."
+        }
+      },
+      chartTitle: "الإيرادات مقابل المصاريف",
+      chartButtons: {
+        bar: "مخطط الأعمدة",
+        line: "مخطط الخط"
+      },
+    }
+  };
+
+  // ترجمة أسماء الأشهر إلى العربية
+  const arabicMonths = {
+    January: "يناير",
+    February: "فبراير",
+    March: "مارس",
+    April: "أبريل"
+  };
+
+  // إذا كانت اللغة العربية مختارة نقوم بترجمة أسماء الأشهر في البيانات
+  const translatedData = data.map(item => ({
+    ...item,
+    period: language === 'ar' ? (arabicMonths[item.period] || item.period) : item.period
+  }));
+
   return (
-    <div className="homepage-container">
-      <h1 className="title">Website Overview</h1>
+    <div className="homepage-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* قائمة اختيار اللغة */}
+      <div className="language-select">
+        <select 
+          value={language} 
+          onChange={(e) => setLanguage(e.target.value)}
+          className="chart-button"
+        >
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+
+      <h1 className="title">{translations[language].title}</h1>
       
       <div className="features-grid">
         <div className="feature-card">
-          <h2>Data Export</h2>
-          <p>Easily export data in multiple formats.</p>
+          <h2>{translations[language].features.dataExport.title}</h2>
+          <p>{translations[language].features.dataExport.description}</p>
         </div>
         <div className="feature-card">
-          <h2>Financial Reports</h2>
-          <p>Detailed and accurate financial reporting.</p>
+          <h2>{translations[language].features.financialReports.title}</h2>
+          <p>{translations[language].features.financialReports.description}</p>
         </div>
         <div className="feature-card">
-          <h2>Custom Expense Categories</h2>
-          <p>Tailor expense categories to your needs.</p>
+          <h2>{translations[language].features.customExpenseCategories.title}</h2>
+          <p>{translations[language].features.customExpenseCategories.description}</p>
         </div>
         <div className="feature-card">
-          <h2>Income & Expense Tracking</h2>
-          <p>Manage and track revenues and expenses efficiently.</p>
+          <h2>{translations[language].features.incomeExpenseTracking.title}</h2>
+          <p>{translations[language].features.incomeExpenseTracking.description}</p>
         </div>
       </div>
       
       <div className="chart-container">
-        <h2 className="chart-title">Revenue vs. Expenses</h2>
+        <h2 className="chart-title">{translations[language].chartTitle}</h2>
         <div className="chart-buttons">
-          <button className="chart-button" onClick={() => setChartType('bar')}>Bar Chart</button>
-          <button className="chart-button" onClick={() => setChartType('line')}>Line Chart</button>
+          <button className="chart-button" onClick={() => setChartType('bar')}>
+            {translations[language].chartButtons.bar}
+          </button>
+          <button className="chart-button" onClick={() => setChartType('line')}>
+            {translations[language].chartButtons.line}
+          </button>
         </div>
         <ResponsiveContainer width="100%" height={350}>
           {chartType === 'bar' ? (
-            <BarChart data={data}>
+            <BarChart data={translatedData}>
               <XAxis dataKey="period" />
               <YAxis />
               <Tooltip />
@@ -52,7 +144,7 @@ export default function HomePage() {
               <Bar dataKey="Expenses" fill="#F44336" barSize={50} />
             </BarChart>
           ) : (
-            <LineChart data={data}>
+            <LineChart data={translatedData}>
               <XAxis dataKey="period" />
               <YAxis />
               <Tooltip />
