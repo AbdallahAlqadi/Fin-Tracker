@@ -74,7 +74,7 @@
 //   useEffect(() => {
 //     const fetchCategories = async () => {
 //       try {
-//         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
+//         const response = await axios.get('http://127.0.0.1:5002/api/getcategories');
 //         setCategories(response.data.data);
 
 //         // تهيئة عدد العناصر المرئية لكل نوع (افتراضي 12)
@@ -100,7 +100,7 @@
 //     const fetchAddedItems = async () => {
 //       try {
 //         const token = sessionStorage.getItem('jwt');
-//         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getBudget', {
+//         const response = await axios.get('http://127.0.0.1:5002/api/getBudget', {
 //           headers: { Auth: `Bearer ${token}` },
 //         });
 //         // نفترض أن الكائن budget يحتوي على مصفوفة المنتجات في الخاصية products
@@ -160,7 +160,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         'https://fin-tracker-ncbx.onrender.com/api/addBudget',
+//         'http://127.0.0.1:5002/api/addBudget',
 //         {
 //           CategoriesId: currentCategory._id,
 //           valueitem: parsedValue, // إرسال القيمة كرقم عشري
@@ -305,7 +305,7 @@
 //                               src={
 //                                 category.image.startsWith("data:")
 //                                   ? category.image
-//                                   : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+//                                   : `http://127.0.0.1:5002/${category.image}`
 //                               }
 //                               alt={category.categoryName}
 //                               sx={{
@@ -389,7 +389,7 @@
 //               src={
 //                 selectedCategory.image.startsWith("data:")
 //                   ? selectedCategory.image
-//                   : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+//                   : `http://127.0.0.1:5002/${selectedCategory.image}`
 //               }
 //               alt={selectedCategory.categoryName}
 //               sx={{
@@ -549,7 +549,7 @@ const DashboardUser = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
+        const response = await axios.get('http://127.0.0.1:5002/api/getcategories');
         setCategories(response.data.data);
 
         // تهيئة عدد العناصر المرئية لكل نوع (افتراضي 12)
@@ -575,7 +575,7 @@ const DashboardUser = () => {
     const fetchAddedItems = async () => {
       try {
         const token = sessionStorage.getItem('jwt');
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getBudget', {
+        const response = await axios.get('http://127.0.0.1:5002/api/getBudget', {
           headers: { Auth: `Bearer ${token}` },
         });
         const budget = response.data.budget;
@@ -630,7 +630,7 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/addBudget',
+        'http://127.0.0.1:5002/api/addBudget',
         {
           CategoriesId: currentCategory._id,
           valueitem: parsedValue,
@@ -781,7 +781,7 @@ const DashboardUser = () => {
                                 src={
                                   category.image.startsWith("data:")
                                     ? category.image
-                                    : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                                    : `http://127.0.0.1:5002/${category.image}`
                                 }
                                 alt={category.categoryName}
                                 sx={{
@@ -829,7 +829,7 @@ const DashboardUser = () => {
                                 src={
                                   category.image.startsWith("data:")
                                     ? category.image
-                                    : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                                    : `http://127.0.0.1:5002/${category.image}`
                                 }
                                 alt={category.categoryName}
                                 sx={{
@@ -913,7 +913,7 @@ const DashboardUser = () => {
               src={
                 selectedCategory.image.startsWith("data:")
                   ? selectedCategory.image
-                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+                  : `http://127.0.0.1:5002/${selectedCategory.image}`
               }
               alt={selectedCategory.categoryName}
               sx={{

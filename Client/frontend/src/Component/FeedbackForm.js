@@ -16,7 +16,7 @@ const FeedbackForm = () => {
     const username = sessionStorage.getItem("username");
 
     try {
-      await axios.post("https://fin-tracker-ncbx.onrender.com/api/fedback", {
+      await axios.post("http://127.0.0.1:5002/api/fedback", {
         username: username,
         message: feedback,
       });

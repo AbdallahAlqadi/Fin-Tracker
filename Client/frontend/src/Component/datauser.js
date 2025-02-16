@@ -222,7 +222,7 @@ const ExportButton = styled(StyledButton)(({ theme }) => ({
 // دالة مساعدة لبناء رابط الصورة بشكل صحيح
 const getImageUrl = (image) => {
   if (!image) return "";
-  return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+  return image.startsWith("data:") ? image : `http://127.0.0.1:5002/${image}`;
 };
 
 // ==========================
@@ -258,7 +258,7 @@ const BudgetItems = () => {
   // دالة جلب البيانات مع فلترة العناصر التي ليس لها فئة
   const fetchBudget = async () => {
     try {
-      const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getUserBudget", {
+      const response = await axios.get("http://127.0.0.1:5002/api/getUserBudget", {
         headers: {
           Auth: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -289,7 +289,7 @@ const BudgetItems = () => {
     if (!itemToDelete) return;
     handleCloseDeleteDialog();
     try {
-      const response = await axios.delete("https://fin-tracker-ncbx.onrender.com/api/deleteBudget", {
+      const response = await axios.delete("http://127.0.0.1:5002/api/deleteBudget", {
         headers: {
           Auth: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -341,7 +341,7 @@ const BudgetItems = () => {
     handleCloseDialog();
     try {
       const response = await axios.put(
-        "https://fin-tracker-ncbx.onrender.com/api/updateBudget",
+        "http://127.0.0.1:5002/api/updateBudget",
         {
           CategoriesId: selectedItem.CategoriesId._id,
           date: selectedItem.date,
