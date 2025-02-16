@@ -11,9 +11,7 @@
   --modal-bg: rgba(255, 255, 255, 0.95);
 }
 
-* {
-  box-sizing: border-box;
-}
+
 
 body {
   margin: 0;

@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
   Grid,
   Card,
   CardContent,
-  Typography,
+  Paper,
   CircularProgress,
   Box,
   FormControl,
@@ -16,6 +20,12 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -50,22 +60,22 @@ const ImageContainer = styled("div")({
   justifyContent: "center",
 });
 
-// بطاقة الفئة مع حجم ثابت وتأثير hover
+// بطاقة الفئة مع تأثير hover أكثر نعومة وحداثة وإضافة مؤشر "pointer"
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  padding: "16px",
+  padding: theme.spacing(2),
   borderRadius: "12px",
-  border: "1px solid #e0e0e0",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  background: "linear-gradient(145deg, #ffffff, #f9f9f9)",
+  backgroundColor: "#fff",
   width: "200px",
-  height: "230px", // ارتفاع ثابت بدون سطر التاريخ
+  height: "230px",
+  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+  cursor: "pointer",
   "&:hover": {
     transform: "translateY(-5px)",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-    borderColor: "#007BFF",
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
   },
 }));
 
@@ -74,14 +84,29 @@ const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#007BFF",
+    borderColor: theme.palette.primary.main,
   },
   "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#0056b3",
+    borderColor: theme.palette.primary.dark,
   },
   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#007BFF",
+    borderColor: theme.palette.primary.main,
     borderWidth: "2px",
+  },
+}));
+
+// بطاقة إجماليات مخصصة مع تأثيرات حديثة دون تغيير حجمها
+const TotalCard = styled(Card)(({ theme, bgColor }) => ({
+  minWidth: 200,
+  textAlign: "center",
+  color: "#fff",
+  borderRadius: "12px",
+  padding: theme.spacing(2),
+  background: bgColor,
+  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
+  transition: "box-shadow 0.3s ease",
+  "&:hover": {
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.25)",
   },
 }));
 
@@ -89,9 +114,14 @@ const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState(new Date());
-  const [filterType, setFilterType] = useState("Revenues"); // إفتراضيًا الإيرادات
+  // إفتراضيًا يتم اختيار الإيرادات
+  const [filterType, setFilterType] = useState("Revenues");
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
+
+  // حالات النافذة المنبثقة لعرض التفاصيل
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // مقياس لوني باستخدام مجموعة ألوان من d3
   const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
@@ -154,11 +184,10 @@ const Graph = () => {
       });
     }
 
-    if (filterType !== "All") {
-      filteredItems = filteredItems.filter(
-        (item) => item.CategoriesId?.categoryType === filterType
-      );
-    }
+    // تصفية العناصر بناءً على النوع (Revenues أو Expenses)
+    filteredItems = filteredItems.filter(
+      (item) => item.CategoriesId?.categoryType === filterType
+    );
 
     return Object.values(groupByCategory(filteredItems));
   };
@@ -180,6 +209,12 @@ const Graph = () => {
   const filteredItems = filterItems(budgetItems);
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
+
+  // دالة التعامل مع النقر على عنصر الفئة (بطاقة أو جزء من الرسم)
+  const handleItemClick = (item) => {
+    setSelectedCategory(item);
+    setModalOpen(true);
+  };
 
   // تحديث الرسم البياني عند تغيير البيانات المفلترة
   useEffect(() => {
@@ -289,13 +324,14 @@ const Graph = () => {
           .duration(200)
           .attr("d", arc);
       })
+      .on("click", function (event, d) {
+        // عند النقر على جزء من الرسم البياني يتم عرض نافذة التفاصيل
+        handleItemClick(d.data);
+      })
       .transition()
       .duration(1000)
       .attrTween("d", function (d) {
-        const interpolate = d3.interpolate(
-          { startAngle: 0, endAngle: 0 },
-          d
-        );
+        const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
         return function (t) {
           return arc(interpolate(t));
         };
@@ -314,266 +350,310 @@ const Graph = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box
-        sx={{
-          padding: { xs: 2, sm: 4 },
-          background: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        {/* عناصر التصفية */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            gap: 2,
-            justifyContent: "center",
-          }}
-        >
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Date Type</InputLabel>
-            <StyledSelect
-              value={dateType}
-              onChange={(e) => setDateType(e.target.value)}
-              label="Date Type"
-            >
-              <MenuItem value="full">Full Date</MenuItem>
-              <MenuItem value="month">Month</MenuItem>
-              <MenuItem value="year">Year</MenuItem>
-            </StyledSelect>
-          </FormControl>
-          <DatePicker
-            label={
-              dateType === "month"
-                ? "Select Month"
-                : dateType === "year"
-                ? "Select Year"
-                : "Select Date"
-            }
-            views={
-              dateType === "month"
-                ? ["year", "month"]
-                : dateType === "year"
-                ? ["year"]
-                : ["year", "month", "day"]
-            }
-            value={filterDate}
-            onChange={(newValue) => setFilterDate(newValue)}
-            renderInput={(params) => (
-              <TextField {...params} sx={{ minWidth: 180 }} />
-            )}
-          />
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Type</InputLabel>
-            <StyledSelect
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              label="Type"
-            >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Revenues">Revenues</MenuItem>
-              <MenuItem value="Expenses">Expenses</MenuItem>
-            </StyledSelect>
-          </FormControl>
-        </Box>
-
-        {/* بطاقات الإجماليات */}
-        <Box
-          sx={{
-            marginBottom: 4,
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: { xs: 2, md: 4 },
-          }}
-        >
-          <Card
-            sx={{
-              minWidth: 200,
-              textAlign: "center",
-              background: "#4CAF50",
-              color: "#fff",
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Revenues
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {totals.Revenues.toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card
-            sx={{
-              minWidth: 200,
-              textAlign: "center",
-              background: "#F44336",
-              color: "#fff",
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Expenses
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {totals.Expenses.toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card
-            sx={{
-              minWidth: 200,
-              textAlign: "center",
-              background: balance >= 0 ? "#4CAF50" : "#F44336",
-              color: "#fff",
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Balance
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                {balance.toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
-
-        {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="80vh"
-          >
-            <CircularProgress size={60} />
-          </Box>
-        ) : filteredItems.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="80vh"
-          >
-            <Typography variant="h4" color="textSecondary">
-              No Items
+      <>
+        {/* شريط التنقل */}
+        <AppBar position="static" color="primary" elevation={4}>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontSize: "30px" }}>
+              Budget board
             </Typography>
-          </Box>
-        ) : (
-          <>
-            {/* الرسم البياني والوسيلة التوضيحية (Legend) */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 4,
-                gap: 2,
-              }}
+          </Toolbar>
+        </AppBar>
+
+        {/* تغليف المحتوى في حاوية مركزية */}
+        <Container
+          maxWidth="lg"
+          sx={{
+            py: 4,
+            backgroundColor: "#f5f5f5",
+            minHeight: "100vh",
+          }}
+        >
+          {/* عناصر التصفية */}
+          <Paper
+            sx={{
+              p: 2,
+              mb: 4,
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "center",
+              gap: 2,
+              justifyContent: "center",
+              borderRadius: 2,
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+            }}
+          >
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel>Date Type</InputLabel>
+              <StyledSelect
+                value={dateType}
+                onChange={(e) => setDateType(e.target.value)}
+                label="Date Type"
+              >
+                <MenuItem value="full">Full Date</MenuItem>
+                <MenuItem value="month">Month</MenuItem>
+                <MenuItem value="year">Year</MenuItem>
+              </StyledSelect>
+            </FormControl>
+            <DatePicker
+              label={
+                dateType === "month"
+                  ? "Select Month"
+                  : dateType === "year"
+                  ? "Select Year"
+                  : "Select Date"
+              }
+              views={
+                dateType === "month"
+                  ? ["year", "month"]
+                  : dateType === "year"
+                  ? ["year"]
+                  : ["year", "month", "day"]
+              }
+              value={filterDate}
+              onChange={(newValue) => setFilterDate(newValue)}
+              renderInput={(params) => <TextField {...params} sx={{ minWidth: 180 }} />}
+            />
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel>Type</InputLabel>
+              <StyledSelect
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                label="Type"
+              >
+                <MenuItem value="Revenues">Revenues</MenuItem>
+                <MenuItem value="Expenses">Expenses</MenuItem>
+              </StyledSelect>
+            </FormControl>
+          </Paper>
+
+          {/* بطاقات الإجماليات */}
+          <Box
+            sx={{
+              mb: 4,
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: { xs: 2, md: 4 },
+            }}
+          >
+            <TotalCard bgColor="linear-gradient(135deg, #66BB6A, #43A047)">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Total Revenues
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {totals.Revenues.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </TotalCard>
+
+            <TotalCard bgColor="linear-gradient(135deg, #EF5350, #E53935)">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Total Expenses
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {totals.Expenses.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </TotalCard>
+
+            <TotalCard
+              bgColor={
+                balance >= 0
+                  ? "linear-gradient(135deg, #66BB6A, #43A047)"
+                  : "linear-gradient(135deg, #EF5350, #E53935)"
+              }
             >
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Balance
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {balance.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </TotalCard>
+          </Box>
+
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+              <CircularProgress size={60} />
+            </Box>
+          ) : filteredItems.length === 0 ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+              <Typography variant="h4" color="textSecondary">
+                No Items
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              {/* الرسم البياني والوسيلة التوضيحية */}
               <Box
                 sx={{
-                  width: { xs: "100%", md: "700px" },
-                  height: { xs: "auto", md: "500px" },
-                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 4,
+                  gap: 2,
                 }}
               >
-                <svg ref={svgRef} style={{ width: "100%", height: "100%" }} />
-              </Box>
-              <List
-                sx={{
-                  marginLeft: { md: "20px", xs: 0 },
-                  width: "300px",
-                  marginTop: { xs: "20px", md: 0 },
-                }}
-              >
-                {filteredItems.map((item, index) => (
-                  <ListItem key={index}>
-                    <ListItemIcon>
-                      <Box
-                        sx={{
-                          width: "20px",
-                          height: "20px",
-                          backgroundColor: colorScale(index),
-                        }}
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                        (item.valueitem / d3.sum(
-                          filteredItems.map((i) => i.valueitem)
-                        )) *
-                        100
-                      ).toFixed(2)}%)`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
-
-            {/* شبكة بطاقات الفئات */}
-            <Grid container spacing={2} justifyContent="center">
-              {filteredItems.map((item, index) => (
-                <Grid
-                  item
-                  key={index}
-                  xs={6}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  xl={2}
-                  sx={{ display: "flex", justifyContent: "center" }}
+                <Box
+                  sx={{
+                    width: { xs: "100%", md: "700px" },
+                    height: { xs: "auto", md: "500px" },
+                    overflow: "hidden",
+                    backgroundColor: "#fff",
+                    borderRadius: 2,
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                  }}
                 >
-                  <StyledCard>
-                    <ImageContainer>
-                      <StyledImage
-                        src={getImageUrl(item.CategoriesId?.image)}
-                        alt="Category"
+                  <svg ref={svgRef} style={{ width: "100%", height: "100%" }} />
+                </Box>
+                <List
+                  sx={{
+                    ml: { md: "20px", xs: 0 },
+                    width: "300px",
+                    mt: { xs: "20px", md: 0 },
+                    backgroundColor: "#fff",
+                    borderRadius: 2,
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {filteredItems.map((item, index) => (
+                    <ListItem
+                      key={index}
+                      onClick={() => handleItemClick(item)}
+                      sx={{
+                        cursor: "pointer",
+                        transition: "background-color 0.3s ease",
+                        "&:hover": { backgroundColor: "#f0f0f0" },
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Box
+                          sx={{
+                            width: "20px",
+                            height: "20px",
+                            backgroundColor: colorScale(index),
+                          }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
+                          (item.valueitem / d3.sum(filteredItems.map((i) => i.valueitem)) *
+                            100) || 0
+                        ).toFixed(2)}%)`}
                       />
-                    </ImageContainer>
-                    <CardContent sx={{ textAlign: "center" }}>
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold", color: "#007BFF" }}
-                      >
-                        {item.CategoriesId?.categoryName || "Unknown"}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color:
-                            item.CategoriesId?.categoryType === "Revenues"
-                              ? "#4CAF50"
-                              : "#F44336",
-                        }}
-                      >
-                        {item.CategoriesId?.categoryType === "Expenses"
-                          ? `-${item.valueitem}`
-                          : item.valueitem}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#666" }}>
-                        {item.CategoriesId?.categoryType &&
-                        totals[item.CategoriesId.categoryType]
-                          ? (
-                              (item.valueitem /
-                                totals[item.CategoriesId.categoryType]) *
-                              100
-                            ).toFixed(2)
-                          : "0.00"}
-                        %
-                      </Typography>
-                    </CardContent>
-                  </StyledCard>
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+
+              {/* شبكة بطاقات الفئات */}
+              <Grid container spacing={2} justifyContent="center">
+                {filteredItems.map((item, index) => (
+                  <Grid
+                    item
+                    key={index}
+                    xs={6}
+                    sm={6}
+                    md={4}
+                    lg={3}
+                    xl={2}
+                    sx={{ display: "flex", justifyContent: "center" }}
+                  >
+                    <StyledCard onClick={() => handleItemClick(item)}>
+                      <ImageContainer>
+                        <StyledImage
+                          src={getImageUrl(item.CategoriesId?.image)}
+                          alt="Category"
+                        />
+                      </ImageContainer>
+                      <CardContent sx={{ textAlign: "center" }}>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: "bold", color: "#1976d2" }}
+                        >
+                          {item.CategoriesId?.categoryName || "Unknown"}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color:
+                              item.CategoriesId?.categoryType === "Revenues"
+                                ? "#4CAF50"
+                                : "#F44336",
+                          }}
+                        >
+                          {item.CategoriesId?.categoryType === "Expenses"
+                            ? `-${item.valueitem}`
+                            : item.valueitem}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: "#666" }}>
+                          {item.CategoriesId?.categoryType &&
+                          totals[item.CategoriesId.categoryType]
+                            ? (
+                                (item.valueitem / totals[item.CategoriesId.categoryType]) *
+                                100
+                              ).toFixed(2)
+                            : "0.00"}
+                          %
+                        </Typography>
+                      </CardContent>
+                    </StyledCard>
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          )}
+        </Container>
+
+        {/* نافذة منبثقة (Modal) لعرض تفاصيل الفئة */}
+        <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
+          <DialogTitle>تفاصيل الفئة</DialogTitle>
+          <DialogContent>
+            {selectedCategory && (
+              <>
+                <Box display="flex" alignItems="center" mb={2}>
+                  <ImageContainer sx={{ width: 50, height: 50, mr: 2 }}>
+                    <StyledImage
+                      src={getImageUrl(selectedCategory.CategoriesId?.image)}
+                      alt="Category"
+                    />
+                  </ImageContainer>
+                  <Typography variant="h6">
+                    {selectedCategory.CategoriesId?.categoryName || "Unknown"}
+                  </Typography>
+                </Box>
+                <DialogContentText>
+                  النوع: {selectedCategory.CategoriesId?.categoryType || "Unknown"}
+                </DialogContentText>
+                <DialogContentText>
+                  القيمة: {parseFloat(selectedCategory.valueitem).toFixed(2)}
+                </DialogContentText>
+                <DialogContentText>
+                  النسبة:{" "}
+                  {selectedCategory &&
+                  totals[selectedCategory.CategoriesId?.categoryType]
+                    ? (
+                        (selectedCategory.valueitem /
+                          totals[selectedCategory.CategoriesId.categoryType]) *
+                        100
+                      ).toFixed(2)
+                    : "0.00"}
+                  %
+                </DialogContentText>
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setModalOpen(false)}>إغلاق</Button>
+          </DialogActions>
+        </Dialog>
+      </>
     </LocalizationProvider>
   );
 };
