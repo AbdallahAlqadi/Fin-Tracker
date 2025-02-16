@@ -16,7 +16,7 @@ const FeedbackForm = () => {
     const username = sessionStorage.getItem("username");
 
     try {
-      await axios.post("http://127.0.0.1:5002/api/fedback", {
+      await axios.post("http://127.0.0.1:5004/api/fedback", {
         username: username,
         message: feedback,
       });
