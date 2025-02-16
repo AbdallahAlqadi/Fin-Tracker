@@ -108,28 +108,28 @@ const DashboardUser = () => {
   }, []);
 
   // جلب العناصر التي تمت إضافتها اليوم من الخادم
-  useEffect(() => {
-    const fetchAddedItems = async () => {
-      try {
-        const token = sessionStorage.getItem('jwt');
-        const response = await axios.get('http://127.0.0.1:5004/api/getBudget', {
-          headers: { Auth: `Bearer ${token}` },
-        });
-        const budget = response.data.budget;
-        const today = getTodayDate();
-        if (budget && budget.products) {
-          const addedToday = budget.products
-            .filter((product) => product.date === today)
-            .map((product) => product.CategoriesId);
-          setAddedItems(addedToday);
-        }
-      } catch (error) {
-        console.error('Error fetching today’s budget items:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchAddedItems = async () => {
+  //     try {
+  //       const token = sessionStorage.getItem('jwt');
+  //       const response = await axios.get('http://127.0.0.1:5004/api/getBudget', {
+  //         headers: { Auth: `Bearer ${token}` },
+  //       });
+  //       const budget = response.data.budget;
+  //       const today = getTodayDate();
+  //       if (budget && budget.products) {
+  //         const addedToday = budget.products
+  //           .filter((product) => product.date === today)
+  //           .map((product) => product.CategoriesId);
+  //         setAddedItems(addedToday);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching today’s budget items:', error);
+  //     }
+  //   };
 
-    fetchAddedItems();
-  }, []);
+  //   fetchAddedItems();
+  // }, []);
 
   // فتح نافذة الإدخال لعنصر معين إذا لم تتم إضافته اليوم
   const handleClickOpen = (category) => {
