@@ -196,6 +196,11 @@ function DashboardLayoutBasic(props) {
               icon: <SignalCellularAltIcon />,
             },
             {
+              segment: 'installment',
+              title: 'installment',
+              icon: <ChatIcon />,
+            },
+            {
               segment: 'fedbackuser',
               title: 'FedbakUser',
               icon: <ChatBubbleIcon />,
