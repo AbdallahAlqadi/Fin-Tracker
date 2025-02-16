@@ -51,7 +51,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  
 }
 .category-form .input-group {
   display: flex;
@@ -161,7 +160,8 @@ body {
   gap: 10px;
   margin-top: 15px;
 }
-.edit-btn, .delete-btn {
+.edit-btn,
+.delete-btn {
   padding: 8px 12px;
   border: none;
   border-radius: var(--border-radius);
@@ -184,40 +184,62 @@ body {
   background: #c0392b;
 }
 
-/* تصميم النافذة المنبثقة (Modal) */
+/* تصميم النافذة المنبثقة (Modal) - النسخة المطورة */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  opacity: 0;
+  animation: modalFadeIn 0.4s forwards;
 }
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal-content {
   background: var(--modal-bg);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
   border-radius: var(--border-radius);
-  padding: 30px;
+  padding: 40px;
   width: 90%;
   max-width: 500px;
   position: relative;
-  box-shadow: 0 10px 25px var(--shadow-color);
-  transition: transform var(--transition-speed);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-20px);
+  animation: contentSlideIn 0.4s forwards;
 }
+
+@keyframes contentSlideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .modal-close {
   position: absolute;
   top: 15px;
   right: 20px;
   background: transparent;
   border: none;
-  font-size: 24px;
+  font-size: 28px;
   color: var(--text-color);
   cursor: pointer;
+  transition: color 0.3s;
 }
+
+.modal-close:hover {
+  color: var(--primary-color);
+}
+
+/* تصميم نموذج النافذة المنبثقة */
 .modal-form .input-group {
   margin-bottom: 20px;
   display: flex;
