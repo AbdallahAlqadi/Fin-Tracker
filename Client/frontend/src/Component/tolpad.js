@@ -25,6 +25,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage';
 import InstallmentCalculator from '../Component/Installments';
+import AcountUser from '../Component/AcountUser';
 
 const demoTheme = createTheme({
   palette: {
@@ -97,6 +98,8 @@ function DashboardLayoutBasic(props) {
     { path: '/fedbackuser', component: <FedbackUser /> },
     { path: '/homepage', component: <HomePage /> },
     { path: '/installment', component: <InstallmentCalculator /> },
+    { path: '/alluser', component: <AcountUser /> },
+
   ];
 
   const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
@@ -198,6 +201,11 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'installment',
               title: 'installment',
+              icon: <ChatIcon />,
+            },
+            {
+              segment: 'alluser',
+              title: 'AllUserAcount',
               icon: <ChatIcon />,
             },
             {
