@@ -166,7 +166,7 @@ body {
   border: none;
   border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   transition: background var(--transition-speed);
 }
 .edit-btn {
