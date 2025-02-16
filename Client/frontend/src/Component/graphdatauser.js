@@ -96,7 +96,10 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 }));
 
 // بطاقة إجماليات مخصصة مع تأثيرات حديثة دون تغيير حجمها
-const TotalCard = styled(Card)(({ theme, bgColor }) => ({
+// تم استخدام shouldForwardProp لمنع تمرير الخاصية bgColor إلى DOM
+const TotalCard = styled(Card, {
+  shouldForwardProp: (prop) => prop !== "bgColor",
+})(({ theme, bgColor }) => ({
   minWidth: 200,
   textAlign: "center",
   color: "#fff",
