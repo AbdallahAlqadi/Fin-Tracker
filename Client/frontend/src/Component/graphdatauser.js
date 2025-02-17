@@ -628,14 +628,29 @@ const Graph = () => {
           )}
         </Container>
 
-        {/* نافذة منبثقة (Modal) لعرض تفاصيل الفئة */}
-        <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
-          <DialogTitle>تفاصيل الفئة</DialogTitle>
-          <DialogContent>
+        {/* نافذة منبثقة (Modal) لعرض تفاصيل الفئة - بتنسيق وحجم أصغر */}
+        <Dialog
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          maxWidth="sm"
+          PaperProps={{ sx: { borderRadius: 2, padding: 1 } }}
+        >
+          <DialogTitle
+            sx={{
+              backgroundColor: "#1976d2",
+              color: "#fff",
+              fontSize: "18px",
+              fontWeight: "bold",
+              padding: "12px",
+            }}
+          >
+            تفاصيل الفئة
+          </DialogTitle>
+          <DialogContent sx={{ padding: 2 }}>
             {selectedCategory && (
               <>
                 <Box display="flex" alignItems="center" mb={2}>
-                  <ImageContainer sx={{ width: 50, height: 50, mr: 2 }}>
+                  <ImageContainer sx={{ width: 40, height: 40, mr: 2 }}>
                     <StyledImage
                       src={getImageUrl(selectedCategory.CategoriesId?.image)}
                       alt="Category"
@@ -645,10 +660,10 @@ const Graph = () => {
                     {selectedCategory.CategoriesId?.categoryName || "Unknown"}
                   </Typography>
                 </Box>
-                <DialogContentText>
+                <DialogContentText sx={{ mb: 1 }}>
                   النوع: {selectedCategory.CategoriesId?.categoryType || "Unknown"}
                 </DialogContentText>
-                <DialogContentText>
+                <DialogContentText sx={{ mb: 1 }}>
                   القيمة: {parseFloat(selectedCategory.valueitem).toFixed(2)}
                 </DialogContentText>
                 <DialogContentText>
@@ -666,8 +681,10 @@ const Graph = () => {
               </>
             )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setModalOpen(false)}>إغلاق</Button>
+          <DialogActions sx={{ padding: "8px" }}>
+            <Button onClick={() => setModalOpen(false)} variant="contained" color="primary">
+              إغلاق
+            </Button>
           </DialogActions>
         </Dialog>
       </>

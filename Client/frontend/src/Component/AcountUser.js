@@ -47,6 +47,27 @@ const UsersTable = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const token = sessionStorage.getItem('jwt');
 
+  // دالة لإزالة الحروف الخاصة من النص قبل إنشاء التعبير النظامي
+  const escapeRegExp = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
+  // دالة لتقسيم النص وتغليظ الجزء المطابق
+  const highlightText = (text, query) => {
+    if (!query) return text;
+    const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} style={{ backgroundColor: 'yellow' }}>
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -191,9 +212,15 @@ const UsersTable = () => {
                   <TableCell component="th" scope="row">
                     {index + 1}
                   </TableCell>
-                  <TableCell align="right">{user.roul}</TableCell>
-                  <TableCell align="right">{user.username}</TableCell>
-                  <TableCell align="right">{user.email}</TableCell>
+                  <TableCell align="right">
+                    {highlightText(user.roul, searchQuery)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {highlightText(user.username, searchQuery)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {highlightText(user.email, searchQuery)}
+                  </TableCell>
                 </StyledTableRow>
               ))
             ) : (
