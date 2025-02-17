@@ -633,7 +633,7 @@ const Graph = () => {
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           maxWidth="sm"
-          PaperProps={{ sx: { borderRadius: 2, padding: 1 } }}
+          PaperProps={{ sx: { borderRadius: 2, padding: 1,width:"20%" } }}
         >
           <DialogTitle
             sx={{
@@ -650,7 +650,7 @@ const Graph = () => {
             {selectedCategory && (
               <>
                 <Box display="flex" alignItems="center" mb={2}>
-                  <ImageContainer sx={{ width: 40, height: 40, mr: 2 }}>
+                  <ImageContainer sx={{ width: 60, height: 60, marginTop:"5px",mr: 6 }}>
                     <StyledImage
                       src={getImageUrl(selectedCategory.CategoriesId?.image)}
                       alt="Category"
