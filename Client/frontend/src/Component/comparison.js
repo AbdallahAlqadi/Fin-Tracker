@@ -19,19 +19,35 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import * as d3 from "d3";
 import "../cssStyle/comparsion.css";
 
-// مكون Select مُخصص
+// مكون Select مُخصص مع تحسينات تصميم
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#007BFF",
+    borderColor: theme.palette.primary.main,
   },
   "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#0056b3",
+    borderColor: theme.palette.primary.dark,
   },
   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#007BFF",
+    borderColor: theme.palette.primary.main,
     borderWidth: "2px",
+  },
+}));
+
+// مكون Checkbox مُخصص لتحسين التصميم
+const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  "&.Mui-checked": {
+    color: theme.palette.primary.main,
+  },
+}));
+
+// مكون Radio مُخصص لتحسين التصميم
+const StyledRadio = styled(Radio)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  "&.Mui-checked": {
+    color: theme.palette.primary.main,
   },
 }));
 
@@ -266,9 +282,7 @@ const Comparison = () => {
     chartGroup
       .append("g")
       .attr("class", "grid")
-      .call(
-        d3.axisLeft(y).tickSize(-chartWidth).tickFormat("")
-      )
+      .call(d3.axisLeft(y).tickSize(-chartWidth).tickFormat(""))
       .selectAll("line")
       .attr("stroke", "#e0e0e0")
       .attr("stroke-dasharray", "3 3");
@@ -467,11 +481,7 @@ const Comparison = () => {
     chartGroup
       .append("g")
       .attr("class", "grid")
-      .call(
-        d3.axisLeft(y)
-          .tickSize(-chartWidth)
-          .tickFormat("")
-      )
+      .call(d3.axisLeft(y).tickSize(-chartWidth).tickFormat(""))
       .selectAll("line")
       .attr("stroke", "#e0e0e0")
       .attr("stroke-dasharray", "3 3");
@@ -711,13 +721,13 @@ const Comparison = () => {
             flexWrap: "wrap",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: 2,
           }}
         >
           <FormControl
             id="date-type-select"
             sx={{
-              marginRight: { xs: 0, md: 2 },
-              marginBottom: { xs: 2, md: 0 },
+              minWidth: 150,
             }}
           >
             <InputLabel>Date Type</InputLabel>
@@ -736,12 +746,20 @@ const Comparison = () => {
             value={chartType}
             onChange={(e) => setChartType(e.target.value)}
           >
-            <FormControlLabel value="bar" control={<Radio />} label="Bar Chart" />
-            <FormControlLabel value="line" control={<Radio />} label="Line Chart" />
+            <FormControlLabel
+              value="bar"
+              control={<StyledRadio />}
+              label="Bar Chart"
+            />
+            <FormControlLabel
+              value="line"
+              control={<StyledRadio />}
+              label="Line Chart"
+            />
           </RadioGroup>
           <FormControlLabel
             control={
-              <Checkbox
+              <StyledCheckbox
                 checked={showRevenues}
                 onChange={(e) => setShowRevenues(e.target.checked)}
               />
@@ -750,7 +768,7 @@ const Comparison = () => {
           />
           <FormControlLabel
             control={
-              <Checkbox
+              <StyledCheckbox
                 checked={showExpenses}
                 onChange={(e) => setShowExpenses(e.target.checked)}
               />
@@ -773,7 +791,7 @@ const Comparison = () => {
                 <FormControlLabel
                   key={year}
                   control={
-                    <Checkbox
+                    <StyledCheckbox
                       checked={selectedYear.includes(year)}
                       onChange={() => handleYearChange(year)}
                     />
@@ -797,7 +815,7 @@ const Comparison = () => {
                 <FormControlLabel
                   key={month}
                   control={
-                    <Checkbox
+                    <StyledCheckbox
                       checked={selectedMonths.includes(month)}
                       onChange={() => handleMonthChange(month)}
                     />
@@ -843,7 +861,7 @@ const Comparison = () => {
                           <FormControlLabel
                             key={day}
                             control={
-                              <Checkbox
+                              <StyledCheckbox
                                 checked={selectedDays.includes(day)}
                                 onChange={() => handleDayChange(day)}
                               />
