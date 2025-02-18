@@ -11,8 +11,6 @@
   --modal-bg: rgba(255, 255, 255, 0.95);
 }
 
-
-
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -33,11 +31,11 @@ body {
   background: var(--card-bg);
   backdrop-filter: blur(5px);
   border-radius: var(--border-radius);
-  box-shadow: 0 25px 45px var(--shadow-color); /* ظل مُعزز */
+  box-shadow: 0 25px 45px var(--shadow-color);
   padding: 30px;
   margin-bottom: 40px;
   width: 50%;
-  margin-left: 23%;
+  margin: 0 auto; /* توسيط النموذج */
   transition: transform var(--transition-speed);
 }
 
@@ -106,7 +104,6 @@ body {
 }
 
 /* بطاقات التصنيفات */
-/* هنا نضمن عرض 5 بطاقات في الصف على الشاشات الكبيرة */
 .category-cards {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -183,7 +180,7 @@ body {
   background: #c0392b;
 }
 
-/* تصميم النافذة المنبثقة (Modal) - النسخة المطورة */
+/* تصميم النافذة المنبثقة (Modal) */
 .modal {
   position: fixed;
   top: 0;
@@ -287,11 +284,17 @@ body {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
 @media (max-width: 992px) {
   .category-cards {
     grid-template-columns: repeat(3, 1fr);
   }
+  .form-container {
+    width: 70%;
+    padding: 25px;
+  }
 }
+
 @media (max-width: 768px) {
   .combined-page {
     padding: 20px;
@@ -302,9 +305,40 @@ body {
   .category-cards {
     grid-template-columns: repeat(2, 1fr);
   }
+  .form-container {
+    width: 90%;
+    padding: 20px;
+  }
+  .submit-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
 }
+
+/* تحسين التصميم للأجهزة الصغيرة (0 - 575px) */
 @media (max-width: 576px) {
+  .combined-page {
+    padding: 10px;
+  }
+  .form-container {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px auto;
+    box-sizing: border-box;
+  }
   .category-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .save-btn,
+  .submit-btn {
+    width: 100%;
+    font-size: 16px;
+    padding: 8px;
+  }
+  /* تقليل عرض البطاقة بنسبة ضئيلة */
+  .category-card {
+    width: 95%;
+    justify-self: center;
   }
 }
