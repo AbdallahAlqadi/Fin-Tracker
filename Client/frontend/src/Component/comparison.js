@@ -215,7 +215,50 @@ const Comparison = () => {
       .attr("x2", "0%")
       .attr("y2", "100%");
     gradient.append("stop").attr("offset", "0%").attr("stop-color", "#f5f7fa");
-    gradient.append("stop").attr("offset", "100%").attr("stop-color", "#c3cfe2");
+    gradient
+      .append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#c3cfe2");
+
+    // إضافة تأثير ظل للنصوص (عنوان)
+    const titleShadow = defs.append("filter").attr("id", "titleShadow");
+    titleShadow
+      .append("feDropShadow")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("stdDeviation", 3)
+      .attr("flood-color", "#000")
+      .attr("flood-opacity", 0.3);
+
+    // تأثير ظل للوسيلة الإيضاح (Legend)
+    const legendShadow = defs.append("filter").attr("id", "legendShadow");
+    legendShadow
+      .append("feDropShadow")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("stdDeviation", 2)
+      .attr("flood-color", "#000")
+      .attr("flood-opacity", 0.2);
+
+    // تأثير ظل حديث للأعمدة
+    const filter = defs
+      .append("filter")
+      .attr("id", "dropShadow")
+      .attr("height", "130%");
+    filter
+      .append("feGaussianBlur")
+      .attr("in", "SourceAlpha")
+      .attr("stdDeviation", 3)
+      .attr("result", "blur");
+    filter
+      .append("feOffset")
+      .attr("in", "blur")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("result", "offsetBlur");
+    const feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "offsetBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
     // مجموعة الرسم الأساسية مع خلفية ذات حواف دائرية
     const chartGroup = svg
@@ -258,26 +301,6 @@ const Comparison = () => {
       .domain(categories)
       .range(categories.map((cat) => colorMapping[cat]));
 
-    // تأثير ظل حديث للأعمدة
-    const filter = defs
-      .append("filter")
-      .attr("id", "dropShadow")
-      .attr("height", "130%");
-    filter
-      .append("feGaussianBlur")
-      .attr("in", "SourceAlpha")
-      .attr("stdDeviation", 3)
-      .attr("result", "blur");
-    filter
-      .append("feOffset")
-      .attr("in", "blur")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("result", "offsetBlur");
-    const feMerge = filter.append("feMerge");
-    feMerge.append("feMergeNode").attr("in", "offsetBlur");
-    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
     // خطوط شبكة خفيفة للمحور الرأسي
     chartGroup
       .append("g")
@@ -307,6 +330,8 @@ const Comparison = () => {
       .attr("width", x1.bandwidth())
       .attr("height", 0)
       .attr("fill", (d) => color(d.category))
+      .attr("rx", 5) // إضافة حواف دائرية للأعمدة
+      .attr("ry", 5)
       .attr("filter", "url(#dropShadow)")
       .on("mouseover", function (event, d) {
         d3.select(this).attr("opacity", 0.8);
@@ -350,10 +375,9 @@ const Comparison = () => {
       .attr("fill", "#616161")
       .style("font-size", "14px")
       .style("font-weight", "500");
-
     chartGroup.selectAll(".domain").attr("stroke", "#e0e0e0");
 
-    // عنوان الرسم البياني
+    // عنوان الرسم البياني مع تأثير ظل للنص
     svg
       .append("text")
       .attr("x", width / 2)
@@ -363,6 +387,7 @@ const Comparison = () => {
       .style("font-family", "sans-serif")
       .style("fill", "#424242")
       .style("font-weight", "bold")
+      .attr("filter", "url(#titleShadow)")
       .text("Budget Comparison");
 
     // إضافة وتنسيق وسيلة الإيضاح (Legend)
@@ -373,7 +398,6 @@ const Comparison = () => {
         "transform",
         `translate(${margin.left}, ${margin.top - 60 - legendGap})`
       );
-
     legend
       .append("rect")
       .attr("x", 0)
@@ -383,7 +407,8 @@ const Comparison = () => {
       .attr("fill", "#f9f9f9")
       .attr("stroke", "#ccc")
       .attr("rx", 8)
-      .attr("ry", 8);
+      .attr("ry", 8)
+      .attr("filter", "url(#legendShadow)");
 
     categories.forEach((cat, i) => {
       legend
@@ -393,7 +418,6 @@ const Comparison = () => {
         .attr("width", 20)
         .attr("height", 20)
         .attr("fill", colorMapping[cat]);
-
       legend
         .append("text")
         .attr("x", 40)
@@ -438,6 +462,26 @@ const Comparison = () => {
       .append("stop")
       .attr("offset", "100%")
       .attr("stop-color", "#c3cfe2");
+
+    // إضافة تأثير ظل للنصوص (عنوان)
+    const titleShadow = defs.append("filter").attr("id", "titleShadow");
+    titleShadow
+      .append("feDropShadow")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("stdDeviation", 3)
+      .attr("flood-color", "#000")
+      .attr("flood-opacity", 0.3);
+
+    // تأثير ظل للوسيلة الإيضاح (Legend)
+    const legendShadow = defs.append("filter").attr("id", "legendShadow");
+    legendShadow
+      .append("feDropShadow")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("stdDeviation", 2)
+      .attr("flood-color", "#000")
+      .attr("flood-opacity", 0.2);
 
     const chartGroup = svg
       .append("g")
@@ -527,7 +571,6 @@ const Comparison = () => {
         .attr("stroke-linecap", "round")
         .attr("filter", "url(#lineShadow)")
         .attr("d", lineGenerator);
-
       const totalLength = path.node().getTotalLength();
       path
         .attr("stroke-dasharray", totalLength + " " + totalLength)
@@ -536,7 +579,6 @@ const Comparison = () => {
         .duration(1000)
         .ease(d3.easeCubicOut)
         .attr("stroke-dashoffset", 0);
-
       chartGroup
         .selectAll(`.dot-${category}`)
         .data(categoryData)
@@ -574,7 +616,6 @@ const Comparison = () => {
       .style("font-weight", "500")
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end");
-
     const yAxis = d3.axisLeft(y).ticks(6).tickSize(0).tickPadding(10);
     chartGroup
       .append("g")
@@ -583,9 +624,9 @@ const Comparison = () => {
       .attr("fill", "#616161")
       .style("font-size", "14px")
       .style("font-weight", "500");
-
     chartGroup.selectAll(".domain").attr("stroke", "#e0e0e0");
 
+    // عنوان الرسم البياني مع تأثير ظل للنص
     svg
       .append("text")
       .attr("x", width / 2)
@@ -595,6 +636,7 @@ const Comparison = () => {
       .style("font-family", "sans-serif")
       .style("fill", "#424242")
       .style("font-weight", "bold")
+      .attr("filter", "url(#titleShadow)")
       .text("Budget Comparison");
 
     // إضافة وتنسيق وسيلة الإيضاح (Legend)
@@ -605,7 +647,6 @@ const Comparison = () => {
         "transform",
         `translate(${margin.left}, ${margin.top - 60 - legendGap})`
       );
-
     legend
       .append("rect")
       .attr("x", 0)
@@ -615,7 +656,8 @@ const Comparison = () => {
       .attr("fill", "#f9f9f9")
       .attr("stroke", "#ccc")
       .attr("rx", 8)
-      .attr("ry", 8);
+      .attr("ry", 8)
+      .attr("filter", "url(#legendShadow)");
 
     categories.forEach((cat, i) => {
       legend
@@ -625,7 +667,6 @@ const Comparison = () => {
         .attr("width", 20)
         .attr("height", 20)
         .attr("fill", colorMapping[cat]);
-
       legend
         .append("text")
         .attr("x", 40)
@@ -835,8 +876,7 @@ const Comparison = () => {
                   const validDays = availableDays.filter((day) => {
                     const [dayYear, dayMonth] = day.split("-");
                     return (
-                      parseInt(dayMonth) === month &&
-                      parseInt(dayYear) === year
+                      parseInt(dayMonth) === month && parseInt(dayYear) === year
                     );
                   });
                   if (validDays.length === 0) return null;
@@ -931,9 +971,11 @@ const Comparison = () => {
                 opacity: 0,
                 background: "#fff",
                 border: "1px solid #ccc",
-                padding: "5px",
-                borderRadius: "5px",
+                padding: "8px",
+                borderRadius: "8px",
                 pointerEvents: "none",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "opacity 0.3s ease",
               }}
             ></div>
           </>
