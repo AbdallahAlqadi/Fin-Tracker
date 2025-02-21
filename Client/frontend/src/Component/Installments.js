@@ -54,7 +54,7 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
     }
 
     onCalculate({ total, installment, frequency, endDateObj });
-    onClose(); // Close the dialog after calculation
+    onClose(); // إغلاق النافذة بعد الحساب
   };
 
   const getDaysInterval = (type) => {
@@ -67,34 +67,66 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
     }
   };
 
+  const handleReset = () => {
+    setTotalAmount('');
+    setEndDate('');
+    setInstallmentAmount('');
+    setFrequency('monthly');
+    setError('');
+  };
+
   return (
     <div className="dialog-box">
       <div className="dialog-content">
-        <h2>Installment Calculator</h2>
+        <div className="dialog-header">
+          <h2>Installment Calculator</h2>
+          <button className="close-dialog-icon" onClick={onClose}>&times;</button>
+        </div>
         {error && <p className="error-text">{error}</p>}
         <div className="input-group">
           <label>Total Amount:</label>
-          <input type="number" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} />
+          <input 
+            type="number" 
+            value={totalAmount} 
+            onChange={(e) => setTotalAmount(e.target.value)} 
+            placeholder="Enter total amount" 
+          />
         </div>
         <div className="input-group">
           <label>End Date:</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <input 
+            type="date" 
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)} 
+          />
         </div>
         <div className="input-group">
           <label>Installment Amount:</label>
-          <input type="number" value={installmentAmount} onChange={(e) => setInstallmentAmount(e.target.value)} />
+          <input 
+            type="number" 
+            value={installmentAmount} 
+            onChange={(e) => setInstallmentAmount(e.target.value)} 
+            placeholder="Enter installment amount" 
+          />
         </div>
         <div className="input-group">
           <label>Payment Frequency:</label>
-          <select className="custom-select" value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+          <select 
+            className="custom-select" 
+            value={frequency} 
+            onChange={(e) => setFrequency(e.target.value)}
+          >
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
             <option value="yearly">Yearly</option>
           </select>
         </div>
-        <button className="calculate-button" onClick={handleSubmit}>Calculate Installments</button>
-        <button className="close-button" onClick={onClose}>Close</button>
+        <div className="dialog-buttons">
+          <button className="calculate-button" onClick={handleSubmit}>Calculate Installments</button>
+          <button className="reset-button" onClick={handleReset}>Reset Form</button>
+          <button className="close-button" onClick={onClose}>Close</button>
+        </div>
       </div>
     </div>
   );
@@ -106,22 +138,22 @@ const InstallmentTable = ({ installments, total }) => (
     <table>
       <thead>
         <tr>
-          <th style={{ textAlign: 'left' }}>Installment #</th>
-          <th style={{ textAlign: 'left' }}>Date</th>
-          <th style={{ textAlign: 'left' }}>Amount</th>
+          <th>Installment #</th>
+          <th>Date</th>
+          <th>Amount</th>
         </tr>
       </thead>
       <tbody>
         {installments.map((installment, index) => (
           <tr key={index}>
-            <td style={{ textAlign: 'left' }}>{index + 1}</td>
-            <td style={{ textAlign: 'left' }}>{installment.date}</td>
-            <td style={{ textAlign: 'left' }}>{installment.amount.toFixed(2)}</td>
+            <td>{index + 1}</td>
+            <td>{installment.date}</td>
+            <td>{installment.amount.toFixed(2)}</td>
           </tr>
         ))}
       </tbody>
     </table>
-    <p>Total Amount: {total.toFixed(2)}</p>
+    <p className="total-amount">Total Amount: {total.toFixed(2)}</p>
   </div>
 );
 
@@ -129,6 +161,7 @@ const InstallmentCalculator = () => {
   const [installments, setInstallments] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [showDialog, setShowDialog] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
 
   const calculateInstallments = ({ total, installment, frequency, endDateObj }) => {
     let remainingAmount = total;
@@ -181,7 +214,7 @@ const InstallmentCalculator = () => {
       'Amount': installment.amount.toFixed(2),
     }));
 
-    // Add total row
+    // إضافة صف الإجمالي
     worksheetData.push({
       'Installment #': 'Total',
       'Date': '',
@@ -190,15 +223,15 @@ const InstallmentCalculator = () => {
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData, { header: ['Installment #', 'Date', 'Amount'] });
 
-    // Apply some styling
+    // تعيين عرض الأعمدة
     const wscols = [
-      { wch: 15 }, // Installment # column width
-      { wch: 15 }, // Date column width
-      { wch: 15 }, // Amount column width
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
     ];
     worksheet['!cols'] = wscols;
 
-    // Add bold font to the header
+    // إضافة تنسيق عريض للرأس
     const headerStyle = { font: { bold: true } };
     for (let col = 0; col < 3; col++) {
       const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
@@ -206,22 +239,55 @@ const InstallmentCalculator = () => {
       worksheet[cellRef].s = headerStyle;
     }
 
-    // Add bold font to the total row
+    // تنسيق صف الإجمالي
     const totalRowRef = XLSX.utils.encode_cell({ r: worksheetData.length, c: 2 });
     if (!worksheet[totalRowRef].s) worksheet[totalRowRef].s = {};
     worksheet[totalRowRef].s = headerStyle;
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Installments');
-
     XLSX.writeFile(workbook, 'installments.xlsx');
+    setExportMessage('Exported to Excel successfully!');
+    setTimeout(() => setExportMessage(''), 3000);
+  };
+
+  const exportToCSV = () => {
+    const csvRows = [];
+    const headers = ['Installment #', 'Date', 'Amount'];
+    csvRows.push(headers.join(','));
+
+    installments.forEach((inst, index) => {
+      const row = [index + 1, inst.date, inst.amount.toFixed(2)];
+      csvRows.push(row.join(','));
+    });
+    csvRows.push(['Total', '', totalAmount.toFixed(2)].join(','));
+
+    const csvData = csvRows.join('\n');
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'installments.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setExportMessage('Exported to CSV successfully!');
+    setTimeout(() => setExportMessage(''), 3000);
+  };
+
+  const resetCalculator = () => {
+    setInstallments([]);
+    setTotalAmount(0);
   };
 
   return (
     <div className="calculator-container">
-      <h1 style={{fontFamily:'-moz-initial'}}>Installment Calculator</h1>
+      <h1>Installment Calculator</h1>
       <div className="content-container">
-        <button className="open-dialog-button" onClick={() => setShowDialog(true)}>Open Calculator</button>
+        <button className="open-dialog-button" onClick={() => setShowDialog(true)}>
+          Open Calculator
+        </button>
         {showDialog && (
           <InstallmentForm
             onCalculate={calculateInstallments}
@@ -231,9 +297,20 @@ const InstallmentCalculator = () => {
         {installments.length > 0 && (
           <>
             <InstallmentTable installments={installments} total={totalAmount} />
-            <button className="export-button" onClick={exportToExcel}>Export to Excel</button>
+            <div className="action-buttons">
+              <button className="export-button" onClick={exportToExcel}>
+                Export to Excel
+              </button>
+              <button className="export-button" onClick={exportToCSV}>
+                Export to CSV
+              </button>
+              <button className="reset-calculator-button" onClick={resetCalculator}>
+                Reset Calculator
+              </button>
+            </div>
           </>
         )}
+        {exportMessage && <p className="export-message">{exportMessage}</p>}
       </div>
     </div>
   );
