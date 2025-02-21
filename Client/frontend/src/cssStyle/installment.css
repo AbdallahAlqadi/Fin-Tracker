@@ -1,258 +1,76 @@
-/* الحاوية الرئيسية */
+/* ====== الأنماط الأساسية ====== */
 .calculator-container {
   width: 800px;
   margin: 100px auto;
   padding: 30px;
-  background: #ffffff;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
   text-align: center;
-  font-family: 'Roboto', sans-serif;
 }
 
-.calculator-container h1 {
-  margin-bottom: 20px;
-  color: #333;
+.calculate-button {
+  background-color: #016bdd; /* لون أزرق */
+  color: white; /* لون النص */
+  font-size: 18px; /* حجم النص */
+  font-weight: bold; /* سمك الخط */
+  padding: 12px 24px; /* الهوامش الداخلية */
+  border: none; /* إزالة الحدود */
+  border-radius: 8px; /* تدوير الحواف */
+  cursor: pointer; /* تغيير المؤشر عند التمرير */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* ظل خفيف */
+  transition: all 0.3s ease-in-out; /* تأثير سلس */
+  width: 390px;
 }
 
-/* زر فتح النافذة */
+.calculate-button:hover {
+  background-color: #0056b3; /* لون أزرق أغمق عند التحويم */
+  transform: scale(1.05); /* تكبير بسيط */
+}
+
+.calculate-button:active {
+  transform: scale(0.95); /* تأثير ضغط عند النقر */
+}
+
 .open-dialog-button {
   width: 100%;
   padding: 12px;
   background: #007BFF;
-  color: #fff;
-  border-radius: 6px;
+  color: white;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
   border: none;
   margin-bottom: 20px;
-  transition: background 0.3s;
 }
 
 .open-dialog-button:hover {
   background: #0056b3;
 }
 
-/* صندوق النافذة (Dialog) */
 .dialog-box {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(5px);
   z-index: 1000;
 }
 
-/* محتوى النافذة */
 .dialog-content {
-  background: #f9f9f9;
-  padding: 25px 30px;
-  border-radius: 10px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  padding: 30px;
+  border-radius: 15px;
   width: 450px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
-  position: relative;
 }
 
-/* رأس النافذة */
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.dialog-header h2 {
-  margin: 0;
-  font-size: 22px;
-  color: #333;
-}
-
-/* زر الإغلاق في النافذة */
-.close-dialog-icon {
-  background: transparent;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  color: #aaa;
-  transition: color 0.3s;
-}
-
-.close-dialog-icon:hover {
-  color: #333;
-}
-
-/* مجموعات الإدخال */
-.input-group {
-  margin-bottom: 15px;
-  text-align: left;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #555;
-  font-weight: bold;
-}
-
-.input-group input,
-.input-group select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-  transition: border-color 0.3s;
-}
-
-.input-group input:focus,
-.input-group select:focus {
-  outline: none;
-  border-color: #007BFF;
-}
-
-/* أزرار النافذة */
-.dialog-buttons {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.calculate-button,
-.reset-button,
-.close-button {
-  flex: 1;
-  padding: 12px;
-  font-size: 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-}
-
-.calculate-button {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.calculate-button:hover {
-  background-color: #218838;
-  transform: scale(1.02);
-}
-
-.reset-button {
-  background-color: #ffc107;
-  color: #fff;
-}
-
-.reset-button:hover {
-  background-color: #e0a800;
-  transform: scale(1.02);
-}
-
-.close-button {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.close-button:hover {
-  background-color: #c82333;
-  transform: scale(1.02);
-}
-
-/* حاوية الجدول */
-.table-container {
-  margin-top: 30px;
-  overflow-x: auto;
-}
-
-.table-container h2 {
-  margin-bottom: 10px;
-  color: #333;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-table th,
-table td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: center;
-  font-size: 16px;
-}
-
-table th {
-  background: #f2f2f2;
-  font-weight: bold;
-}
-
-table tr:nth-child(even) {
-  background: #fafafa;
-}
-
-.total-amount {
-  margin-top: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-/* أزرار الإجراءات أسفل الجدول */
-.action-buttons {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.export-button,
-.reset-calculator-button {
-  padding: 12px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-  color: #fff;
-}
-
-.export-button {
-  background-color: #007BFF;
-}
-
-.export-button:hover {
-  background-color: #0056b3;
-  transform: scale(1.02);
-}
-
-.reset-calculator-button {
-  background-color: #6c757d;
-}
-
-.reset-calculator-button:hover {
-  background-color: #5a6268;
-  transform: scale(1.02);
-}
-
-/* رسالة التصدير */
-.export-message {
-  margin-top: 15px;
-  font-size: 16px;
-  color: #28a745;
-}
-
-/* تأثير الدخول */
 @keyframes slideIn {
   from {
     transform: translateY(-20px);
@@ -264,24 +82,111 @@ table tr:nth-child(even) {
   }
 }
 
-/* الأنماط التكيفية */
+.close-button {
+  width: 100%;
+  padding: 12px;
+  background: #aa0b0b;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border: none;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
 
-/* الجوال (portrait): 0px - 575px */
+.custom-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  font-size: 16px;
+  color: #333;
+  appearance: none; /* إزالة السهم الافتراضي */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #66afe9;
+  box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+}
+
+.error-text {
+  color: red;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.table-container {
+  margin-top: 30px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+table th,
+table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+table th {
+  background: #f2f2f2;
+  font-weight: bold;
+}
+
+table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.export-button {
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  margin-top: 20px;
+}
+
+.export-button:hover {
+  background-color: darkgreen;
+}
+
+/* ====== الأنماط التكيفية (Responsive) ====== */
+
+/* Mobile (portrait): 0px - 575px */
 @media (max-width: 575px) {
   .calculator-container {
     width: 95%;
     margin: 20px auto;
     padding: 20px;
   }
-  .calculate-button,
-  .reset-button,
-  .close-button {
-    font-size: 14px;
-    padding: 10px;
+  .calculate-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 20px;
   }
-  .open-dialog-button {
-    font-size: 14px;
+  .open-dialog-button,
+  .close-button {
     padding: 10px;
+    font-size: 14px;
+  }
+  .custom-select {
+    font-size: 14px;
   }
   .dialog-content {
     width: 90%;
@@ -294,20 +199,24 @@ table tr:nth-child(even) {
   }
 }
 
-/* التابلت: 576px - 991px */
-@media (min-width: 576px) and (max-width: 991px) {
+/* Mobile (landscape): 576px - 767px */
+@media (min-width: 576px) and (max-width: 767px) {
   .calculator-container {
     width: 90%;
     margin: 30px auto;
     padding: 25px;
   }
-  .calculate-button,
-  .reset-button,
-  .close-button {
-    font-size: 15px;
-    padding: 10px;
+  .calculate-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 20px;
   }
-  .open-dialog-button {
+  .open-dialog-button,
+  .close-button {
+    padding: 10px;
+    font-size: 15px;
+  }
+  .custom-select {
     font-size: 15px;
   }
   .dialog-content {
@@ -321,12 +230,46 @@ table tr:nth-child(even) {
   }
 }
 
-/* اللابتوب والمكتبي: 992px فما فوق */
-@media (min-width: 992px) {
+/* Tablet: 768px - 991px */
+@media (min-width: 768px) and (max-width: 991px) {
+  .calculator-container {
+    width: 90%;
+    margin: 50px auto;
+    padding: 25px;
+  }
+  .calculate-button {
+    width: 100%;
+    font-size: 17px;
+    padding: 11px 22px;
+  }
+  .open-dialog-button,
+  .close-button {
+    padding: 11px;
+    font-size: 16px;
+  }
+  .custom-select {
+    font-size: 16px;
+  }
+  .dialog-content {
+    width: 80%;
+    padding: 30px;
+  }
+  table th,
+  table td {
+    padding: 10px;
+    font-size: 16px;
+  }
+}
+
+/* Laptop: 992px - 1199px */
+@media (min-width: 992px) and (max-width: 1199px) {
   .calculator-container {
     width: 800px;
     margin: 80px auto;
     padding: 30px;
+  }
+  .calculate-button {
+    width: 390px;
   }
   .dialog-content {
     width: 450px;
@@ -335,5 +278,20 @@ table tr:nth-child(even) {
   table td {
     padding: 10px;
     font-size: 16px;
+  }
+}
+
+/* Desktop: 1200px and above */
+@media (min-width: 1200px) {
+  .calculator-container {
+    width: 800px;
+    margin: 100px auto;
+    padding: 30px;
+  }
+  .calculate-button {
+    width: 390px;
+  }
+  .dialog-content {
+    width: 450px;
   }
 }
