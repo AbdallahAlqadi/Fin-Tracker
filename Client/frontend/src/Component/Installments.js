@@ -251,31 +251,6 @@ const InstallmentCalculator = () => {
     setTimeout(() => setExportMessage(''), 3000);
   };
 
-  const exportToCSV = () => {
-    const csvRows = [];
-    const headers = ['Installment #', 'Date', 'Amount'];
-    csvRows.push(headers.join(','));
-
-    installments.forEach((inst, index) => {
-      const row = [index + 1, inst.date, inst.amount.toFixed(2)];
-      csvRows.push(row.join(','));
-    });
-    csvRows.push(['Total', '', totalAmount.toFixed(2)].join(','));
-
-    const csvData = csvRows.join('\n');
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'installments.csv');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setExportMessage('Exported to CSV successfully!');
-    setTimeout(() => setExportMessage(''), 3000);
-  };
-
   const resetCalculator = () => {
     setInstallments([]);
     setTotalAmount(0);
@@ -300,9 +275,6 @@ const InstallmentCalculator = () => {
             <div className="action-buttons">
               <button className="export-button" onClick={exportToExcel}>
                 Export to Excel
-              </button>
-              <button className="export-button" onClick={exportToCSV}>
-                Export to CSV
               </button>
               <button className="reset-calculator-button" onClick={resetCalculator}>
                 Reset Calculator
