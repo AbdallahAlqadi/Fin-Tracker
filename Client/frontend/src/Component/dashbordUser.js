@@ -15,6 +15,7 @@ import {
   InputAdornment,
   IconButton,
   useMediaQuery,
+  Container,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import { styled, keyframes } from '@mui/system';
@@ -28,12 +29,24 @@ const floatAnimation = keyframes`
   100% { transform: translateY(0); }
 `;
 
-// بطاقة التصنيف بتصميم حديث مع تعديلات للعرض على الأجهزة الصغيرة
+// حركة تلاشي دخول البطاقات
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+// تصميم بطاقة التصنيف بشكل حديث
 const CategoryCard = styled(Box)(({ theme }) => ({
   border: '2px solid #4A90E2',
   backgroundColor: '#FFFFFF',
   borderRadius: '16px',
-  padding: '20px',
+  padding: theme.spacing(2.5),
   width: '180px',
   height: '180px',
   display: 'flex',
@@ -43,17 +56,17 @@ const CategoryCard = styled(Box)(({ theme }) => ({
   textAlign: 'center',
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
   cursor: 'pointer',
-  transition: 'transform 0.2s, box-shadow 0.2s',
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  animation: `${fadeIn} 0.5s ease forwards`,
   '&:hover': {
     transform: 'scale(1.05)',
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
     animation: `${floatAnimation} 2s ease-in-out infinite`,
   },
-  // تعديل المقاسات على الشاشات الصغيرة
   [theme.breakpoints.down('sm')]: {
     width: '140px',
     height: '140px',
-    padding: '15px',
+    padding: theme.spacing(2),
   },
 }));
 
@@ -67,17 +80,13 @@ const DashboardUser = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  // حالة لتتبع العناصر التي تم إضافة قيمتها اليوم
   const [addedItems, setAddedItems] = useState([]);
-  // حالة لتتبع عملية الإرسال
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // حالة لتصفية التصنيفات: الكل - الدخل - المصروفات
   const [filterType, setFilterType] = useState('all');
 
-  // استخدام useMediaQuery للتحقق مما إذا كان عرض الشاشة أقل من 370px
   const isSmallDevice = useMediaQuery('(max-width:370px)');
 
-  // دالة للحصول على تاريخ اليوم بتوقيت عمّان بصيغة "YYYY-MM-DD"
+  // دالة للحصول على تاريخ اليوم بتوقيت عمّان
   const getTodayDate = () => {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
   };
@@ -107,8 +116,6 @@ const DashboardUser = () => {
     fetchCategories();
   }, []);
 
-
-  // فتح نافذة الإدخال لعنصر معين إذا لم تتم إضافته اليوم
   const handleClickOpen = (category) => {
     if (addedItems.includes(category._id)) return; // منع الضغط إذا تمت الإضافة
     setSelectedCategory(category);
@@ -123,7 +130,7 @@ const DashboardUser = () => {
     setErrorMessage('');
   };
 
-  // إرسال القيمة إلى الخادم مع التحقق من أن القيمة المدخلة رقم عشري وغير سالبة
+  // إرسال القيمة إلى الخادم بعد التحقق من صحة المدخلات
   const handleSubmit = async () => {
     if (!selectedCategory || !value) {
       setErrorMessage('يرجى إدخال قيمة صحيحة.');
@@ -178,7 +185,7 @@ const DashboardUser = () => {
     }));
   };
 
-  // استخدام قائمة خيارات لحقل البحث بناءً على أسماء التصنيفات
+  // خيارات البحث بناءً على أسماء التصنيفات
   const categoryOptions = categories.map((cat) => cat.categoryName);
 
   if (loading) {
@@ -189,12 +196,11 @@ const DashboardUser = () => {
     );
   }
 
-  // تصفية التصنيفات بناءً على قيمة البحث (غير حساس لحالة الأحرف)
+  // تصفية التصنيفات بناءً على البحث والنوع
   let filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // تطبيق التصفية الإضافية بناءً على نوع التصنيف
   if (filterType === 'income') {
     filteredCategories = filteredCategories.filter(
       (category) => !category.categoryType.toLowerCase().startsWith('expens')
@@ -214,14 +220,15 @@ const DashboardUser = () => {
     return acc;
   }, {});
 
-  // دالة لإرجاع أيقونة التصنيف حسب النوع (مع مقارنة غير حساسة لحالة الأحرف)
+  // دالة لإرجاع أيقونة التصنيف بناءً على النوع
   const getCategoryIcon = (type) =>
     type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
 
   return (
-    <Box
+    <Container
+      maxWidth="lg"
       sx={{
-        p: { xs: 2, sm: 4 },
+        py: { xs: 2, sm: 4 },
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
         fontFamily: 'Arial, sans-serif',
@@ -298,7 +305,7 @@ const DashboardUser = () => {
         )}
       />
 
-      {/* مجموعة أزرار لتصفية التصنيفات (بحجم أكبر) */}
+      {/* مجموعة أزرار لتصفية التصنيفات */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
         <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden' }}>
           <Button
@@ -319,7 +326,8 @@ const DashboardUser = () => {
               py: 1.5,
             }}
           >
-All          </Button>
+            All
+          </Button>
           <Button
             onClick={() => setFilterType('income')}
             variant={filterType === 'income' ? 'contained' : 'outlined'}
@@ -357,7 +365,8 @@ All          </Button>
               py: 1.5,
             }}
           >
-Expenses          </Button>
+            Expenses
+          </Button>
         </ButtonGroup>
       </Box>
 
@@ -384,7 +393,6 @@ Expenses          </Button>
             >
               {getCategoryIcon(type)} {type}
             </Typography>
-            {/* عرض البطاقات بطريقة Grid للأجهزة الصغيرة و Flex للشاشات الأكبر */}
             {isSmallDevice ? (
               <Box
                 sx={{
@@ -613,7 +621,7 @@ Expenses          </Button>
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   );
 };
 
