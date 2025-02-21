@@ -29,6 +29,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
 // ==========================
@@ -217,6 +218,18 @@ const ExportButton = styled(StyledButton)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: "8px",
+}));
+
+// مكوّن جديد لتزيين التاريخ الذي يظهر في أعلى الكارد
+const StyledDateCard = styled(Box)(({ theme }) => ({
+  background: "linear-gradient(135deg, #007BFF, #00C6FF)",
+  color: "#fff",
+  padding: theme.spacing(1.5),
+  borderRadius: "12px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  display: "inline-block",
+  textAlign: "center",
+  marginBottom: theme.spacing(2),
 }));
 
 // دالة مساعدة لبناء رابط الصورة بشكل صحيح
@@ -483,11 +496,7 @@ const BudgetItems = () => {
     setExportProgress(0);
 
     const wsData = filteredItems.map((item) => ({
-      Date: new Date(item.date).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+      Date: format(new Date(item.date), "dd/MM/yyyy"),
       Item: item.CategoriesId.categoryName,
       Type: item.CategoriesId.categoryType,
       Value: item.valueitem,
@@ -589,7 +598,14 @@ const BudgetItems = () => {
         </Alert>
       </Snackbar>
 
-      <Box sx={{ padding: { xs: 2, sm: 4 }, background: "#f5f5f5", minHeight: "100vh" }}>
+      <Box
+        sx={{
+          fontFamily: "'Cairo', sans-serif",
+          padding: { xs: 2, sm: 4 },
+          background: "#f5f5f5",
+          minHeight: "100vh",
+        }}
+      >
         <Box
           sx={{
             marginBottom: 4,
@@ -761,22 +777,11 @@ const BudgetItems = () => {
         ) : (
           groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{
-                  color: "#333",
-                  fontWeight: "bold",
-                  marginBottom: "24px",
-                  textAlign: "center",
-                }}
-              >
-                {new Date(date).toLocaleDateString("en-GB", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })}
-              </Typography>
+              <StyledDateCard>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {format(new Date(date), "dd MMMM yyyy")}
+                </Typography>
+              </StyledDateCard>
               <Grid container spacing={3} justifyContent="center">
                 {items
                   .filter((item) => item.CategoriesId)
