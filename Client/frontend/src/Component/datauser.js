@@ -47,10 +47,15 @@ const StyledCard = styled(Card)(({ theme }) => ({
   width: "100%",
   maxWidth: "450px",
   boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-  [theme.breakpoints.down("sm")]: {
+  // عند الشاشات حتى 880 بكسل (بما في ذلك الأجهزة بين 600-880)
+  "@media (max-width:880px)": {
     flexDirection: "column",
     alignItems: "center",
     textAlign: "center",
+  },
+  // تقليل عرض الكارد للأجهزة التي يقل عرضها عن 575 بكسل
+  "@media (max-width:575px)": {
+    maxWidth: "350px",
   },
   "&:hover": {
     transform: "translateY(-5px)",
@@ -66,7 +71,8 @@ const ImageContainer = styled("div")(({ theme }) => ({
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
   width: "100px",
   height: "100px",
-  [theme.breakpoints.down("sm")]: {
+  // تعديل الهوامش ليصبح تحت الصورة في الشاشات حتى 880 بكسل
+  "@media (max-width:880px)": {
     marginRight: 0,
     marginBottom: "16px",
   },
