@@ -45,11 +45,10 @@ body {
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-  /* margin: 0 auto; */
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: -17.5% !important;
 }
 
 /* صندوق النموذج */
@@ -152,8 +151,13 @@ margin-left: -29px;
 
   }
   .title{
-text-align: center;  }
+text-align: center;  
+margin-left: -6% !important;
+
+}
+
   .title-container {
+
     font-size: 2rem;
   }
   .login-box h2 {
