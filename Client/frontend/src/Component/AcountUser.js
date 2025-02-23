@@ -14,7 +14,8 @@ import Chip from '@mui/material/Chip';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Styled table row with alternate row colors and a hover effect
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
@@ -46,6 +47,8 @@ const UsersTable = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const token = sessionStorage.getItem('jwt');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // دالة لإزالة الحروف الخاصة من النص قبل إنشاء التعبير النظامي
   const escapeRegExp = (string) => {
@@ -140,7 +143,7 @@ const UsersTable = () => {
         />
       </Box>
       {/* حقل البحث مع تحسين الشكل */}
-      <Box sx={{ mb: 2, width: '100%' }}>
+      <Box sx={{ mb: 2, width: '100%', maxWidth: { xs: '100%', sm: '600px' } }}>
         <TextField
           label="Search by Email or Username"
           variant="outlined"
@@ -166,13 +169,14 @@ const UsersTable = () => {
       <TableContainer
         component={Paper}
         sx={{
-          maxHeight: 400,
-          width: '1000px', // عرض ثابت أكبر
-          overflowX: 'auto',
+          maxHeight: { xs: '300px', sm: '400px' },
+          width: { xs: '100%', sm: '800px', md: '1000px' }, // عرض متجاوب
+          overflowX: 'auto', // Scroll أفقي عند الحاجة
           margin: '0 auto', // توسيط العنصر داخل الحاوية
           // تخصيص شكل شريط التمرير
           '&::-webkit-scrollbar': {
             width: '0.6em',
+            height: '0.6em', // ارتفاع شريط التمرير الأفقي
           },
           '&::-webkit-scrollbar-track': {
             background: '#f1f1f1',
@@ -187,7 +191,7 @@ const UsersTable = () => {
           },
         }}
       >
-        <Table sx={{ minWidth: 650 }} aria-label="users table">
+        <Table sx={{ minWidth: isMobile ? 300 : 650 }} aria-label="users table">
           <caption style={{ captionSide: 'bottom', padding: '8px', fontSize: '1rem' }}>
             Displaying user information
           </caption>
@@ -200,9 +204,9 @@ const UsersTable = () => {
           >
             <TableRow>
               <StyledTableCell>No.</StyledTableCell>
-              <StyledTableCell align="right">Role</StyledTableCell>
-              <StyledTableCell align="right">Username</StyledTableCell>
-              <StyledTableCell align="right">Email</StyledTableCell>
+              <StyledTableCell align={isMobile ? 'center' : 'right'}>Role</StyledTableCell>
+              <StyledTableCell align={isMobile ? 'center' : 'right'}>Username</StyledTableCell>
+              <StyledTableCell align={isMobile ? 'center' : 'right'}>Email</StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -212,13 +216,13 @@ const UsersTable = () => {
                   <TableCell component="th" scope="row">
                     {index + 1}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align={isMobile ? 'center' : 'right'}>
                     {highlightText(user.roul, searchQuery)}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align={isMobile ? 'center' : 'right'}>
                     {highlightText(user.username, searchQuery)}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align={isMobile ? 'center' : 'right'}>
                     {highlightText(user.email, searchQuery)}
                   </TableCell>
                 </StyledTableRow>
