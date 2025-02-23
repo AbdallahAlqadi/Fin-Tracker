@@ -55,29 +55,21 @@ body {
 
 /* ---------- حاوية التسجيل ---------- */
 .signup-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    /* تمت إزالة تأثير الضبابية */
-    /* backdrop-filter: blur(10px); */
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
     border-radius: 15px;
-    margin-bottom: 25px;
-}
-
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 /* ---------- صندوق التسجيل ---------- */
-.signup-box {
-    /* تغيير الخلفية إلى أبيض بدون شفافية */
-    background: #fff;
-    padding: 1.8rem;
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    width: 100%;  /* عرض الصندوق يصبح 100% من الحاوية */
-    text-align: center;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
+.signup-box{
+    width: 100%;
+  }
 
 .signup-box h2 {
     margin-bottom: 1.2rem;
