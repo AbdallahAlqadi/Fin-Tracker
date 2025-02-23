@@ -208,9 +208,9 @@ body {
         width:122%;
         /* max-width: 115%; */
         margin-top:8px ;
-        margin-left: -11.5%;
+        margin-left: -18.5%;
         padding: 1.5rem;
-        border-radius: 10px;
+        border-radius: 13px;
         box-shadow: none;
     }
     
@@ -236,8 +236,13 @@ body {
 /* ---- Mobile Landscape (576px - 767px) ---- */
 @media (min-width: 576px) and (max-width: 767px) {
     .signup-container {
-        max-width: 90%;
+        width:122%;
+        /* max-width: 115%; */
+        margin-top:8px ;
+        margin-left: -18.5%;
         padding: 1.5rem;
+        border-radius: 13px;
+        box-shadow: none;
     }
     
     .title {
@@ -252,8 +257,13 @@ body {
 /* ---- Tablet (768px - 991px) ---- */
 @media (min-width: 768px) and (max-width: 991px) {
     .signup-container {
-        max-width: 85%;
-        margin: 20px auto;
+        width:122%;
+        /* max-width: 115%; */
+        margin-top:8px ;
+        margin-left: -18.5%;
+        padding: 1.5rem;
+        border-radius: 13px;
+        box-shadow: none;
     }
     
     .input-group input {
@@ -264,7 +274,13 @@ body {
 /* ---- Laptop (992px - 1199px) ---- */
 @media (min-width: 992px) and (max-width: 1199px) {
     .signup-container {
-        max-width: 800px;
+        width:122%;
+        /* max-width: 115%; */
+        margin-top:8px ;
+        margin-left: -18.5%;
+        padding: 1.5rem;
+        border-radius: 13px;
+        box-shadow: none;
     }
     
     .input-group input {
@@ -275,7 +291,13 @@ body {
 /* ---- Desktop (1200px and above) ---- */
 @media (min-width: 1200px) {
     .signup-container {
-        max-width: 850px;
+        width:122%;
+        /* max-width: 115%; */
+        margin-top:8px ;
+        margin-left: -18.5%;
+        padding: 1.5rem;
+        border-radius: 13px;
+        box-shadow: none;
     }
     
     .input-group input {
