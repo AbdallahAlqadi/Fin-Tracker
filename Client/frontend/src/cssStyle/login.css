@@ -143,8 +143,9 @@ body {
 /* تحسين التصميم للشاشات الصغيرة */
 @media (max-width: 480px) {
   .login-container {
-    width: 100%;
+    width: 120%;
     padding: 20px;
+    
   }
   .title-container {
     font-size: 2rem;
