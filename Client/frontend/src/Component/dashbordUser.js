@@ -95,7 +95,7 @@ const DashboardUser = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
+        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
         setCategories(response.data.data);
 
         // تهيئة عدد العناصر المرئية لكل نوع (افتراضي 12)
@@ -151,7 +151,7 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5004/api/addBudget',
+        'https://fin-tracker-ncbx.onrender.com/api/addBudget',
         {
           CategoriesId: currentCategory._id,
           valueitem: parsedValue,
@@ -422,7 +422,7 @@ const DashboardUser = () => {
                                 src={
                                   category.image.startsWith('data:')
                                     ? category.image
-                                    : `http://127.0.0.1:5004/${category.image}`
+                                    : `https://fin-tracker-ncbx.onrender.com/${category.image}`
                                 }
                                 alt={category.categoryName}
                                 sx={{
@@ -470,7 +470,7 @@ const DashboardUser = () => {
                                 src={
                                   category.image.startsWith('data:')
                                     ? category.image
-                                    : `http://127.0.0.1:5004/${category.image}`
+                                    : `https://fin-tracker-ncbx.onrender.com/${category.image}`
                                 }
                                 alt={category.categoryName}
                                 sx={{
@@ -554,7 +554,7 @@ const DashboardUser = () => {
               src={
                 selectedCategory.image.startsWith('data:')
                   ? selectedCategory.image
-                  : `http://127.0.0.1:5004/${selectedCategory.image}`
+                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
               }
               alt={selectedCategory.categoryName}
               sx={{

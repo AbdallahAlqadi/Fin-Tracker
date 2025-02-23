@@ -38,7 +38,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
     formData.append('image', image);
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5004/api/category',
+        'https://fin-tracker-ncbx.onrender.com/api/category',
         formData
       );
       console.log('Successfully submitted:', response.data);
@@ -152,7 +152,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
               src={
                 cat.image.startsWith('data:')
                   ? cat.image
-                  : `http://127.0.0.1:5004/${cat.image}`
+                  : `https://fin-tracker-ncbx.onrender.com/${cat.image}`
               }
               alt={cat.categoryName}
             />
@@ -269,7 +269,7 @@ const CombinedPage = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://127.0.0.1:5004/api/getcategories');
+      const res = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
       setCategories(res.data.data);
     } catch (err) {
       setError(err.message);
@@ -291,7 +291,7 @@ const CombinedPage = () => {
   const handleDelete = async (id) => {
     try {
       const res = await axios.delete(
-        `http://127.0.0.1:5004/api/deletecategory/${id}`
+        `https://fin-tracker-ncbx.onrender.com/api/deletecategory/${id}`
       );
       if (res.status === 200) {
         setCategories(categories.filter((cat) => cat._id !== id));
@@ -306,7 +306,7 @@ const CombinedPage = () => {
     try {
       const id = formData.get('_id');
       const res = await axios.put(
-        `http://127.0.0.1:5004/api/updatecategory/${id}`,
+        `https://fin-tracker-ncbx.onrender.com/api/updatecategory/${id}`,
         formData
       );
       if (res.status === 200) {

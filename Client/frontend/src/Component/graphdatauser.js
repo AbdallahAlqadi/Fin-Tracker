@@ -37,7 +37,7 @@ import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 // دالة مساعدة لبناء رابط الصورة بشكل صحيح
 const getImageUrl = (image) => {
   if (!image) return "fallback-image.png"; // في حال عدم وجود صورة يمكن استبدالها بصورة بديلة محلياً
-  return image.startsWith("data:") ? image : `http://127.0.0.1:5004/${image}`;
+  return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
 };
 
 // صورة متجاوبة داخل الحاوية الدائرية
@@ -138,7 +138,7 @@ const Graph = () => {
   const fetchBudget = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:5004/api/getUserBudget",
+        "https://fin-tracker-ncbx.onrender.com/api/getUserBudget",
         {
           headers: {
             Auth: `Bearer ${token}`,
