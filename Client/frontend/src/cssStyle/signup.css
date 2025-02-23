@@ -200,15 +200,17 @@ body {
 /* ---- Mobile Portrait (0px - 575px) ---- */
 @media (max-width: 575px) {
     .container {
-        padding: 0 0.5rem;
+        padding: 0;
         width: 100%;
-        max-width: 100%;
     }
     
     .signup-container {
-        padding: 1rem;
-        margin: 10px auto;
-        max-width: 95%;
+        width: 100%;
+        max-width: 100%;
+        margin: 10px 0;
+        padding: 1.5rem;
+        border-radius: 0;
+        box-shadow: none;
     }
     
     .title {
@@ -227,8 +229,6 @@ body {
     .signup-button {
         padding: 0.8rem;
         font-size: 1rem;
-        width: 100% !important;
-        margin: 0 !important;
     }
 }
 
