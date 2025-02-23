@@ -43,6 +43,8 @@ body {
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;           /* توسيط الحاوية أفقيًا */
+  text-align: center;       /* توسيط المحتويات داخلها بشكل افتراضي */
 }
 
 /* صندوق النموذج */
@@ -69,6 +71,7 @@ body {
 .input-group {
   margin-bottom: 20px;
   position: relative;
+  text-align: left;         /* محاذاة النص لليسار على الشاشات الكبيرة */
 }
 
 .input-group label {
@@ -133,10 +136,28 @@ body {
 /* تحسين التصميم للشاشات الصغيرة */
 @media (max-width: 480px) {
   .login-container {
-    margin: 20px;
+    
     padding: 20px;
   }
   .title-container {
     font-size: 2rem;
+  }
+  .login-box h2 {
+    font-size: 1.5rem;
+  }
+  .input-group input {
+    padding: 10px 12px;
+  }
+  .login-button {
+    padding: 10px;
+    font-size: 1rem;
+  }
+  /* تعديل محاذاة مجموعات الإدخال للأجهزة الصغيرة */
+  .input-group {
+    text-align: center;
+  }
+  .input-group label,
+  .input-group input {
+    text-align: center;
   }
 }
