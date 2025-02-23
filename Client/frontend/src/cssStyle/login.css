@@ -13,10 +13,11 @@ body {
   background: linear-gradient(135deg, #add8e6, #87ceeb, #4682b4, #191970);
   background-size: 200% 200%;
   animation: gradientShift 8s ease infinite;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px; /* لضمان وجود مسافة عند الحواف على الأجهزة الصغيرة */
 }
 
 /* حركة الخلفية */
@@ -43,8 +44,10 @@ body {
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-  margin: 0 auto;           /* توسيط الحاوية أفقيًا */
-  text-align: center;       /* توسيط المحتويات داخلها بشكل افتراضي */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* صندوق النموذج */
@@ -55,7 +58,7 @@ body {
 /* شعار الصفحة */
 .login-box img.logo {
   display: block;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 20px;
   width: 80px;
   height: 80px;
 }
@@ -69,16 +72,19 @@ body {
 
 /* تنسيق مجموعات الإدخال */
 .input-group {
+  width: 100%;
   margin-bottom: 20px;
-  position: relative;
-  text-align: left;         /* محاذاة النص لليسار على الشاشات الكبيرة */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;  /* محاذاة المحتوى لليسار بشكل افتراضي */
 }
 
 .input-group label {
-  display: block;
+  width: 100%;
   margin-bottom: 8px;
   color: #333;
   font-weight: bold;
+  text-align: left;
 }
 
 .input-group input {
@@ -116,6 +122,7 @@ body {
 .footer {
   text-align: center;
   margin-top: 20px;
+  width: 100%;
 }
 
 .footer p {
@@ -136,7 +143,7 @@ body {
 /* تحسين التصميم للشاشات الصغيرة */
 @media (max-width: 480px) {
   .login-container {
-    
+    width: 100%;
     padding: 20px;
   }
   .title-container {
@@ -152,9 +159,9 @@ body {
     padding: 10px;
     font-size: 1rem;
   }
-  /* تعديل محاذاة مجموعات الإدخال للأجهزة الصغيرة */
+  /* توسيط محتويات مجموعات الإدخال على الشاشات الصغيرة */
   .input-group {
-    text-align: center;
+    align-items: center;
   }
   .input-group label,
   .input-group input {
