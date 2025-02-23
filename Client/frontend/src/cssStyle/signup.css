@@ -59,17 +59,18 @@ body {
     justify-content: center;
     align-items: center;
     height: 100%;
-    backdrop-filter: blur(10px);
+    /* تمت إزالة تأثير الضبابية */
+    /* backdrop-filter: blur(10px); */
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     border-radius: 15px;
     margin-bottom: 25px;
-    
 }
 
 /* ---------- صندوق التسجيل ---------- */
 .signup-box {
-    background: rgba(255, 255, 255, 0.95);
+    /* تغيير الخلفية إلى أبيض بدون شفافية */
+    background: #fff;
     padding: 1.8rem;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -208,11 +209,11 @@ body {
 /* ---- Mobile Portrait (0px - 575px) ---- */
 @media (max-width: 575px) {
     .signup-container {
-        width: 90%;
+        width: 100%;
         margin: 0 auto;
         height: 70%;
         padding: 1rem;
-        margin-left: .7%;
+        margin-left: 0.7%;
     }
     .signup-box {
         width: 100%;
