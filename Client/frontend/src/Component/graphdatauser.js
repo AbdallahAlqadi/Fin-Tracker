@@ -26,7 +26,9 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { styled } from "@mui/system";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -126,8 +128,12 @@ const Graph = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // مقياس لوني باستخدام مجموعة ألوان من d3
+  // استخدام d3 لمقياس اللون
   const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
+
+  // إضافة استخدام useTheme و useMediaQuery لجعل النافذة متجاوبة على الشاشات الصغيرة
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     fetchBudget();
@@ -612,8 +618,7 @@ const Graph = () => {
                           {item.CategoriesId?.categoryType &&
                           totals[item.CategoriesId.categoryType]
                             ? (
-                                (item.valueitem /
-                                  totals[item.CategoriesId.categoryType]) *
+                                (item.valueitem / totals[item.CategoriesId.categoryType]) *
                                 100
                               ).toFixed(2)
                             : "0.00"}
@@ -628,12 +633,14 @@ const Graph = () => {
           )}
         </Container>
 
-        {/* نافذة منبثقة (Modal) لعرض تفاصيل الفئة - بتنسيق وحجم أصغر */}
+        {/* نافذة منبثقة (Modal) لعرض تفاصيل الفئة */}
         <Dialog
           open={modalOpen}
           onClose={() => setModalOpen(false)}
+          fullWidth
           maxWidth="sm"
-          PaperProps={{ sx: { borderRadius: 2, padding: 1,width:"20%" } }}
+          fullScreen={fullScreen}
+          PaperProps={{ sx: { borderRadius: 2, padding: 1 } }}
         >
           <DialogTitle
             sx={{
@@ -650,7 +657,7 @@ const Graph = () => {
             {selectedCategory && (
               <>
                 <Box display="flex" alignItems="center" mb={2}>
-                  <ImageContainer sx={{ width: 60, height: 60, marginTop:"5px",mr: 6 }}>
+                  <ImageContainer sx={{ width: 60, height: 60, marginTop: "5px", mr: 6 }}>
                     <StyledImage
                       src={getImageUrl(selectedCategory.CategoriesId?.image)}
                       alt="Category"
