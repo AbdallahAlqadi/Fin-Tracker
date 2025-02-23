@@ -27,6 +27,7 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+
 /* عنوان الموقع */
 .title-container {
   text-align: center;
@@ -145,9 +146,12 @@ body {
   .login-container {
     width: 120%;
     padding: 20px;
-margin-left: -50px;
+margin-left: -29px;
     
+
   }
+  .title{
+text-align: center;  }
   .title-container {
     font-size: 2rem;
   }
