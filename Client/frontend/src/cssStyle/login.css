@@ -88,6 +88,9 @@ body {
   text-align: left;
 }
 
+.title{
+  margin-left: -6.5% !important;
+}
 .input-group input {
   width: 100%;
   padding: 12px 15px;
