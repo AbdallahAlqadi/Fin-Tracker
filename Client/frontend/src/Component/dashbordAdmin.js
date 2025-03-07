@@ -78,7 +78,7 @@ const CategoryForm = ({ onCategoryAdded }) => {
             onChange={(e) => setCategoryType(e.target.value)}
             required
           >
-            <option value="">Select Category Type</option>
+            <option value="">Category Type</option>
             <option value="Expenses">Expenses</option>
             <option value="Revenues">Revenues</option>
           </select>
