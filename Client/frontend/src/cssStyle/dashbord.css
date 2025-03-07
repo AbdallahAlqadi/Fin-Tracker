@@ -304,36 +304,43 @@ body {
 .modal-actions {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 15px;
+  margin-top: 25px;
 }
 
 .confirm-btn,
 .cancel-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.3s;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease-in-out;
+  text-transform: uppercase;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .confirm-btn {
-  background: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 }
 
 .confirm-btn:hover {
-  background: #c0392b;
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: scale(1.05);
+  box-shadow: 0 6px 10px rgba(192, 57, 43, 0.3);
 }
 
 .cancel-btn {
-  background: #ccc;
-  color: #333;
+  background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+  color: #2c3e50;
 }
 
 .cancel-btn:hover {
-  background: #bbb;
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  transform: scale(1.05);
+  box-shadow: 0 6px 10px rgba(149, 165, 166, 0.3);
 }
 
 /* التصميم المتجاوب */
