@@ -282,9 +282,9 @@ body {
 /* تصميم الشريط الصغير لرسالة النجاح */
 .success-message {
   position: fixed;
-  top: 20px;
+  top: 70px;
   right: 20px;
-  background: #4caf50;
+  background: #3bce40e0;
   color: white;
   padding: 10px 20px;
   border-radius: 5px;
