@@ -521,6 +521,7 @@ const DashboardUser = () => {
         ))
       )}
 
+      {/* تحسين تصميم Dialog Box */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -529,25 +530,27 @@ const DashboardUser = () => {
         PaperProps={{
           sx: {
             minWidth: 320,
-            borderRadius: 2,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+            borderRadius: '16px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+            overflow: 'hidden',
           },
         }}
       >
         <DialogTitle
           sx={{
-            backgroundColor: '#4A90E2',
+            background: 'linear-gradient(135deg, #4A90E2, #357ABD)',
             color: '#FFFFFF',
             p: 2,
             textAlign: 'center',
-            fontSize: 24,
+            fontSize: { xs: '1.5rem', sm: '2rem' },
             fontWeight: 'bold',
-            borderRadius: '2px 2px 0 0',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
           }}
         >
           {selectedCategory?.categoryName}
         </DialogTitle>
-        <DialogContent sx={{ p: 3, textAlign: 'center' }}>
+        <DialogContent sx={{ p: 3, textAlign: 'center', backgroundColor: '#FAFAFA' }}>
           {selectedCategory?.image && (
             <Box
               component="img"
@@ -587,7 +590,14 @@ const DashboardUser = () => {
             </Typography>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 2 }}>
+        <DialogActions
+          sx={{
+            p: 2,
+            justifyContent: 'center',
+            gap: 2,
+            backgroundColor: '#FAFAFA',
+          }}
+        >
           <Button
             onClick={handleClose}
             sx={{
