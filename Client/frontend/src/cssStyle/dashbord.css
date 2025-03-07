@@ -60,7 +60,7 @@ body {
 .category-form input,
 .category-form select,
 .category-form input[type="file"] {
-  width: 100%; /* تمت الإضافة لضمان العرض الكامل */
+  width: 100%;
   padding: 12px;
   border: 1px solid #ccc;
   border-radius: var(--border-radius);
@@ -249,7 +249,7 @@ body {
 .modal-form input[type="text"],
 .modal-form select,
 .modal-form input[type="file"] {
-  width: 100%; /* تمت الإضافة لضمان العرض الكامل */
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: var(--border-radius);
@@ -277,6 +277,63 @@ body {
 .save-btn:hover {
   background: #0263d8;
   transform: scale(1.02);
+}
+
+/* تصميم الشريط الصغير لرسالة النجاح */
+.success-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* تصميم مربع الحوار لتأكيد الحذف */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirm-btn,
+.cancel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+.confirm-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: #c0392b;
+}
+
+.cancel-btn {
+  background: #ccc;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background: #bbb;
 }
 
 /* التصميم المتجاوب */

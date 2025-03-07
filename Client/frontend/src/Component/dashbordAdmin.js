@@ -1,4 +1,3 @@
-// CombinedPage.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/dashbord.css';
@@ -8,7 +7,6 @@ const CategoryForm = ({ onCategoryAdded }) => {
   const [categoryType, setCategoryType] = useState('');
   const [image, setImage] = useState(null);
 
-  // التعامل مع تغيير الصورة والتحقق من حجمها ونوعها
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -25,7 +23,6 @@ const CategoryForm = ({ onCategoryAdded }) => {
     }
   };
 
-  // إرسال بيانات النموذج إلى الخادم
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!categoryName || !categoryType || !image) {
@@ -42,7 +39,6 @@ const CategoryForm = ({ onCategoryAdded }) => {
         formData
       );
       console.log('Successfully submitted:', response.data);
-      // إعادة تعيين الحقول بعد النجاح
       setCategoryName('');
       setCategoryType('');
       setImage(null);
@@ -99,12 +95,12 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
-  // فصل التصنيفات إلى Expenses و Revenues
   const expenses = categories.filter((cat) => cat.categoryType === 'Expenses');
   const revenues = categories.filter((cat) => cat.categoryType === 'Revenues');
 
-  // التعامل مع تغيير الصورة في حالة التعديل
   const handleUpdateImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -121,7 +117,6 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     }
   };
 
-  // إرسال بيانات التحديث إلى الخادم
   const handleModalSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -136,9 +131,23 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
     setNewImage(null);
   };
 
-  // عرض بطاقة التصنيف مع تعديل التنسيق بناءً على النوع
+  const handleDeleteClick = (id) => {
+    setCategoryToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    onDelete(categoryToDelete);
+    setShowDeleteConfirm(false);
+    setCategoryToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setCategoryToDelete(null);
+  };
+
   const renderCategoryCard = (cat) => {
-    // إذا كان النوع Expenses يكون اللون أحمر وإلا أزرق
     const color = cat.categoryType === 'Expenses' ? 'red' : 'blue';
     return (
       <div
@@ -162,7 +171,6 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
         </div>
         <div className="card-content">
           <h3>{cat.categoryName}</h3>
-          {/* عرض نوع التصنيف مع تلوين النص */}
           <p style={{ color: color, fontWeight: 'bold' }}>
             {cat.categoryType}
           </p>
@@ -177,7 +185,10 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
           >
             Edit
           </button>
-          <button className="delete-btn" onClick={() => onDelete(cat._id)}>
+          <button
+            className="delete-btn"
+            onClick={() => handleDeleteClick(cat._id)}
+          >
             Delete
           </button>
         </div>
@@ -211,7 +222,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
         <div className="modal">
           <div className="modal-content">
             <button className="modal-close" onClick={() => setIsModalOpen(false)}>
-              &times;
+              ×
             </button>
             <form onSubmit={handleModalSubmit} className="modal-form">
               <div className="input-group">
@@ -256,6 +267,23 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
           </div>
         </div>
       )}
+
+      {showDeleteConfirm && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>تأكيد الحذف</h3>
+            <p>هل أنت متأكد من حذف هذا التصنيف؟</p>
+            <div className="modal-actions">
+              <button className="confirm-btn" onClick={confirmDelete}>
+                نعم
+              </button>
+              <button className="cancel-btn" onClick={cancelDelete}>
+                لا
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -264,8 +292,8 @@ const CombinedPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // جلب التصنيفات من الخادم
   const fetchCategories = async () => {
     try {
       setLoading(true);
@@ -282,12 +310,12 @@ const CombinedPage = () => {
     fetchCategories();
   }, []);
 
-  // إضافة تصنيف جديد
   const handleCategoryAdded = (newCategory) => {
     setCategories([...categories, newCategory]);
+    setSuccessMessage('تمت إضافة التصنيف بنجاح!');
+    setTimeout(() => setSuccessMessage(''), 3000); // إخفاء الرسالة بعد 3 ثوانٍ
   };
 
-  // حذف تصنيف
   const handleDelete = async (id) => {
     try {
       const res = await axios.delete(
@@ -301,7 +329,6 @@ const CombinedPage = () => {
     }
   };
 
-  // تحديث التصنيف
   const handleUpdate = async (formData) => {
     try {
       const id = formData.get('_id');
@@ -316,7 +343,7 @@ const CombinedPage = () => {
       }
     } catch (err) {
       alert(
-        'Error updating category: ' +
+        'خطأ في تحديث التصنيف: ' +
           (err.response?.data?.message || err.message)
       );
     }
@@ -325,8 +352,9 @@ const CombinedPage = () => {
   return (
     <div className="combined-page">
       <CategoryForm onCategoryAdded={handleCategoryAdded} />
-      {loading && <p>Loading categories...</p>}
-      {error && <p>Error: {error}</p>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      {loading && <p>جارٍ تحميل التصنيفات...</p>}
+      {error && <p>خطأ: {error}</p>}
       <CategoryList
         categories={categories}
         onDelete={handleDelete}
