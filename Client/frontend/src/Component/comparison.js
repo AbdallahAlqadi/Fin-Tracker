@@ -12,6 +12,7 @@ import {
   MenuItem,
   Select,
   Checkbox,
+  Grid,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -35,11 +36,14 @@ const StyledSelect = styled(Select)(({ theme }) => ({
   },
 }));
 
-// مكون Checkbox مُخصص لتحسين التصميم
+// مكون Checkbox مُخصص لتحسين التصميم مع حجم مناسب واستجابة
 const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
   color: theme.palette.primary.main,
   "&.Mui-checked": {
     color: theme.palette.primary.main,
+  },
+  "& .MuiSvgIcon-root": {
+    fontSize: 24, // حجم ثابت ومناسب للأيقونة
   },
 }));
 
@@ -820,99 +824,97 @@ const Comparison = () => {
 
         <Box id="date-selection-container" sx={{ marginBottom: 2 }}>
           {dateType === "year" && (
-            <Box
-              id="year-selection"
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-              }}
-            >
+            <Grid container spacing={2}>
               {availableYears.map((year) => (
-                <FormControlLabel
-                  key={year}
-                  control={
-                    <StyledCheckbox
-                      checked={selectedYear.includes(year)}
-                      onChange={() => handleYearChange(year)}
-                    />
-                  }
-                  label={year}
-                />
+                <Grid item xs={6} sm={4} md={3} key={year}>
+                  <FormControlLabel
+                    control={
+                      <StyledCheckbox
+                        checked={selectedYear.includes(year)}
+                        onChange={() => handleYearChange(year)}
+                      />
+                    }
+                    label={year}
+                  />
+                </Grid>
               ))}
-            </Box>
+            </Grid>
           )}
 
           {dateType === "month" && selectedYear.length > 0 && (
-            <Box
-              id="month-selection"
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-              }}
-            >
+            <Grid container spacing={2}>
               {availableMonths.map((month) => (
-                <FormControlLabel
-                  key={month}
-                  control={
-                    <StyledCheckbox
-                      checked={selectedMonths.includes(month)}
-                      onChange={() => handleMonthChange(month)}
-                    />
-                  }
-                  label={`Month ${month}`}
-                />
+                <Grid item xs={6} sm={4} md={3} key={month}>
+                  <FormControlLabel
+                    control={
+                      <StyledCheckbox
+                        checked={selectedMonths.includes(month)}
+                        onChange={() => handleMonthChange(month)}
+                      />
+                    }
+                    label={`Month ${month}`}
+                  />
+                </Grid>
               ))}
-            </Box>
+            </Grid>
           )}
 
           {dateType === "day" &&
             selectedYear.length > 0 &&
             selectedMonths.length > 0 && (
               <Box id="day-selection">
-                {selectedMonths.map((month) => {
-                  const year = selectedYear[0];
-                  const validDays = availableDays.filter((day) => {
-                    const [dayYear, dayMonth] = day.split("-");
-                    return (
-                      parseInt(dayMonth) === month && parseInt(dayYear) === year
-                    );
-                  });
-                  if (validDays.length === 0) return null;
-                  return (
-                    <Box
-                      key={month}
-                      className="month-days-container"
-                      sx={{ marginBottom: 2 }}
-                    >
-                      <strong>{`الشهر ${month
-                        .toString()
-                        .padStart(2, "0")} (${year})`}</strong>
-                      <Box
-                        className="days-checkbox-group"
-                        sx={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 1,
-                        }}
-                      >
-                        {validDays.map((day) => (
-                          <FormControlLabel
-                            key={day}
-                            control={
-                              <StyledCheckbox
-                                checked={selectedDays.includes(day)}
-                                onChange={() => handleDayChange(day)}
+                {availableDays.length > 0 && (
+                  <>
+                    {Object.entries(
+                      availableDays.reduce((acc, day) => {
+                        const [year, month] = day.split("-").slice(0, 2);
+                        const key = `${year}-${month}`;
+                        if (!acc[key]) acc[key] = [];
+                        acc[key].push(day);
+                        return acc;
+                      }, {})
+                    ).map(([key, days]) => {
+                      const [year, month] = key.split("-");
+                      return (
+                        <Box
+                          key={key}
+                          sx={{
+                            marginBottom: 2,
+                            padding: 2,
+                            border: "1px solid #ccc",
+                            borderRadius: "8px",
+                            backgroundColor: "#f9f9f9",
+                          }}
+                        >
+                          <Typography variant="h6">{`الشهر ${month.padStart(
+                            2,
+                            "0"
+                          )} (${year})`}</Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 1,
+                            }}
+                          >
+                            {days.map((day) => (
+                              <FormControlLabel
+                                key={day}
+                                control={
+                                  <StyledCheckbox
+                                    checked={selectedDays.includes(day)}
+                                    onChange={() => handleDayChange(day)}
+                                  />
+                                }
+                                label={day}
                               />
-                            }
-                            label={day}
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-                  );
-                })}
+                            ))}
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </>
+                )}
               </Box>
             )}
         </Box>
