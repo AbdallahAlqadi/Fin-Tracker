@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Box,
@@ -317,12 +317,12 @@ const Comparison = () => {
       <Box
         id="main-container"
         sx={{
-          padding: { xs: 2, md: 3 },
+          padding: { xs: 2, sm: 3, md: 4 },
           background: "linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%)",
           borderRadius: "16px",
           boxShadow: "0 6px 30px rgba(0, 0, 0, 0.15)",
           transition: "all 0.3s ease",
-          maxWidth: "1200px",
+          maxWidth: { xs: "95%", sm: "90%", md: "1200px" },
           margin: "20px auto",
         }}
       >
@@ -331,7 +331,7 @@ const Comparison = () => {
           elevation={4}
           sx={{
             marginBottom: 3,
-            padding: 2,
+            padding: { xs: 2, sm: 3 },
             borderRadius: "12px",
             background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
           }}
@@ -457,7 +457,7 @@ const Comparison = () => {
                           key={key}
                           sx={{
                             marginBottom: 2,
-                            padding: 2,
+                            padding: { xs: 1, sm: 2 },
                             border: "1px solid #ccc",
                             borderRadius: "8px",
                             backgroundColor: "#f9f9f9",
@@ -503,7 +503,7 @@ const Comparison = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "300px",
+              height: { xs: "250px", sm: "300px" },
             }}
           >
             <CircularProgress size={60} />
@@ -515,7 +515,7 @@ const Comparison = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "300px",
+              height: { xs: "250px", sm: "300px" },
             }}
           >
             <Typography variant="h4" color="textSecondary">
@@ -527,7 +527,7 @@ const Comparison = () => {
             id="chart-container"
             sx={{
               width: "100%",
-              height: "500px",
+              height: { xs: "400px", sm: "500px" },
               position: "relative",
             }}
           >

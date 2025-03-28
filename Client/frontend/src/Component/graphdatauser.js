@@ -8,6 +8,7 @@ import {
   Grid,
   Card,
   CardContent,
+  CardMedia,
   Paper,
   CircularProgress,
   Box,
@@ -27,6 +28,7 @@ import {
   DialogActions,
   Button,
   useMediaQuery,
+  LinearProgress,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { styled } from "@mui/system";
@@ -38,67 +40,70 @@ import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
 
 // دالة مساعدة لبناء رابط الصورة بشكل صحيح
 const getImageUrl = (image) => {
-  if (!image) return "fallback-image.png"; // في حال عدم وجود صورة يمكن استبدالها بصورة بديلة محلياً
+  if (!image) return "fallback-image.png";
   return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
 };
 
-// صورة متجاوبة داخل الحاوية الدائرية
-const StyledImage = styled("img")({
-  width: "100%",
-  height: "100%",
-  objectFit: "cover",
-});
-
-// حاوية الصورة بشكل دائري
-const ImageContainer = styled("div")({
-  width: "80px",
-  height: "80px",
-  borderRadius: "50%",
-  overflow: "hidden",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-  marginBottom: "12px",
+// تصميم بطاقة العنصر بشكل مستطيل أفقي مع ترتيب واضح (صورة على اليسار والمحتوى على اليمين)
+const RectangularCard = styled(Card)(({ theme }) => ({
   display: "flex",
+  flexDirection: "row",
   alignItems: "center",
-  justifyContent: "center",
-});
+  borderRadius: 16,
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
+  cursor: "pointer",
+  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  overflow: "hidden",
+  backgroundColor: "#fff",
+  marginBottom: theme.spacing(2),
+  "&:hover": {
+    transform: "translateY(-4px)",
+    boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)",
+  },
+  [theme.breakpoints.down("sm")]: {
+    flexDirection: "column",
+  },
+}));
 
-// بطاقة الفئة مع تأثير hover أكثر نعومة وحداثة وإضافة مؤشر "pointer"
-const StyledCard = styled(Card)(({ theme }) => ({
+// تصميم الصورة داخل البطاقة
+const RectangularMedia = styled(CardMedia)(({ theme }) => ({
+  width: 160,
+  height: 160,
+  objectFit: "cover",
+  [theme.breakpoints.down("sm")]: {
+    width: "100%",
+    height: 200,
+  },
+}));
+
+// تنسيق محتوى البطاقة بجانب الصورة مع مسافات داخلية واضحة
+const RectangularCardContent = styled(CardContent)(({ theme }) => ({
+  flex: 1,
+  padding: theme.spacing(2),
   display: "flex",
   flexDirection: "column",
-  alignItems: "center",
-  padding: theme.spacing(2),
-  borderRadius: "12px",
-  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  backgroundColor: "#fff",
-  width: "200px",
-  height: "230px",
-  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-  cursor: "pointer",
-  "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
+  justifyContent: "center",
+}));
+
+// تخصيص شريط التقدم بحيث يكون عرضه ثابتاً (مثلاً 200px) وتلوين الشريط حسب نوع الفئة
+const StyledLinearProgress = styled(LinearProgress)(({ theme, categoryType }) => ({
+  width: "95px", // عرض ثابت لمؤشر التقدم
+  height: 12,
+  borderRadius: 5,
+  backgroundColor: theme.palette.grey[300],
+  "& .MuiLinearProgress-bar": {
+    borderRadius: 5,
+    backgroundColor:
+      categoryType === "Revenues"
+        ? "#4CAF50"
+        : categoryType === "Expenses"
+        ? "#F44336"
+        : theme.palette.primary.main,
+    minWidth: "10px", // لضمان ظهور الشريط حتى وإن كانت القيمة منخفضة
   },
 }));
 
-// تنسيق قائمة الاختيارات مع تأثيرات مخصصة
-const StyledSelect = styled(Select)(({ theme }) => ({
-  borderRadius: "8px",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.primary.main,
-  },
-  "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.primary.dark,
-  },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.primary.main,
-    borderWidth: "2px",
-  },
-}));
-
-// بطاقة إجماليات مخصصة مع تأثيرات حديثة دون تغيير حجمها
-// تم استخدام shouldForwardProp لمنع تمرير الخاصية bgColor إلى DOM
+// بطاقة الإجماليات المخصصة
 const TotalCard = styled(Card, {
   shouldForwardProp: (prop) => prop !== "bgColor",
 })(({ theme, bgColor }) => ({
@@ -108,10 +113,10 @@ const TotalCard = styled(Card, {
   borderRadius: "12px",
   padding: theme.spacing(2),
   background: bgColor,
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
   transition: "box-shadow 0.3s ease",
   "&:hover": {
-    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.25)",
+    boxShadow: "0 8px 20px rgba(0, 0, 0, 0.25)",
   },
 }));
 
@@ -119,19 +124,16 @@ const Graph = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState(new Date());
-  // إفتراضيًا يتم اختيار الإيرادات، ويمكن اختيار "ALL" لعرض الكل
   const [filterType, setFilterType] = useState("Revenues");
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
 
-  // حالات النافذة المنبثقة لعرض التفاصيل
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // استخدام d3 لمقياس اللون
+  // استخدام d3 لمقياس الألوان
   const colorScale = d3.scaleOrdinal([...schemeSet3, ...schemeTableau10]);
 
-  // إضافة استخدام useTheme و useMediaQuery لجعل النافذة متجاوبة على الشاشات الصغيرة
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -160,10 +162,9 @@ const Graph = () => {
     }
   };
 
-  // تجميع العناصر حسب التصنيف (دمج العناصر المكررة)
+  // تجميع العناصر حسب التصنيف
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
-      // الحصول على اسم الفئة أو تعيين "Unknown" إذا لم يكن موجودًا
       const categoryName = item.CategoriesId?.categoryName || "Unknown";
       if (!acc[categoryName]) {
         acc[categoryName] = { ...item, valueitem: 0 };
@@ -173,10 +174,9 @@ const Graph = () => {
     }, {});
   };
 
-  // تصفية العناصر بناءً على التاريخ والنوع واستبعاد العناصر غير المعروفة
+  // تصفية العناصر بناءً على التاريخ والنوع
   const filterItems = (items) => {
     let filteredItems = items;
-
     if (filterDate) {
       const selectedDate = new Date(filterDate);
       filteredItems = filteredItems.filter((item) => {
@@ -188,24 +188,20 @@ const Graph = () => {
           );
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
-        } else {
-          return true;
         }
+        return true;
       });
     }
-
-    // إذا كان النوع المحدد ليس "ALL" يتم تصفية العناصر بناءً على النوع
     if (filterType !== "ALL") {
       filteredItems = filteredItems.filter(
         (item) => item.CategoriesId?.categoryType === filterType
       );
     }
-
-    // تجميع العناصر ثم استبعاد العناصر التي تحمل اسم "Unknown"
     const grouped = groupByCategory(filteredItems);
     const groupedArray = Object.values(grouped).filter(
       (item) =>
-        item.CategoriesId?.categoryName && item.CategoriesId?.categoryName !== "Unknown"
+        item.CategoriesId?.categoryName &&
+        item.CategoriesId?.categoryName !== "Unknown"
     );
     return groupedArray;
   };
@@ -217,11 +213,8 @@ const Graph = () => {
     const totals = { Revenues: 0, Expenses: 0 };
     items.forEach((item) => {
       const value = parseFloat(item.valueitem);
-      if (item.CategoriesId?.categoryType === "Revenues") {
-        totals.Revenues += value;
-      } else if (item.CategoriesId?.categoryType === "Expenses") {
-        totals.Expenses += value;
-      }
+      if (item.CategoriesId?.categoryType === "Revenues") totals.Revenues += value;
+      else if (item.CategoriesId?.categoryType === "Expenses") totals.Expenses += value;
     });
     return totals;
   };
@@ -229,38 +222,29 @@ const Graph = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
-  // دالة التعامل مع النقر على عنصر الفئة (بطاقة أو جزء من الرسم)
   const handleItemClick = (item) => {
     setSelectedCategory(item);
     setModalOpen(true);
   };
 
-  // تحديث الرسم البياني عند تغيير البيانات المفلترة
   useEffect(() => {
     if (filteredItems.length > 0) {
       drawPieChart(filteredItems);
     } else {
-      // حذف محتويات SVG في حالة عدم وجود بيانات
       d3.select(svgRef.current).selectAll("*").remove();
     }
   }, [filteredItems]);
 
-  // دالة إنشاء رسم بياني (مخطط دونات) باستخدام d3
+  // دالة إنشاء الرسم البياني (مخطط دونات) باستخدام d3
   const drawPieChart = (data) => {
     const width = 700;
     const height = 500;
     const radius = Math.min(width, height) / 2 - 50;
-
-    // إعداد عنصر SVG مع viewBox لتجاوب أفضل
     const svg = d3
       .select(svgRef.current)
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
-
-    // حذف أي عناصر سابقة داخل الـ SVG
     svg.selectAll("*").remove();
-
-    // إنشاء تلميح (tooltip)
     let tooltip = d3.select("#tooltip");
     if (tooltip.empty()) {
       tooltip = d3
@@ -276,34 +260,13 @@ const Graph = () => {
         .style("pointer-events", "none")
         .style("opacity", 0);
     }
-
-    // إنشاء مجموعة (group) مع تموضع مركزي
     const g = svg
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
-
-    const pie = d3
-      .pie()
-      .value((d) => parseFloat(d.valueitem))
-      .sort(null);
-
-    const arc = d3
-      .arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius);
-
-    const arcHover = d3
-      .arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius + 10);
-
-    const arcs = g
-      .selectAll(".arc")
-      .data(pie(data))
-      .enter()
-      .append("g")
-      .attr("class", "arc");
-
+    const pie = d3.pie().value((d) => parseFloat(d.valueitem)).sort(null);
+    const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
+    const arcHover = d3.arc().innerRadius(radius * 0.6).outerRadius(radius + 10);
+    const arcs = g.selectAll(".arc").data(pie(data)).enter().append("g").attr("class", "arc");
     arcs
       .append("path")
       .attr("d", arc)
@@ -344,7 +307,6 @@ const Graph = () => {
           .attr("d", arc);
       })
       .on("click", function (event, d) {
-        // عند النقر على جزء من الرسم البياني يتم عرض نافذة التفاصيل
         handleItemClick(d.data);
       })
       .transition()
@@ -355,11 +317,8 @@ const Graph = () => {
           return arc(interpolate(t));
         };
       });
-
-    // إضافة نص في منتصف الرسم لإظهار الإجمالي
     const totalValue = d3.sum(data, (d) => parseFloat(d.valueitem));
-    g
-      .append("text")
+    g.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
       .style("font-size", "24px")
@@ -370,7 +329,6 @@ const Graph = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <>
-        {/* شريط التنقل */}
         <AppBar position="static" color="primary" elevation={4}>
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontSize: "30px" }}>
@@ -379,7 +337,6 @@ const Graph = () => {
           </Toolbar>
         </AppBar>
 
-        {/* تغليف المحتوى في حاوية مركزية */}
         <Container
           maxWidth="lg"
           sx={{
@@ -388,7 +345,6 @@ const Graph = () => {
             minHeight: "100vh",
           }}
         >
-          {/* عناصر التصفية */}
           <Paper
             sx={{
               p: 2,
@@ -404,15 +360,29 @@ const Graph = () => {
           >
             <FormControl sx={{ minWidth: 120 }}>
               <InputLabel>Date Type</InputLabel>
-              <StyledSelect
+              <Select
                 value={dateType}
                 onChange={(e) => setDateType(e.target.value)}
                 label="Date Type"
+                sx={{
+                  borderRadius: "8px",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.main,
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.dark,
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: "2px",
+                  },
+                }}
               >
                 <MenuItem value="full">Full Date</MenuItem>
                 <MenuItem value="month">Month</MenuItem>
                 <MenuItem value="year">Year</MenuItem>
-              </StyledSelect>
+              </Select>
             </FormControl>
             <DatePicker
               label={
@@ -435,20 +405,32 @@ const Graph = () => {
             />
             <FormControl sx={{ minWidth: 120 }}>
               <InputLabel>Type</InputLabel>
-              <StyledSelect
+              <Select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 label="Type"
+                sx={{
+                  borderRadius: "8px",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.main,
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.dark,
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: "2px",
+                  },
+                }}
               >
-                {/* إضافة خيار ALL إلى جانب Revenues و Expenses */}
                 <MenuItem value="ALL">ALL</MenuItem>
                 <MenuItem value="Revenues">Revenues</MenuItem>
                 <MenuItem value="Expenses">Expenses</MenuItem>
-              </StyledSelect>
+              </Select>
             </FormControl>
           </Paper>
 
-          {/* بطاقات الإجماليات */}
           <Box
             sx={{
               mb: 4,
@@ -510,7 +492,6 @@ const Graph = () => {
             </Box>
           ) : (
             <>
-              {/* الرسم البياني والوسيلة التوضيحية */}
               <Box
                 sx={{
                   display: "flex",
@@ -543,104 +524,104 @@ const Graph = () => {
                     boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
                   }}
                 >
-                  {filteredItems.map((item, index) => (
-                    <ListItem
-                      key={index}
-                      onClick={() => handleItemClick(item)}
-                      sx={{
-                        cursor: "pointer",
-                        transition: "background-color 0.3s ease",
-                        "&:hover": { backgroundColor: "#f0f0f0" },
-                      }}
-                    >
-                      <ListItemIcon>
-                        <Box
-                          sx={{
-                            width: "20px",
-                            height: "20px",
-                            backgroundColor: colorScale(index),
-                          }}
+                  {filteredItems.map((item, index) => {
+                    const percentage =
+                      totals[item.CategoriesId?.categoryType]
+                        ? (item.valueitem / totals[item.CategoriesId.categoryType]) * 100
+                        : 0;
+                    return (
+                      <ListItem
+                        key={index}
+                        onClick={() => handleItemClick(item)}
+                        sx={{
+                          cursor: "pointer",
+                          transition: "background-color 0.3s ease",
+                          "&:hover": { backgroundColor: "#f0f0f0" },
+                        }}
+                      >
+                        <ListItemIcon>
+                          <Box
+                            sx={{
+                              width: "20px",
+                              height: "20px",
+                              backgroundColor: colorScale(index),
+                            }}
+                          />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={`${item.CategoriesId?.categoryName || "Unknown"} (${percentage.toFixed(2)}%)`}
                         />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`${item.CategoriesId?.categoryName || "Unknown"} (${(
-                          (item.valueitem /
-                            d3.sum(filteredItems.map((i) => i.valueitem)) *
-                            100) || 0
-                        ).toFixed(2)}%)`}
-                      />
-                    </ListItem>
-                  ))}
+                      </ListItem>
+                    );
+                  })}
                 </List>
               </Box>
 
-              {/* شبكة بطاقات الفئات */}
               <Grid container spacing={2} justifyContent="center">
-                {filteredItems.map((item, index) => (
-                  <Grid
-                    item
-                    key={index}
-                    xs={6}
-                    sm={6}
-                    md={4}
-                    lg={3}
-                    xl={2}
-                    sx={{ display: "flex", justifyContent: "center" }}
-                  >
-                    <StyledCard onClick={() => handleItemClick(item)}>
-                      <ImageContainer>
-                        <StyledImage
-                          src={getImageUrl(item.CategoriesId?.image)}
-                          alt="Category"
+                {filteredItems.map((item, index) => {
+                  const percentage =
+                    totals[item.CategoriesId?.categoryType]
+                      ? (item.valueitem / totals[item.CategoriesId.categoryType]) * 100
+                      : 0;
+                  return (
+                    <Grid
+                      item
+                      key={index}
+                      xs={12}
+                      sm={12}
+                      md={8}
+                      lg={6}
+                      xl={4}
+                      sx={{ display: "flex", justifyContent: "center" }}
+                    >
+                      <RectangularCard onClick={() => handleItemClick(item)}>
+                        <RectangularMedia
+                          image={getImageUrl(item.CategoriesId?.image)}
+                          title={item.CategoriesId?.categoryName || "Unknown"}
                         />
-                      </ImageContainer>
-                      <CardContent sx={{ textAlign: "center" }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: "bold", color: "#1976d2" }}
-                        >
-                          {item.CategoriesId?.categoryName || "Unknown"}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            color:
-                              item.CategoriesId?.categoryType === "Revenues"
-                                ? "#4CAF50"
-                                : "#F44336",
-                          }}
-                        >
-                          {item.CategoriesId?.categoryType === "Expenses"
-                            ? `-${item.valueitem}`
-                            : item.valueitem}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: "#666" }}>
-                          {item.CategoriesId?.categoryType &&
-                          totals[item.CategoriesId.categoryType]
-                            ? (
-                                (item.valueitem / totals[item.CategoriesId.categoryType]) *
-                                100
-                              ).toFixed(2)
-                            : "0.00"}
-                          %
-                        </Typography>
-                      </CardContent>
-                    </StyledCard>
-                  </Grid>
-                ))}
+                        <RectangularCardContent>
+                          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1976d2" }}>
+                            {item.CategoriesId?.categoryName || "Unknown"}
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              color:
+                                item.CategoriesId?.categoryType === "Revenues" ? "#4CAF50" : "#F44336",
+                              mb: 1,
+                            }}
+                          >
+                            {item.CategoriesId?.categoryType === "Expenses"
+                              ? `-${item.valueitem}`
+                              : item.valueitem}
+                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography variant="body2" sx={{ minWidth: 40 }}>
+                              {percentage.toFixed(2)}%
+                            </Typography>
+                            <StyledLinearProgress
+                              categoryType={item.CategoriesId?.categoryType}
+                              variant="determinate"
+                              value={percentage}
+                            />
+                          </Box>
+                        </RectangularCardContent>
+                      </RectangularCard>
+                    </Grid>
+                  );
+                })}
               </Grid>
             </>
           )}
         </Container>
 
-        {/* نافذة منبثقة (Modal) لعرض تفاصيل الفئة */}
         <Dialog
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           fullWidth
           maxWidth="sm"
           fullScreen={fullScreen}
-          PaperProps={{ sx: { borderRadius: 2, padding: 1 } }}
+          PaperProps={{ sx: { borderRadius: 2, p: 1 } }}
         >
           <DialogTitle
             sx={{
@@ -648,21 +629,31 @@ const Graph = () => {
               color: "#fff",
               fontSize: "18px",
               fontWeight: "bold",
-              padding: "12px",
+              p: 1.5,
             }}
           >
             تفاصيل الفئة
           </DialogTitle>
-          <DialogContent sx={{ padding: 2 }}>
+          <DialogContent sx={{ p: 2 }}>
             {selectedCategory && (
               <>
                 <Box display="flex" alignItems="center" mb={2}>
-                  <ImageContainer sx={{ width: 60, height: 60, marginTop: "5px", mr: 6 }}>
-                    <StyledImage
+                  <Box
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                      mr: 2,
+                    }}
+                  >
+                    <img
                       src={getImageUrl(selectedCategory.CategoriesId?.image)}
                       alt="Category"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
-                  </ImageContainer>
+                  </Box>
                   <Typography variant="h6">
                     {selectedCategory.CategoriesId?.categoryName || "Unknown"}
                   </Typography>
@@ -675,8 +666,7 @@ const Graph = () => {
                 </DialogContentText>
                 <DialogContentText>
                   النسبة:{" "}
-                  {selectedCategory &&
-                  totals[selectedCategory.CategoriesId?.categoryType]
+                  {selectedCategory && totals[selectedCategory.CategoriesId?.categoryType]
                     ? (
                         (selectedCategory.valueitem /
                           totals[selectedCategory.CategoriesId.categoryType]) *
@@ -688,7 +678,7 @@ const Graph = () => {
               </>
             )}
           </DialogContent>
-          <DialogActions sx={{ padding: "8px" }}>
+          <DialogActions sx={{ p: 1 }}>
             <Button onClick={() => setModalOpen(false)} variant="contained" color="primary">
               إغلاق
             </Button>
