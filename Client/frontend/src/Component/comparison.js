@@ -13,17 +13,42 @@ import {
   Select,
   Checkbox,
   Grid,
+  Paper,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import * as d3 from "d3";
+import { Bar, Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import "../cssStyle/comparsion.css";
+
+// تسجيل المكونات اللازمة لمكتبة Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // مكون Select مُخصص مع تحسينات تصميم
 const StyledSelect = styled(Select)(({ theme }) => ({
-  borderRadius: "8px",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  borderRadius: "10px",
+  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
+  backgroundColor: "#fafafa",
   "& .MuiOutlinedInput-notchedOutline": {
     borderColor: theme.palette.primary.main,
   },
@@ -36,18 +61,18 @@ const StyledSelect = styled(Select)(({ theme }) => ({
   },
 }));
 
-// مكون Checkbox مُخصص لتحسين التصميم مع حجم مناسب واستجابة
+// مكون Checkbox مُخصص
 const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
   color: theme.palette.primary.main,
   "&.Mui-checked": {
     color: theme.palette.primary.main,
   },
   "& .MuiSvgIcon-root": {
-    fontSize: 24, // حجم ثابت ومناسب للأيقونة
+    fontSize: 26,
   },
 }));
 
-// مكون Radio مُخصص لتحسين التصميم
+// مكون Radio مُخصص
 const StyledRadio = styled(Radio)(({ theme }) => ({
   color: theme.palette.primary.main,
   "&.Mui-checked": {
@@ -65,16 +90,14 @@ const Comparison = () => {
   const [chartType, setChartType] = useState("bar");
   const [showRevenues, setShowRevenues] = useState(true);
   const [showExpenses, setShowExpenses] = useState(true);
-  const svgRef = useRef();
-  const tooltipRef = useRef();
 
+  // جلب البيانات من الخادم
   useEffect(() => {
     fetchBudget();
   }, []);
 
   const token = sessionStorage.getItem("jwt");
 
-  // جلب البيانات من الخادم
   const fetchBudget = async () => {
     try {
       const response = await axios.get(
@@ -119,7 +142,7 @@ const Comparison = () => {
     });
     // ترتيب المفاتيح بحيث يكون الأحدث أولاً
     const sortedKeys = Object.keys(groupedData).sort(
-      (a, b) => new Date(b) - new Date(a)
+      (a, b) => new Date(a) - new Date(b)
     );
     const sortedData = {};
     sortedKeys.forEach((key) => {
@@ -179,507 +202,52 @@ const Comparison = () => {
 
   const filteredItems = filterItems(budgetItems);
 
-  // إعادة رسم الرسم البياني عند تغيير البيانات أو نوع الرسم أو ظهور الأصناف
-  useEffect(() => {
-    if (Object.keys(filteredItems).length > 0) {
-      if (chartType === "bar") {
-        drawBarChart(filteredItems);
-      } else if (chartType === "line") {
-        drawLineChart(filteredItems);
-      }
-    } else {
-      d3.select(svgRef.current).selectAll("*").remove();
+  // إعداد بيانات الرسم البياني لـ Chart.js بناءً على البيانات المفلترة
+  const getChartData = () => {
+    const labels = Object.keys(filteredItems);
+    const datasets = [];
+    if (showRevenues) {
+      datasets.push({
+        label: "Revenues",
+        data: labels.map((label) => filteredItems[label].Revenues || 0),
+        backgroundColor: "rgba(46, 204, 113, 0.6)",
+        borderColor: "rgba(46, 204, 113, 1)",
+        borderWidth: 1,
+        fill: chartType === "line" ? false : true,
+      });
     }
-  }, [filteredItems, chartType, showRevenues, showExpenses]);
-
-  // دالة رسم الرسم البياني الشريطي (Bar Chart)
-  const drawBarChart = (data) => {
-    const width = 900;
-    const height = 500;
-    const margin = { top: 80, right: 100, bottom: 90, left: 80 };
-
-    d3.select(svgRef.current).selectAll("*").remove();
-
-    // استخدام viewBox لجعل الرسم متجاوباً
-    const svg = d3
-      .select(svgRef.current)
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("preserveAspectRatio", "xMidYMid meet");
-
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-
-    // إضافة تدرج خلفية حديث
-    const defs = svg.append("defs");
-    const gradient = defs
-      .append("linearGradient")
-      .attr("id", "chartGradient")
-      .attr("x1", "0%")
-      .attr("y1", "0%")
-      .attr("x2", "0%")
-      .attr("y2", "100%");
-    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#f5f7fa");
-    gradient
-      .append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", "#c3cfe2");
-
-    // إضافة تأثير ظل للنصوص (عنوان)
-    const titleShadow = defs.append("filter").attr("id", "titleShadow");
-    titleShadow
-      .append("feDropShadow")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("stdDeviation", 3)
-      .attr("flood-color", "#000")
-      .attr("flood-opacity", 0.3);
-
-    // تأثير ظل للوسيلة الإيضاح (Legend)
-    const legendShadow = defs.append("filter").attr("id", "legendShadow");
-    legendShadow
-      .append("feDropShadow")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("stdDeviation", 2)
-      .attr("flood-color", "#000")
-      .attr("flood-opacity", 0.2);
-
-    // تأثير ظل حديث للأعمدة
-    const filter = defs
-      .append("filter")
-      .attr("id", "dropShadow")
-      .attr("height", "130%");
-    filter
-      .append("feGaussianBlur")
-      .attr("in", "SourceAlpha")
-      .attr("stdDeviation", 3)
-      .attr("result", "blur");
-    filter
-      .append("feOffset")
-      .attr("in", "blur")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("result", "offsetBlur");
-    const feMerge = filter.append("feMerge");
-    feMerge.append("feMergeNode").attr("in", "offsetBlur");
-    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-    // مجموعة الرسم الأساسية مع خلفية ذات حواف دائرية
-    const chartGroup = svg
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    chartGroup
-      .append("rect")
-      .attr("width", chartWidth)
-      .attr("height", chartHeight)
-      .attr("fill", "url(#chartGradient)")
-      .attr("rx", 10)
-      .attr("ry", 10);
-
-    const dates = Object.keys(data);
-    const categories = [];
-    if (showRevenues) categories.push("Revenues");
-    if (showExpenses) categories.push("Expenses");
-
-    const colorMapping = {
-      Revenues: "#2ecc71",
-      Expenses: "#e74c3c",
+    if (showExpenses) {
+      datasets.push({
+        label: "Expenses",
+        data: labels.map((label) => filteredItems[label].Expenses || 0),
+        backgroundColor: "rgba(231, 76, 60, 0.6)",
+        borderColor: "rgba(231, 76, 60, 1)",
+        borderWidth: 1,
+        fill: chartType === "line" ? false : true,
+      });
+    }
+    return {
+      labels,
+      datasets,
     };
-
-    const x0 = d3.scaleBand().domain(dates).range([0, chartWidth]).padding(0.2);
-
-    const x1 = d3
-      .scaleBand()
-      .domain(categories)
-      .range([0, x0.bandwidth()])
-      .padding(0.05);
-
-    const maxVal = d3.max(Object.values(data), (d) =>
-      d3.max(categories.map((cat) => d[cat] || 0))
-    );
-    const y = d3.scaleLinear().domain([0, maxVal]).nice().range([chartHeight, 0]);
-
-    const color = d3
-      .scaleOrdinal()
-      .domain(categories)
-      .range(categories.map((cat) => colorMapping[cat]));
-
-    // خطوط شبكة خفيفة للمحور الرأسي
-    chartGroup
-      .append("g")
-      .attr("class", "grid")
-      .call(d3.axisLeft(y).tickSize(-chartWidth).tickFormat(""))
-      .selectAll("line")
-      .attr("stroke", "#e0e0e0")
-      .attr("stroke-dasharray", "3 3");
-
-    const barGroups = chartGroup
-      .selectAll(".bar-group")
-      .data(dates)
-      .enter()
-      .append("g")
-      .attr("class", "bar-group")
-      .attr("transform", (d) => `translate(${x0(d)},0)`);
-
-    barGroups
-      .selectAll("rect")
-      .data((d) =>
-        categories.map((cat) => ({ category: cat, value: data[d][cat] || 0 }))
-      )
-      .enter()
-      .append("rect")
-      .attr("x", (d) => x1(d.category))
-      .attr("y", chartHeight)
-      .attr("width", x1.bandwidth())
-      .attr("height", 0)
-      .attr("fill", (d) => color(d.category))
-      .attr("rx", 5) // إضافة حواف دائرية للأعمدة
-      .attr("ry", 5)
-      .attr("filter", "url(#dropShadow)")
-      .on("mouseover", function (event, d) {
-        d3.select(this).attr("opacity", 0.8);
-        d3.select(tooltipRef.current)
-          .style("opacity", 1)
-          .html(`<strong>${d.category}</strong>: ${d.value}`)
-          .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY - 30}px`);
-      })
-      .on("mouseout", function () {
-        d3.select(this).attr("opacity", 1);
-        d3.select(tooltipRef.current).style("opacity", 0);
-      })
-      .transition()
-      .duration(800)
-      .ease(d3.easeCubicOut)
-      .attr("y", (d) => y(d.value))
-      .attr("height", (d) => chartHeight - y(d.value));
-
-    // رسم المحور الأفقي مع تدوير النصوص
-    const xAxis = d3.axisBottom(x0).tickSize(0).tickPadding(10);
-
-    chartGroup
-      .append("g")
-      .attr("transform", `translate(0, ${chartHeight})`)
-      .call(xAxis)
-      .selectAll("text")
-      .attr("fill", "#616161")
-      .style("font-size", "14px")
-      .style("font-weight", "500")
-      .attr("transform", "rotate(-45)")
-      .style("text-anchor", "end");
-
-    // رسم المحور الرأسي
-    const yAxis = d3.axisLeft(y).ticks(6).tickSize(0).tickPadding(10);
-
-    chartGroup
-      .append("g")
-      .call(yAxis)
-      .selectAll("text")
-      .attr("fill", "#616161")
-      .style("font-size", "14px")
-      .style("font-weight", "500");
-    chartGroup.selectAll(".domain").attr("stroke", "#e0e0e0");
-
-    // عنوان الرسم البياني مع تأثير ظل للنص
-    svg
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", margin.top / 2)
-      .attr("text-anchor", "middle")
-      .style("font-size", "28px")
-      .style("font-family", "sans-serif")
-      .style("fill", "#424242")
-      .style("font-weight", "bold")
-      .attr("filter", "url(#titleShadow)")
-      .text("Budget Comparison");
-
-    // إضافة وتنسيق وسيلة الإيضاح (Legend)
-    const legendGap = 20;
-    const legend = svg
-      .append("g")
-      .attr(
-        "transform",
-        `translate(${margin.left}, ${margin.top - 60 - legendGap})`
-      );
-    legend
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("width", 130)
-      .attr("height", categories.length * 30 + 10)
-      .attr("fill", "#f9f9f9")
-      .attr("stroke", "#ccc")
-      .attr("rx", 8)
-      .attr("ry", 8)
-      .attr("filter", "url(#legendShadow)");
-
-    categories.forEach((cat, i) => {
-      legend
-        .append("rect")
-        .attr("x", 10)
-        .attr("y", i * 30 + 5)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("fill", colorMapping[cat]);
-      legend
-        .append("text")
-        .attr("x", 40)
-        .attr("y", i * 30 + 20)
-        .text(cat)
-        .style("font-size", "16px")
-        .style("fill", "#424242")
-        .style("font-weight", "500");
-    });
   };
 
-  // دالة رسم الرسم البياني الخطي (Line Chart)
-  const drawLineChart = (data) => {
-    const width = 900;
-    const height = 500;
-    const margin = { top: 80, right: 100, bottom: 90, left: 80 };
-
-    d3.select(svgRef.current).selectAll("*").remove();
-
-    const svg = d3
-      .select(svgRef.current)
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("preserveAspectRatio", "xMidYMid meet");
-
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-
-    const defs = svg.append("defs");
-    // تدرج خلفية الرسم البياني
-    const bgGradient = defs
-      .append("linearGradient")
-      .attr("id", "lineChartGradient")
-      .attr("x1", "0%")
-      .attr("y1", "0%")
-      .attr("x2", "0%")
-      .attr("y2", "100%");
-    bgGradient
-      .append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", "#f5f7fa");
-    bgGradient
-      .append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", "#c3cfe2");
-
-    // إضافة تأثير ظل للنصوص (عنوان)
-    const titleShadow = defs.append("filter").attr("id", "titleShadow");
-    titleShadow
-      .append("feDropShadow")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("stdDeviation", 3)
-      .attr("flood-color", "#000")
-      .attr("flood-opacity", 0.3);
-
-    // تأثير ظل للوسيلة الإيضاح (Legend)
-    const legendShadow = defs.append("filter").attr("id", "legendShadow");
-    legendShadow
-      .append("feDropShadow")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("stdDeviation", 2)
-      .attr("flood-color", "#000")
-      .attr("flood-opacity", 0.2);
-
-    const chartGroup = svg
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    chartGroup
-      .append("rect")
-      .attr("width", chartWidth)
-      .attr("height", chartHeight)
-      .attr("fill", "url(#lineChartGradient)")
-      .attr("rx", 10)
-      .attr("ry", 10);
-
-    const dates = Object.keys(data);
-    const categories = [];
-    if (showRevenues) categories.push("Revenues");
-    if (showExpenses) categories.push("Expenses");
-
-    const colorMapping = {
-      Revenues: "#2ecc71",
-      Expenses: "#e74c3c",
-    };
-
-    const x = d3
-      .scalePoint()
-      .domain(dates)
-      .range([0, chartWidth])
-      .padding(0.5);
-
-    const maxVal = d3.max(Object.values(data), (d) =>
-      d3.max(categories.map((cat) => d[cat] || 0))
-    );
-    const y = d3.scaleLinear().domain([0, maxVal]).nice().range([chartHeight, 0]);
-
-    const color = d3
-      .scaleOrdinal()
-      .domain(categories)
-      .range(categories.map((cat) => colorMapping[cat]));
-
-    // خطوط شبكة خفيفة
-    chartGroup
-      .append("g")
-      .attr("class", "grid")
-      .call(d3.axisLeft(y).tickSize(-chartWidth).tickFormat(""))
-      .selectAll("line")
-      .attr("stroke", "#e0e0e0")
-      .attr("stroke-dasharray", "3 3");
-
-    // تأثير ظل حديث للخطوط
-    const filter = defs
-      .append("filter")
-      .attr("id", "lineShadow")
-      .attr("height", "130%");
-    filter
-      .append("feGaussianBlur")
-      .attr("in", "SourceAlpha")
-      .attr("stdDeviation", 3)
-      .attr("result", "blur");
-    filter
-      .append("feOffset")
-      .attr("in", "blur")
-      .attr("dx", 2)
-      .attr("dy", 2)
-      .attr("result", "offsetBlur");
-    const feMerge = filter.append("feMerge");
-    feMerge.append("feMergeNode").attr("in", "offsetBlur");
-    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-    // دالة رسم خط ناعم
-    const lineGenerator = d3
-      .line()
-      .x((d) => x(d.date))
-      .y((d) => y(d.value))
-      .curve(d3.curveMonotoneX);
-
-    categories.forEach((category) => {
-      const categoryData = dates.map((date) => ({
-        date,
-        value: data[date][category] || 0,
-      }));
-      const path = chartGroup
-        .append("path")
-        .datum(categoryData)
-        .attr("fill", "none")
-        .attr("stroke", colorMapping[category])
-        .attr("stroke-width", 3)
-        .attr("stroke-linecap", "round")
-        .attr("filter", "url(#lineShadow)")
-        .attr("d", lineGenerator);
-      const totalLength = path.node().getTotalLength();
-      path
-        .attr("stroke-dasharray", totalLength + " " + totalLength)
-        .attr("stroke-dashoffset", totalLength)
-        .transition()
-        .duration(1000)
-        .ease(d3.easeCubicOut)
-        .attr("stroke-dashoffset", 0);
-      chartGroup
-        .selectAll(`.dot-${category}`)
-        .data(categoryData)
-        .enter()
-        .append("circle")
-        .attr("class", `dot-${category}`)
-        .attr("cx", (d) => x(d.date))
-        .attr("cy", (d) => y(d.value))
-        .attr("r", 6)
-        .attr("fill", colorMapping[category])
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 2)
-        .on("mouseover", function (event, d) {
-          d3.select(this).transition().duration(200).attr("r", 8);
-          d3.select(tooltipRef.current)
-            .style("opacity", 1)
-            .html(`<strong>${category}</strong>: ${d.value}`)
-            .style("left", `${event.pageX + 10}px`)
-            .style("top", `${event.pageY - 30}px`);
-        })
-        .on("mouseout", function () {
-          d3.select(this).transition().duration(200).attr("r", 6);
-          d3.select(tooltipRef.current).style("opacity", 0);
-        });
-    });
-
-    const xAxis = d3.axisBottom(x).tickSize(0).tickPadding(10);
-    chartGroup
-      .append("g")
-      .attr("transform", `translate(0, ${chartHeight})`)
-      .call(xAxis)
-      .selectAll("text")
-      .attr("fill", "#616161")
-      .style("font-size", "14px")
-      .style("font-weight", "500")
-      .attr("transform", "rotate(-45)")
-      .style("text-anchor", "end");
-    const yAxis = d3.axisLeft(y).ticks(6).tickSize(0).tickPadding(10);
-    chartGroup
-      .append("g")
-      .call(yAxis)
-      .selectAll("text")
-      .attr("fill", "#616161")
-      .style("font-size", "14px")
-      .style("font-weight", "500");
-    chartGroup.selectAll(".domain").attr("stroke", "#e0e0e0");
-
-    // عنوان الرسم البياني مع تأثير ظل للنص
-    svg
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", margin.top / 2)
-      .attr("text-anchor", "middle")
-      .style("font-size", "28px")
-      .style("font-family", "sans-serif")
-      .style("fill", "#424242")
-      .style("font-weight", "bold")
-      .attr("filter", "url(#titleShadow)")
-      .text("Budget Comparison");
-
-    // إضافة وتنسيق وسيلة الإيضاح (Legend)
-    const legendGap = 20;
-    const legend = svg
-      .append("g")
-      .attr(
-        "transform",
-        `translate(${margin.left}, ${margin.top - 60 - legendGap})`
-      );
-    legend
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("width", 130)
-      .attr("height", categories.length * 30 + 10)
-      .attr("fill", "#f9f9f9")
-      .attr("stroke", "#ccc")
-      .attr("rx", 8)
-      .attr("ry", 8)
-      .attr("filter", "url(#legendShadow)");
-
-    categories.forEach((cat, i) => {
-      legend
-        .append("rect")
-        .attr("x", 10)
-        .attr("y", i * 30 + 5)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("fill", colorMapping[cat]);
-      legend
-        .append("text")
-        .attr("x", 40)
-        .attr("y", i * 30 + 20)
-        .text(cat)
-        .style("font-size", "16px")
-        .style("fill", "#424242")
-        .style("font-weight", "500");
-    });
+  // خيارات الرسم البياني العامة
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Budget Comparison",
+        font: {
+          size: 24,
+        },
+      },
+    },
+    maintainAspectRatio: false,
   };
 
   // المتغيرات الخاصة بالتواريخ المتاحة حسب البيانات
@@ -750,79 +318,88 @@ const Comparison = () => {
         id="main-container"
         sx={{
           padding: { xs: 2, md: 3 },
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+          background: "linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%)",
+          borderRadius: "16px",
+          boxShadow: "0 6px 30px rgba(0, 0, 0, 0.15)",
           transition: "all 0.3s ease",
           maxWidth: "1200px",
           margin: "20px auto",
         }}
       >
-        <Box
+        <Paper
           id="controls-container"
+          elevation={4}
           sx={{
-            marginBottom: 2,
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 2,
+            marginBottom: 3,
+            padding: 2,
+            borderRadius: "12px",
+            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
           }}
         >
-          <FormControl
-            id="date-type-select"
-            sx={{
-              minWidth: 150,
-            }}
-          >
-            <InputLabel>Date Type</InputLabel>
-            <StyledSelect
-              value={dateType}
-              onChange={(e) => setDateType(e.target.value)}
-              label="Date Type"
-            >
-              <MenuItem value="year">Year</MenuItem>
-              <MenuItem value="month">Month</MenuItem>
-              <MenuItem value="day">Day</MenuItem>
-            </StyledSelect>
-          </FormControl>
-          <RadioGroup
-            row
-            value={chartType}
-            onChange={(e) => setChartType(e.target.value)}
-          >
-            <FormControlLabel
-              value="bar"
-              control={<StyledRadio />}
-              label="Bar Chart"
-            />
-            <FormControlLabel
-              value="line"
-              control={<StyledRadio />}
-              label="Line Chart"
-            />
-          </RadioGroup>
-          <FormControlLabel
-            control={
-              <StyledCheckbox
-                checked={showRevenues}
-                onChange={(e) => setShowRevenues(e.target.checked)}
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm="auto">
+              <FormControl
+                id="date-type-select"
+                sx={{
+                  minWidth: 150,
+                }}
+              >
+                <InputLabel>Date Type</InputLabel>
+                <StyledSelect
+                  value={dateType}
+                  onChange={(e) => setDateType(e.target.value)}
+                  label="Date Type"
+                >
+                  <MenuItem value="year">Year</MenuItem>
+                  <MenuItem value="month">Month</MenuItem>
+                  <MenuItem value="day">Day</MenuItem>
+                </StyledSelect>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm="auto">
+              <RadioGroup
+                row
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value)}
+              >
+                <FormControlLabel
+                  value="bar"
+                  control={<StyledRadio />}
+                  label="Bar Chart"
+                />
+                <FormControlLabel
+                  value="line"
+                  control={<StyledRadio />}
+                  label="Line Chart"
+                />
+              </RadioGroup>
+            </Grid>
+            <Grid item xs={12} sm="auto">
+              <FormControlLabel
+                control={
+                  <StyledCheckbox
+                    checked={showRevenues}
+                    onChange={(e) => setShowRevenues(e.target.checked)}
+                  />
+                }
+                label="Show Revenues"
               />
-            }
-            label="Show Revenues"
-          />
-          <FormControlLabel
-            control={
-              <StyledCheckbox
-                checked={showExpenses}
-                onChange={(e) => setShowExpenses(e.target.checked)}
+            </Grid>
+            <Grid item xs={12} sm="auto">
+              <FormControlLabel
+                control={
+                  <StyledCheckbox
+                    checked={showExpenses}
+                    onChange={(e) => setShowExpenses(e.target.checked)}
+                  />
+                }
+                label="Show Expenses"
               />
-            }
-            label="Show Expenses"
-          />
-        </Box>
+            </Grid>
+          </Grid>
+        </Paper>
 
-        <Box id="date-selection-container" sx={{ marginBottom: 2 }}>
+        <Box id="date-selection-container" sx={{ marginBottom: 3 }}>
           {dateType === "year" && (
             <Grid container spacing={2}>
               {availableYears.map((year) => (
@@ -946,41 +523,20 @@ const Comparison = () => {
             </Typography>
           </Box>
         ) : (
-          <>
-            <Box
-              id="chart-container"
-              sx={{
-                width: "100%",
-                overflow: "hidden",
-                textAlign: "center",
-              }}
-            >
-              <svg
-                ref={svgRef}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  maxWidth: "900px",
-                  maxHeight: "500px",
-                }}
-              ></svg>
-            </Box>
-            <div
-              id="tooltip"
-              ref={tooltipRef}
-              style={{
-                position: "absolute",
-                opacity: 0,
-                background: "#fff",
-                border: "1px solid #ccc",
-                padding: "8px",
-                borderRadius: "8px",
-                pointerEvents: "none",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "opacity 0.3s ease",
-              }}
-            ></div>
-          </>
+          <Box
+            id="chart-container"
+            sx={{
+              width: "100%",
+              height: "500px",
+              position: "relative",
+            }}
+          >
+            {chartType === "bar" ? (
+              <Bar data={getChartData()} options={chartOptions} />
+            ) : (
+              <Line data={getChartData()} options={chartOptions} />
+            )}
+          </Box>
         )}
       </Box>
     </LocalizationProvider>
