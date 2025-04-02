@@ -54,7 +54,7 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
     }
 
     onCalculate({ total, installment, frequency, endDateObj });
-    onClose(); // Close the dialog after calculation
+    onClose();
   };
 
   const getDaysInterval = (type) => {
@@ -70,22 +70,44 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
   return (
     <div className="dialog-box">
       <div className="dialog-content">
-        <h2>Installment Calculator</h2>
-        {error && <p className="error-text">{error}</p>}
+        <h2 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>Payment Plan Calculator</h2>
+        {error && (
+          <div className="error-text">
+            <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="input-group">
-          <label>Total Amount:</label>
-          <input type="number" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} />
+          <label>Total Amount ($)</label>
+          <input
+            type="number"
+            placeholder="Enter total amount"
+            value={totalAmount}
+            onChange={(e) => setTotalAmount(e.target.value)}
+          />
         </div>
         <div className="input-group">
-          <label>End Date:</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <label>End Date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+          />
         </div>
         <div className="input-group">
-          <label>Installment Amount:</label>
-          <input type="number" value={installmentAmount} onChange={(e) => setInstallmentAmount(e.target.value)} />
+          <label>Installment Amount ($)</label>
+          <input
+            type="number"
+            placeholder="Enter installment amount"
+            value={installmentAmount}
+            onChange={(e) => setInstallmentAmount(e.target.value)}
+          />
         </div>
         <div className="input-group">
-          <label>Payment Frequency:</label>
+          <label>Payment Frequency</label>
           <select className="custom-select" value={frequency} onChange={(e) => setFrequency(e.target.value)}>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -93,8 +115,17 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
             <option value="yearly">Yearly</option>
           </select>
         </div>
-        <button className="calculate-button" onClick={handleSubmit}>Calculate Installments</button>
-        <button className="close-button" onClick={onClose}>Close</button>
+        <div className="button-container">
+          <button className="calculate-button" onClick={handleSubmit}>
+            <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Generate Plan
+          </button>
+          <button className="close-button" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -102,26 +133,29 @@ const InstallmentForm = ({ onCalculate, onClose }) => {
 
 const InstallmentTable = ({ installments, total }) => (
   <div className="table-container">
-    <h2>Installment Schedule</h2>
+    <h3 style={{ color: '#2c3e50', marginBottom: '1rem' }}>Payment Schedule</h3>
     <table>
       <thead>
         <tr>
-          <th style={{ textAlign: 'left' }}>Installment #</th>
-          <th style={{ textAlign: 'left' }}>Date</th>
-          <th style={{ textAlign: 'left' }}>Amount</th>
+          <th>#</th>
+          <th>Due Date</th>
+          <th>Amount</th>
         </tr>
       </thead>
       <tbody>
         {installments.map((installment, index) => (
           <tr key={index}>
-            <td style={{ textAlign: 'left' }}>{index + 1}</td>
-            <td style={{ textAlign: 'left' }}>{installment.date}</td>
-            <td style={{ textAlign: 'left' }}>{installment.amount.toFixed(2)}</td>
+            <td>{index + 1}</td>
+            <td>{installment.date}</td>
+            <td>${installment.amount.toFixed(2)}</td>
           </tr>
         ))}
+        <tr style={{ fontWeight: '600' }}>
+          <td colSpan="2">Total Amount</td>
+          <td>${total.toFixed(2)}</td>
+        </tr>
       </tbody>
     </table>
-    <p>Total Amount: {total.toFixed(2)}</p>
   </div>
 );
 
@@ -181,58 +215,46 @@ const InstallmentCalculator = () => {
       'Amount': installment.amount.toFixed(2),
     }));
 
-    // Add total row
     worksheetData.push({
       'Installment #': 'Total',
       'Date': '',
       'Amount': totalAmount.toFixed(2),
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData, { header: ['Installment #', 'Date', 'Amount'] });
-
-    // Apply some styling
-    const wscols = [
-      { wch: 15 }, // Installment # column width
-      { wch: 15 }, // Date column width
-      { wch: 15 }, // Amount column width
-    ];
-    worksheet['!cols'] = wscols;
-
-    // Add bold font to the header
-    const headerStyle = { font: { bold: true } };
-    for (let col = 0; col < 3; col++) {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
-      if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
-      worksheet[cellRef].s = headerStyle;
-    }
-
-    // Add bold font to the total row
-    const totalRowRef = XLSX.utils.encode_cell({ r: worksheetData.length, c: 2 });
-    if (!worksheet[totalRowRef].s) worksheet[totalRowRef].s = {};
-    worksheet[totalRowRef].s = headerStyle;
-
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Installments');
-
     XLSX.writeFile(workbook, 'installments.xlsx');
   };
 
   return (
     <div className="calculator-container">
-      <h1 style={{fontFamily:'-moz-initial'}}>Installment Calculator</h1>
+      <h1>Payment Plan Calculator</h1>
       <div className="content-container">
-        <button className="open-dialog-button" onClick={() => setShowDialog(true)}>Open Calculator</button>
+        <button className="open-dialog-button" onClick={() => setShowDialog(true)}>
+          <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create New Plan
+        </button>
+
         {showDialog && (
           <InstallmentForm
             onCalculate={calculateInstallments}
             onClose={() => setShowDialog(false)}
           />
         )}
+
         {installments.length > 0 && (
-          <>
+          <div style={{ marginTop: '2rem' }}>
             <InstallmentTable installments={installments} total={totalAmount} />
-            <button className="export-button" onClick={exportToExcel}>Export to Excel</button>
-          </>
+            <button className="export-button" onClick={exportToExcel}>
+              <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              </svg>
+              Export to Excel
+            </button>
+          </div>
         )}
       </div>
     </div>

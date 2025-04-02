@@ -1,189 +1,156 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+:root {
+  --primary-color: #2A2A2A;
+  --secondary-color: #45B7D1;
+  --background-light: #f9f9f9;
+  --text-dark: #333;
+  --text-light: #fff;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
 .feedback-page {
-  font-family: 'Roboto', sans-serif;
   min-height: 100vh;
-  background: #f9f9f9;
+  background: var(--background-light);
 }
 
-/* تصميم الهيدر العنوان في أعلى الصفحة */
 .page-header {
-  width: 100%;
-  background: #007BFF;
-  padding: 20px 0;
+  background: linear-gradient(135deg, var(--secondary-color), #3a7bd5);
+  padding: 4rem 1rem;
   text-align: center;
-  color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  box-shadow: var(--shadow);
 }
 
-.page-header h1 {
-  font-size: 2em;
-  margin: 0;
-}
-
-.feedback-container {
-  max-width: 1000px;
-  width: 800px;
-  margin: 20px auto;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-}
-
-.feedback-window {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-height: calc(100vh - 160px); /* تخصيص ارتفاع ديناميكي بناءً على ارتفاع الهيدر */
-  overflow-y: auto;
-  width: 90%;
+.header-gradient {
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-/* تقليل عرض الرسالة وتوسيطها */
-.feedback-message {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  max-width: 600px; /* تقليل عرض الرسالة */
-  width: 500px;
-margin-bottom: 3.5px;
-margin-left: 9%;}
-
-.feedback-message:hover {
-  transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.page-header h1 {
+  color: var(--text-light);
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.message-avatar img {
-  width: 50px;
-  height: 50px;
+.header-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+.feedback-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.feedback-window {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 2rem 0;
+}
+
+.feedback-card {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  position: relative;
+  transition: transform 0.3s ease;
+  box-shadow: var(--shadow);
+}
+
+.feedback-card:hover {
+  transform: translateY(-5px);
+}
+
+.quote-icon {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 3.5rem;
+  color: var(--secondary-color);
+  opacity: 0.3;
+}
+
+.avatar-container {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #007BFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: var(--text-light);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.message-content {
-  flex: 1;
+.user-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.message-username {
+.username {
   font-weight: 600;
-  color: #007BFF;
-  margin-bottom: 8px;
-  display: block;
+  color: var(--primary-color);
+  font-size: 1.1rem;
 }
 
-.message-text {
-  color: #555;
-  line-height: 1.5;
+.rating-stars {
+  display: flex;
+  gap: 2px;
 }
 
-/* ============================
-   وسائط التجاوب حسب حجم الشاشة
-   ============================ */
+.star {
+  color: #ddd;
+  font-size: 1.1rem;
+}
 
-/* Mobile (portrait): 0px - 575px */
-@media (max-width: 575px) {
+.star.filled {
+  color: #FFD700;
+}
+
+.feedback-text {
+  color: var(--text-dark);
+  line-height: 1.6;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
   .page-header h1 {
-    font-size: 1.5em;
+    font-size: 2rem;
   }
-  .feedback-container {
-    width: 95%;
-    margin: 10px auto;
-    padding: 10px;
-  }
+  
   .feedback-window {
-    width: 95%;
-    margin-left: -4.5%;
-
-
+    grid-template-columns: 1fr;
   }
-  .feedback-message {
-    width: 90%;
-    max-width: 90%;
-    padding: 10px;
-    gap: 10px;
-
-
-  }
-  .message-avatar img {
-    width: 40px;
-    height: 40px;
+  
+  .feedback-card {
+    padding: 1.5rem;
   }
 }
 
-/* Mobile (landscape): 576px - 767px */
-@media (min-width: 576px) and (max-width: 767px) {
-  .page-header h1 {
-    font-size: 1.75em;
-  }
-  .feedback-container {
-    width: 90%;
-    padding: 10px;
-
-  }
-  .feedback-window {
-    width: 90%;
-
-  }
-  .feedback-message {
-    width: 90%;
-    max-width: 90%;
-    padding: 12px;
-    gap: 12px;
-  }
-  .message-avatar img {
-    width: 45px;
-    height: 45px;
-  }
+/* شريط التمرير المخصص */
+.feedback-window::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Tablet: 768px - 991px */
-@media (min-width: 768px) and (max-width: 991px) {
-  .feedback-container {
-    width: 90%;
-    padding: 15px;
-  }
-  .feedback-window {
-    width: 90%;
-  }
-  .feedback-message {
-    width: 90%;
-    max-width: 600px;
-  }
-  .page-header h1 {
-    font-size: 2em;
-  }
+.feedback-window::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
 }
 
-/* Laptop: 992px - 1199px */
-@media (min-width: 992px) and (max-width: 1199px) {
-  .feedback-container {
-    width: 800px;
-  }
-  .feedback-message {
-    width: 500px;
-    max-width: 600px;
-  }
-}
-
-/* Desktop: 1200px and above */
-@media (min-width: 1200px) {
-  .feedback-container {
-    width: 800px; /* أو يمكن استخدام max-width: 1000px حسب الرغبة */
-  }
-  .feedback-message {
-    width: 500px;
-    max-width: 600px;
-  }
+.feedback-window::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: 10px;
 }
