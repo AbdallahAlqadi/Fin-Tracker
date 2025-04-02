@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../cssStyle/signup.css';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2'; // استيراد SweetAlert2
+import Swal from 'sweetalert2';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -13,7 +13,6 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // التحقق من إدخال جميع الحقول
     if (!username || !email || !password) {
       Swal.fire({
         icon: 'error',
@@ -23,7 +22,6 @@ const Signup = () => {
       return;
     }
 
-    // قيود على البريد الإلكتروني باستخدام تعبير منتظم
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       Swal.fire({
@@ -34,12 +32,6 @@ const Signup = () => {
       return;
     }
 
-    // التحقق من قوة كلمة المرور باستخدام تعبير منتظم:
-    // - على الأقل 8 أحرف
-    // - حرف كبير واحد على الأقل
-    // - حرف صغير واحد على الأقل
-    // - رقم واحد على الأقل
-    // - حرف خاص واحد على الأقل (من @$!%*?&)
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
       Swal.fire({
@@ -63,7 +55,7 @@ const Signup = () => {
           title: 'Success!',
           text: 'User added successfully!'
         }).then(() => {
-          navigate('/'); // إعادة التوجيه إلى صفحة تسجيل الدخول بعد الضغط على الزر
+          navigate('/');
         });
       } else {
         Swal.fire({
@@ -82,101 +74,84 @@ const Signup = () => {
     }
   };
 
-  // تغيير خلفية الصفحة عند فتح صفحة التسجيل
   useEffect(() => {
-    if (window.location.pathname === '/signup') {
-      document.body.style.background = `
-        linear-gradient(
-          135deg, 
-          rgba(173, 216, 230, 0.8), 
-          rgba(135, 206, 235, 0.9), 
-          rgba(70, 130, 180, 0.8), 
-          rgba(25, 25, 112, 0.85)
-        )`;
-      document.body.style.backgroundSize = '200% 200%';
-      document.body.style.animation = 'gradientShift 8s ease infinite';
+    // تغيير خلفية الصفحة بتأثير متدرج احترافي
+    document.body.style.background = `#4299e1`;
+    document.body.style.backgroundSize = '400% 400%';
+    document.body.style.animation = 'bgAnimation 15s ease infinite';
 
+    if (!document.getElementById('bgAnimationStyle')) {
       const style = document.createElement('style');
+      style.id = 'bgAnimationStyle';
       style.textContent = `
-        @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
+        @keyframes bgAnimation {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
       `;
       document.head.appendChild(style);
-
-      return () => {
-        // إزالة التأثير عند مغادرة الصفحة
-        document.body.style.background = '';
-        document.body.style.animation = '';
-      };
     }
+
+    return () => {
+      document.body.style.background = '';
+      document.body.style.animation = '';
+    };
   }, []);
 
   return (
-    <div>
-      <div className="title-container">
-        <h1 className="title">Fin Tracker</h1>
-      </div>
-      <div className="signup-container">
-        <div className="signup-box">
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3135/3135679.png"
-            alt="Budget Logo"
+    <div className="signup-wrapper">
+      <div className="signup-card">
+        <div className="header">
+          <img 
+            src="https://cdn-icons-png.flaticon.com/512/3135/3135679.png" 
+            alt="Logo" 
             className="logo"
           />
-          <h2>Sign Up</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label htmlFor="username">Username</label>
-              <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <button type="submit" className="signup-button">Sign Up</button>
-          </form>
-          <div className="footer">
-            <p>
-              Already have an account?{' '}
-              <a style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
-                Login
-              </a>
-            </p>
+          <h1>Fin Tracker</h1>
+        </div>
+        <h2>Create Account</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="input-container">
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              required
+            />
           </div>
+          <div className="input-container">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          <div className="input-container">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          <button type="submit" className="btn-signup">Sign Up</button>
+        </form>
+        <div className="footer-text">
+          <p>
+            Already have an account?{' '}
+            <span onClick={() => navigate('/')}>Login</span>
+          </p>
         </div>
       </div>
     </div>

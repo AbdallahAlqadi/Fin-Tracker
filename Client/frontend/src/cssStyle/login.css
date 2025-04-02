@@ -1,107 +1,79 @@
-/* login.css */
-
-/* إعادة تعيين بعض الأنماط الافتراضية */
-* {
+/* تنسيق الصفحة بالكامل */
+body {
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(-45deg, #4facfe, #00f2fe, #4299e1, #6a11cb);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
 }
 
-/* خلفية متدرجة مع حركة ناعمة */
-body {
-  background: linear-gradient(135deg, #add8e6, #87ceeb, #4682b4, #191970);
-  background-size: 200% 200%;
-  animation: gradientShift 8s ease infinite;
-  min-height: 100vh;
+/* حاوية الصفحة لتوسيط المحتوى */
+.login-page {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px; /* لضمان وجود مسافة عند الحواف على الأجهزة الصغيرة */
+  min-height: 100vh;
 }
 
-/* حركة الخلفية */
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-
-/* عنوان الموقع */
-.title-container {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #fff;
-  font-size: 2.5rem;
-  font-weight: bold;
-}
-
-/* الحاوية الرئيسية للنموذج */
-.login-container {
-  width: 100%;
-  max-width: 400px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* صندوق النموذج */
+/* صندوق تسجيل الدخول */
 .login-box {
-  width: 100%;
-}
-
-/* شعار الصفحة */
-.login-box img.logo {
-  display: block;
-  margin: 0 auto 20px;
-  width: 80px;
-  height: 80px;
-}
-
-/* عنوان النموذج */
-.login-box h2 {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 40px;
+  width: 360px;
   text-align: center;
-  margin-bottom: 25px;
-  color: #4682b4;
+  animation: fadeIn 1s ease-in-out;
 }
 
-/* تنسيق مجموعات الإدخال */
-.input-group {
-  width: 100%;
+/* تنسيق الشعار والعنوان */
+.logo-container {
   margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;  /* محاذاة المحتوى لليسار بشكل افتراضي */
+}
+
+.logo {
+  width: 60px;
+  margin-bottom: 10px;
+}
+
+/* عناوين الصفحة */
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+h2 {
+  margin: 20px 0;
+  font-size: 1.4rem;
+  color: #555;
+}
+
+/* تنسيق المجموعات المدخلة */
+.input-group {
+  text-align: left;
+  margin-bottom: 20px;
 }
 
 .input-group label {
-  width: 100%;
+  display: block;
   margin-bottom: 8px;
-  color: #333;
-  font-weight: bold;
-  text-align: left;
+  color: #444;
+  font-weight: 600;
 }
 
-.title{
-  margin-left: -6.5% !important;
-}
 .input-group input {
   width: 100%;
-  padding: 12px 15px;
+  padding: 12px;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 6px;
+  transition: border-color 0.3s, box-shadow 0.3s;
   font-size: 1rem;
-  transition: border-color 0.3s;
 }
 
 .input-group input:focus {
-  border-color: #4682b4;
+  border-color: #4299e1;
+  box-shadow: 0 0 5px rgba(66, 153, 225, 0.5);
   outline: none;
 }
 
@@ -109,76 +81,46 @@ body {
 .login-button {
   width: 100%;
   padding: 12px;
-  background-color: #4682b4;
+  background: #4299e1;
   border: none;
+  border-radius: 6px;
   color: #fff;
-  font-size: 1.1rem;
-  border-radius: 8px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: 10px;
 }
 
 .login-button:hover {
-  background-color: #3571a0;
+  background: #3182ce;
+  transform: translateY(-2px);
 }
 
-/* تذييل الصفحة */
-.footer {
-  text-align: center;
-  margin-top: 20px;
-  width: 100%;
+/* رابط التسجيل */
+.signup-link {
+  margin-top: 15px;
 }
 
-.footer p {
+.signup-link p {
   color: #555;
   font-size: 0.9rem;
 }
 
-.footer a {
-  color: #4682b4;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.footer a:hover {
+.signup-link span {
+  color: #007BFF;
+  cursor: pointer;
   text-decoration: underline;
 }
 
-/* تحسين التصميم للشاشات الصغيرة */
-@media (max-width: 480px) {
-  .login-container {
-    width: 120%;
-    padding: 20px;
-margin-left: -29px;
-    
-
-  }
-  .title{
-text-align: center;  
-margin-left: -6% !important;
-
+/* تأثير حركة الخلفية */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-  .title-container {
-
-    font-size: 2rem;
-  }
-  .login-box h2 {
-    font-size: 1.5rem;
-  }
-  .input-group input {
-    padding: 10px 12px;
-  }
-  .login-button {
-    padding: 10px;
-    font-size: 1rem;
-  }
-  /* توسيط محتويات مجموعات الإدخال على الشاشات الصغيرة */
-  .input-group {
-    align-items: center;
-  }
-  .input-group label,
-  .input-group input {
-    text-align: center;
-  }
+/* تأثير ظهور تدريجي للصندوق */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
