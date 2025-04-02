@@ -1,27 +1,119 @@
-/* استيراد خط عصري */
-@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap");
-
-/* الحاوية الرئيسية */
-
-
-/* تصميم الكارد المُطوَّر */
+/* FeedbackForm.css */
 .feedback-card {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(15px);
-  padding: 30px 40px; /* تقليل الحشو لتصغير حجم الكارد */
-  border-radius: 15px;
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4);
-  max-width: 600px; /* تقليل عرض الكارد */
-  width: 100%;
-  text-align: center;
-  animation: fadeIn 0.8s ease-in-out;
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
-/* أنيميشن عند ظهور الصفحة */
-@keyframes fadeIn {
+.feedback-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+
+.feedback-title {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 2.2rem;
+  color: #2d3436;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  background: linear-gradient(45deg, #0984e3, #6c5ce7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.feedback-subtitle {
+  font-size: 1.1rem;
+  color: #636e72;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.feedback-form {
+  position: relative;
+}
+
+.feedback-textarea {
+  width: 100%;
+  height: 180px;
+  padding: 1.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #2d3436;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  resize: none;
+}
+
+.feedback-textarea:focus {
+  border-color: #74b9ff;
+  box-shadow: 0 6px 20px rgba(116,185,255,0.15);
+  outline: none;
+}
+
+.feedback-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2.5rem;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #74b9ff 0%, #6c5ce7 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  float: right;
+  box-shadow: 0 4px 15px rgba(116,185,255,0.3);
+}
+
+.feedback-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(116,185,255,0.4);
+  background: linear-gradient(135deg, #6c5ce7 0%, #74b9ff 100%);
+}
+
+.feedback-button:disabled {
+  background: #dfe6e9;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.feedback-button svg {
+  font-size: 1.2rem;
+}
+
+.feedback-message {
+  padding: 1.2rem 2rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 500;
+  opacity: 0;
+  animation: slideIn 0.4s ease forwards;
+}
+
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -29,90 +121,38 @@
   }
 }
 
-/* عنوان الصفحة */
-.feedback-title {
-  font-size: 24px; /* تقليل حجم الخط */
-  font-weight: bold;
-  margin-bottom: 12px; /* تقليل المسافة أسفل العنوان */
-}
-
-/* العنوان الفرعي */
-.feedback-subtitle {
-  font-size: 16px; /* تقليل حجم الخط */
-  opacity: 0.8;
-  margin-bottom: 20px; /* تقليل المسافة أسفل العنوان الفرعي */
-}
-
-/* منطقة إدخال النص */
-.feedback-textarea {
-  width: 100%;
-  min-height: 180px; /* تقليل ارتفاع منطقة الإدخال */
-  padding: 15px; /* تقليل الحشو الداخلي */
-  border-radius: 8px;
-  border: 2px solid #24bdfa; /* إبراز حد العنصر */
-  background: rgba(255, 255, 255, 0.1);
-  font-size: 16px; /* تقليل حجم الخط */
-  transition: 0.3s;
-  outline: none;
-  resize: none;
-}
-
-.feedback-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.feedback-textarea:focus {
-  border-color: #87CEFA; /* تغيير اللون عند التركيز */
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* زر الإرسال */
-.feedback-button {
-  margin-top: 20px;
-  padding: 12px; /* تقليل الحشو داخل الزر */
-  width: 100%;
-  border: none;
-  background: #87CEFA; /* اللون الأزرق الفاتح */
-  color: #333;
-  font-size: 18px; /* تقليل حجم الخط */
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.feedback-button:hover {
-  background: #ADD8E6; /* نسخة أفتح من الأزرق عند التحويم */
-}
-
-.feedback-button:disabled {
-  background: #888;
-  cursor: not-allowed;
-}
-
-/* رسائل التنبيه */
-.feedback-message {
-  margin-top: 20px;
-  padding: 12px; /* تقليل الحشو */
-  font-weight: bold;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  animation: fadeIn 0.5s ease-in-out;
-}
-
 .feedback-message.success {
-  background: rgba(46, 204, 113, 0.8);
-  color: #fff;
+  background: #d1fae5;
+  color: #065f46;
+  border: 2px solid #34d399;
 }
 
 .feedback-message.error {
-  background: rgba(231, 76, 60, 0.8);
-  color: #fff;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 2px solid #f87171;
+}
+
+@media (max-width: 768px) {
+  .feedback-card {
+    margin: 1.5rem;
+    padding: 1.5rem;
+  }
+  
+  .feedback-title {
+    font-size: 1.8rem;
+  }
+  
+  .feedback-subtitle {
+    font-size: 1rem;
+  }
+  
+  .feedback-textarea {
+    height: 150px;
+  }
+  
+  .feedback-button {
+    width: 100%;
+    justify-content: center;
+  }
 }

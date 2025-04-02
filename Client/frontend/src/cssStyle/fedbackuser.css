@@ -1,11 +1,24 @@
-:root {
+.ft-feedback-page {
   --primary-color: #2A2A2A;
   --secondary-color: #45B7D1;
   --background-light: #f9f9f9;
   --text-dark: #333;
   --text-light: #fff;
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-height: 100vh;
+  background: var(--background-light);
 }
+
+/* باقي التنسيق سيبقى كما هو مع استخدام المتغيرات */
+.ft-page-header {
+  background: linear-gradient(135deg, var(--secondary-color), #3a7bd5);
+  padding: 4rem 1rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+/* ... والمتبقي من التنسيق */
+
 
 * {
   margin: 0;
@@ -14,50 +27,50 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.feedback-page {
+.ft-feedback-page {
   min-height: 100vh;
   background: var(--background-light);
 }
 
-.page-header {
+.ft-page-header {
   background: linear-gradient(135deg, var(--secondary-color), #3a7bd5);
   padding: 4rem 1rem;
   text-align: center;
   box-shadow: var(--shadow);
 }
 
-.header-gradient {
+.ft-header-gradient {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.page-header h1 {
+.ft-page-header h1 {
   color: var(--text-light);
   font-size: 2.8rem;
   margin-bottom: 0.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.header-subtitle {
+.ft-header-subtitle {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.2rem;
   font-weight: 300;
 }
 
-.feedback-container {
+.ft-feedback-container {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
 
-.feedback-window {
+.ft-feedback-window {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   padding: 2rem 0;
 }
 
-.feedback-card {
+.ft-feedback-card {
   background: white;
   border-radius: 15px;
   padding: 2rem;
@@ -66,11 +79,11 @@
   box-shadow: var(--shadow);
 }
 
-.feedback-card:hover {
+.ft-feedback-card:hover {
   transform: translateY(-5px);
 }
 
-.quote-icon {
+.ft-quote-icon {
   position: absolute;
   top: 15px;
   right: 20px;
@@ -79,7 +92,7 @@
   opacity: 0.3;
 }
 
-.avatar-container {
+.ft-avatar-container {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -92,34 +105,34 @@
   margin-bottom: 1rem;
 }
 
-.user-info {
+.ft-user-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.username {
+.ft-username {
   font-weight: 600;
   color: var(--primary-color);
   font-size: 1.1rem;
 }
 
-.rating-stars {
+.ft-rating-stars {
   display: flex;
   gap: 2px;
 }
 
-.star {
+.ft-star {
   color: #ddd;
   font-size: 1.1rem;
 }
 
-.star.filled {
+.ft-star.filled {
   color: #FFD700;
 }
 
-.feedback-text {
+.ft-feedback-text {
   color: var(--text-dark);
   line-height: 1.6;
   font-size: 1rem;
@@ -127,30 +140,30 @@
 }
 
 @media (max-width: 768px) {
-  .page-header h1 {
+  .ft-page-header h1 {
     font-size: 2rem;
   }
   
-  .feedback-window {
+  .ft-feedback-window {
     grid-template-columns: 1fr;
   }
   
-  .feedback-card {
+  .ft-feedback-card {
     padding: 1.5rem;
   }
 }
 
-/* شريط التمرير المخصص */
-.feedback-window::-webkit-scrollbar {
+/* Custom scrollbar styling */
+.ft-feedback-window::-webkit-scrollbar {
   width: 8px;
 }
 
-.feedback-window::-webkit-scrollbar-track {
+.ft-feedback-window::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
 }
 
-.feedback-window::-webkit-scrollbar-thumb {
+.ft-feedback-window::-webkit-scrollbar-thumb {
   background: var(--secondary-color);
   border-radius: 10px;
 }
