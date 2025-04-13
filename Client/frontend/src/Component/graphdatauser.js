@@ -179,6 +179,13 @@ const Graph = () => {
           );
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
+        } else if (dateType === "full") {
+          // التحقق من تطابق اليوم والشهر والسنة
+          return (
+            selectedDate.getDate() === itemDate.getDate() &&
+            selectedDate.getMonth() === itemDate.getMonth() &&
+            selectedDate.getFullYear() === itemDate.getFullYear()
+          );
         }
         return true;
       });
