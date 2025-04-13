@@ -16,12 +16,18 @@ import {
   IconButton,
   useMediaQuery,
   Container,
+  Fab,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import { styled, keyframes } from '@mui/system';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 
 // Smooth animation for cards
 const floatAnimation = keyframes`
@@ -72,6 +78,7 @@ const CategoryCard = styled(Box)(({ theme }) => ({
 }));
 
 const DashboardUser = () => {
+  // Original states
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -85,12 +92,19 @@ const DashboardUser = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState('all');
 
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryType, setNewCategoryType] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState(null);
+  const [newErrorMessage, setNewErrorMessage] = useState('');
+  const [isNewSubmitting, setIsNewSubmitting] = useState(false);
+
   const isSmallDevice = useMediaQuery('(max-width:370px)');
 
-  // Function to get today's date in Amman time
-  const getTodayDate = () => {
-    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
-  };
+  // // Function to get today's date (Amman time)
+  // const getTodayDate = () => {
+  //   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
+  // };
 
   // Fetch categories from the server
   useEffect(() => {
@@ -117,6 +131,7 @@ const DashboardUser = () => {
     fetchCategories();
   }, []);
 
+  // Dialog for adding values to existing category (ex: adding budget)
   const handleClickOpen = (category) => {
     if (addedItems.includes(category._id)) return; // Prevent click if item already added
     setSelectedCategory(category);
@@ -131,7 +146,7 @@ const DashboardUser = () => {
     setErrorMessage('');
   };
 
-  // Submit value to server after validating input
+  // Submit value for the selected category
   const handleSubmit = async () => {
     if (!selectedCategory || !value) {
       setErrorMessage('Please enter a valid value.');
@@ -225,6 +240,67 @@ const DashboardUser = () => {
   const getCategoryIcon = (type) =>
     type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
 
+  // Handlers for the "Add New Category" dialog
+  const handleNewDialogOpen = () => {
+    setNewDialogOpen(true);
+    setNewErrorMessage('');
+  };
+
+  const handleNewDialogClose = () => {
+    setNewDialogOpen(false);
+    setNewCategoryName('');
+    setNewCategoryType('');
+    setNewCategoryImage(null);
+    setNewErrorMessage('');
+  };
+
+  const handleImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setNewCategoryImage(event.target.files[0]);
+    }
+  };
+
+  // Submit new category
+  const handleNewCategorySubmit = async () => {
+    if (!newCategoryName || !newCategoryType) {
+      setNewErrorMessage('Please fill in all required fields.');
+      return;
+    }
+
+    setIsNewSubmitting(true);
+    const token = sessionStorage.getItem('jwt');
+
+    // Prepare data using FormData if an image is attached
+    const formData = new FormData();
+    formData.append('categoryName', newCategoryName);
+    formData.append('categoryType', newCategoryType);
+    if (newCategoryImage) {
+      formData.append('image', newCategoryImage);
+    }
+
+    try {
+      const response = await axios.post(
+        'https://fin-tracker-ncbx.onrender.com/api/addCategory',
+        formData,
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log('New Category Response:', response.data);
+      // Update the category list with the newly created category
+      setCategories((prev) => [...prev, response.data.data]);
+      handleNewDialogClose();
+    } catch (error) {
+      console.error('Error adding new category:', error);
+      setNewErrorMessage('An error occurred while adding the category.');
+    } finally {
+      setIsNewSubmitting(false);
+    }
+  };
+
   return (
     <Container
       maxWidth="lg"
@@ -233,6 +309,7 @@ const DashboardUser = () => {
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #F0F8FF 0%, #E6F2FF 100%)',
         fontFamily: 'Arial, sans-serif',
+        position: 'relative',
       }}
     >
       <Typography
@@ -373,7 +450,7 @@ const DashboardUser = () => {
 
       {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: '#666', mt: 2 }}>
-          No Item found.
+          No items found.
         </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
@@ -548,7 +625,7 @@ const DashboardUser = () => {
         ))
       )}
 
-      {/* Enhanced Dialog Box design */}
+      {/* Dialog for adding value to an existing category */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -577,8 +654,7 @@ const DashboardUser = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {selectedCategory && getCategoryIcon(selectedCategory.categoryType)}{' '}
-              {selectedCategory?.categoryName}
+              {selectedCategory && getCategoryIcon(selectedCategory.categoryType)} {selectedCategory?.categoryName}
             </Box>
             <IconButton onClick={handleClose} sx={{ color: '#FFFFFF' }}>
               <CloseIcon />
@@ -667,6 +743,132 @@ const DashboardUser = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Dialog for adding a new category with improved styling */}
+      <Dialog
+        open={newDialogOpen}
+        onClose={handleNewDialogClose}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            minWidth: 320,
+            borderRadius: '20px',
+            boxShadow: '0px 12px 40px rgba(0,0,0,0.25)',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #4A90E2, #357ABD)',
+            color: '#FFFFFF',
+            p: 3,
+            textAlign: 'center',
+            fontSize: { xs: '1.75rem', sm: '2rem' },
+            fontWeight: 'bold',
+            borderTopLeftRadius: '20px',
+            borderTopRightRadius: '20px',
+          }}
+        >
+          Add New Category
+          <IconButton onClick={handleNewDialogClose} sx={{ position: 'absolute', right: 12, top: 12, color: '#FFFFFF' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, backgroundColor: '#FAFAFA' }}>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Category Name"
+            fullWidth
+            variant="outlined"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            sx={{ mb: 3 }}
+          />
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel id="category-type-label">Category Type</InputLabel>
+            <Select
+              labelId="category-type-label"
+              value={newCategoryType}
+              label="Category Type"
+              onChange={(e) => setNewCategoryType(e.target.value)}
+            >
+              <MenuItem value="expenses">Expenses</MenuItem>
+              <MenuItem value="income">Income</MenuItem>
+            </Select>
+          </FormControl>
+          <Button variant="outlined" component="label" fullWidth sx={{ mb: 3 }}>
+            {newCategoryImage ? 'Image Selected' : 'Choose Image'}
+            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+          </Button>
+          {newErrorMessage && (
+            <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center' }}>
+              {newErrorMessage}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            p: 3,
+            justifyContent: 'center',
+            gap: 2,
+            backgroundColor: '#FAFAFA',
+          }}
+        >
+          <Button
+            onClick={handleNewDialogClose}
+            variant="outlined"
+            sx={{
+              borderColor: '#4A90E2',
+              color: '#4A90E2',
+              px: 4,
+              py: 1,
+              borderRadius: 2,
+              fontSize: 16,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleNewCategorySubmit}
+            variant="contained"
+            disabled={isNewSubmitting}
+            sx={{
+              backgroundColor: '#4A90E2',
+              color: '#FFFFFF',
+              px: 4,
+              py: 1,
+              borderRadius: 2,
+              fontSize: 16,
+              '&:hover': {
+                backgroundColor: '#357ABD',
+              },
+            }}
+          >
+            {isNewSubmitting ? <CircularProgress size={24} sx={{ color: '#FFFFFF' }} /> : 'Submit'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Floating Action Button for adding a new category */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleNewDialogOpen}
+        sx={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          backgroundColor: '#4A90E2',
+          '&:hover': {
+            backgroundColor: '#357ABD',
+          },
+        }}
+      >
+        <AddIcon />
+      </Fab>
     </Container>
   );
 };
