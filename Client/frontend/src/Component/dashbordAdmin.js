@@ -271,14 +271,14 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
       {showDeleteConfirm && (
         <div className="modal">
           <div className="modal-content">
-            <h3>تأكيد الحذف</h3>
-            <p>هل أنت متأكد من حذف هذا التصنيف؟</p>
+            <h3>Delete Confirmation</h3>
+            <p>Are you sure you want to delete this category?</p>
             <div className="modal-actions">
               <button className="confirm-btn" onClick={confirmDelete}>
-                نعم
+                Yes
               </button>
               <button className="cancel-btn" onClick={cancelDelete}>
-                لا
+                No
               </button>
             </div>
           </div>
@@ -312,8 +312,8 @@ const CombinedPage = () => {
 
   const handleCategoryAdded = (newCategory) => {
     setCategories([...categories, newCategory]);
-    setSuccessMessage('تمت إضافة التصنيف بنجاح!');
-    setTimeout(() => setSuccessMessage(''), 3000); // إخفاء الرسالة بعد 3 ثوانٍ
+    setSuccessMessage('Category added successfully!');
+    setTimeout(() => setSuccessMessage(''), 3000); // Hide message after 3 seconds
   };
 
   const handleDelete = async (id) => {
@@ -343,7 +343,7 @@ const CombinedPage = () => {
       }
     } catch (err) {
       alert(
-        'خطأ في تحديث التصنيف: ' +
+        'Error updating category: ' +
           (err.response?.data?.message || err.message)
       );
     }
@@ -353,8 +353,8 @@ const CombinedPage = () => {
     <div className="combined-page">
       <CategoryForm onCategoryAdded={handleCategoryAdded} />
       {successMessage && <div className="success-message">{successMessage}</div>}
-      {loading && <p>جارٍ تحميل التصنيفات...</p>}
-      {error && <p>خطأ: {error}</p>}
+      {loading && <p>Loading categories...</p>}
+      {error && <p>Error: {error}</p>}
       <CategoryList
         categories={categories}
         onDelete={handleDelete}

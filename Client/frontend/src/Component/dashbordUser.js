@@ -23,14 +23,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
 
-// حركة انسيابية للبطاقات
+// Smooth animation for cards
 const floatAnimation = keyframes`
   0% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
   100% { transform: translateY(0); }
 `;
 
-// حركة تلاشي دخول البطاقات
+// Fade-in animation for cards
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -42,7 +42,7 @@ const fadeIn = keyframes`
   }
 `;
 
-// تصميم بطاقة التصنيف بشكل حديث
+// Modern design for category card
 const CategoryCard = styled(Box)(({ theme }) => ({
   border: '2px solid #4A90E2',
   backgroundColor: '#FFFFFF',
@@ -87,19 +87,19 @@ const DashboardUser = () => {
 
   const isSmallDevice = useMediaQuery('(max-width:370px)');
 
-  // دالة للحصول على تاريخ اليوم بتوقيت عمّان
+  // Function to get today's date in Amman time
   const getTodayDate = () => {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
   };
 
-  // جلب التصنيفات من الخادم
+  // Fetch categories from the server
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
         setCategories(response.data.data);
 
-        // تهيئة عدد العناصر المرئية لكل نوع (افتراضي 12)
+        // Initialize visible items count for each type (default 12)
         const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
             acc[category.categoryType] = 12;
@@ -118,7 +118,7 @@ const DashboardUser = () => {
   }, []);
 
   const handleClickOpen = (category) => {
-    if (addedItems.includes(category._id)) return; // منع الضغط إذا تمت الإضافة
+    if (addedItems.includes(category._id)) return; // Prevent click if item already added
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
@@ -131,16 +131,16 @@ const DashboardUser = () => {
     setErrorMessage('');
   };
 
-  // إرسال القيمة إلى الخادم بعد التحقق من صحة المدخلات
+  // Submit value to server after validating input
   const handleSubmit = async () => {
     if (!selectedCategory || !value) {
-      setErrorMessage('يرجى إدخال قيمة صحيحة.');
+      setErrorMessage('Please enter a valid value.');
       return;
     }
 
     const parsedValue = parseFloat(value);
     if (isNaN(parsedValue) || parsedValue < 0) {
-      setErrorMessage('يرجى إدخال رقم عشري غير سالب.');
+      setErrorMessage('Please enter a non-negative decimal number.');
       return;
     }
 
@@ -169,7 +169,7 @@ const DashboardUser = () => {
       setAddedItems((prev) => [...prev, currentCategory._id]);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.error(error.response.data.error || 'لقد أضفت هذا العنصر بالفعل اليوم.');
+        console.error(error.response.data.error || 'You have already added this item today.');
         setAddedItems((prev) => [...prev, currentCategory._id]);
       } else {
         console.error('Error submitting value:', error);
@@ -186,7 +186,7 @@ const DashboardUser = () => {
     }));
   };
 
-  // خيارات البحث بناءً على أسماء التصنيفات
+  // Search options based on category names
   const categoryOptions = categories.map((cat) => cat.categoryName);
 
   if (loading) {
@@ -197,7 +197,7 @@ const DashboardUser = () => {
     );
   }
 
-  // تصفية التصنيفات بناءً على البحث والنوع
+  // Filter categories based on search query and type
   let filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -212,7 +212,7 @@ const DashboardUser = () => {
     );
   }
 
-  // تجميع التصنيفات بحسب النوع بعد التصفية
+  // Group categories by type after filtering
   const groupedCategories = filteredCategories.reduce((acc, category) => {
     if (!acc[category.categoryType]) {
       acc[category.categoryType] = [];
@@ -221,7 +221,7 @@ const DashboardUser = () => {
     return acc;
   }, {});
 
-  // دالة لإرجاع أيقونة التصنيف بناءً على النوع
+  // Function to return category icon based on type
   const getCategoryIcon = (type) =>
     type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
 
@@ -256,7 +256,7 @@ const DashboardUser = () => {
         Finance Tracker
       </Typography>
 
-      {/* حقل البحث مع اقتراحات تلقائية */}
+      {/* Search field with autocomplete suggestions */}
       <Autocomplete
         freeSolo
         options={categoryOptions}
@@ -264,7 +264,7 @@ const DashboardUser = () => {
         renderInput={(params) => (
           <TextField
             {...params}
-            placeholder="ابحث عن صنف..."
+            placeholder="Search for a category..."
             variant="outlined"
             sx={{
               mb: 4,
@@ -306,7 +306,7 @@ const DashboardUser = () => {
         )}
       />
 
-      {/* مجموعة أزرار لتصفية التصنيفات */}
+      {/* Button group for filtering categories */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
         <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden' }}>
           <Button
@@ -408,7 +408,7 @@ const DashboardUser = () => {
                   .map((category) => {
                     const isAdded = addedItems.includes(category._id);
                     return (
-                      <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
+                      <Tooltip key={category._id} title={isAdded ? 'Added Today' : ''}>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                           <CategoryCard
                             component="div"
@@ -469,7 +469,7 @@ const DashboardUser = () => {
                   .map((category) => {
                     const isAdded = addedItems.includes(category._id);
                     return (
-                      <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
+                      <Tooltip key={category._id} title={isAdded ? 'Added Today' : ''}>
                         <Box>
                           <CategoryCard
                             component="div"
@@ -548,7 +548,7 @@ const DashboardUser = () => {
         ))
       )}
 
-      {/* تحسين تصميم Dialog Box */}
+      {/* Enhanced Dialog Box design */}
       <Dialog
         open={open}
         onClose={handleClose}
