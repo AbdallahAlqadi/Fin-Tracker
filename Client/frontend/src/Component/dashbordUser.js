@@ -21,6 +21,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { styled, keyframes } from '@mui/system';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import CloseIcon from '@mui/icons-material/Close';
 
 // حركة انسيابية للبطاقات
 const floatAnimation = keyframes`
@@ -410,11 +411,24 @@ const DashboardUser = () => {
                       <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                           <CategoryCard
-                            onClick={() => handleClickOpen(category)}
+                            component="div"
+                            role="button"
+                            tabIndex={isAdded ? -1 : 0}
+                            onClick={isAdded ? undefined : () => handleClickOpen(category)}
+                            onKeyPress={
+                              isAdded
+                                ? undefined
+                                : (e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      handleClickOpen(category);
+                                    }
+                                  }
+                            }
                             sx={{
                               opacity: isAdded ? 0.6 : 1,
                               pointerEvents: isAdded ? 'none' : 'auto',
                             }}
+                            aria-disabled={isAdded}
                           >
                             {category.image && (
                               <Box
@@ -458,11 +472,24 @@ const DashboardUser = () => {
                       <Tooltip key={category._id} title={isAdded ? 'تمت الإضافة اليوم' : ''}>
                         <Box>
                           <CategoryCard
-                            onClick={() => handleClickOpen(category)}
+                            component="div"
+                            role="button"
+                            tabIndex={isAdded ? -1 : 0}
+                            onClick={isAdded ? undefined : () => handleClickOpen(category)}
+                            onKeyPress={
+                              isAdded
+                                ? undefined
+                                : (e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      handleClickOpen(category);
+                                    }
+                                  }
+                            }
                             sx={{
                               opacity: isAdded ? 0.6 : 1,
                               pointerEvents: isAdded ? 'none' : 'auto',
                             }}
+                            aria-disabled={isAdded}
                           >
                             {category.image && (
                               <Box
@@ -548,7 +575,15 @@ const DashboardUser = () => {
             borderTopRightRadius: '16px',
           }}
         >
-          {selectedCategory?.categoryName}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {selectedCategory && getCategoryIcon(selectedCategory.categoryType)}{' '}
+              {selectedCategory?.categoryName}
+            </Box>
+            <IconButton onClick={handleClose} sx={{ color: '#FFFFFF' }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </DialogTitle>
         <DialogContent sx={{ p: 3, textAlign: 'center', backgroundColor: '#FAFAFA' }}>
           {selectedCategory?.image && (
@@ -600,13 +635,13 @@ const DashboardUser = () => {
         >
           <Button
             onClick={handleClose}
+            variant="outlined"
             sx={{
-              backgroundColor: '#FFFFFF',
+              borderColor: '#4A90E2',
               color: '#4A90E2',
               px: 3,
               py: 1,
               borderRadius: 2,
-              border: '2px solid #4A90E2',
               fontSize: 16,
             }}
           >
@@ -614,6 +649,7 @@ const DashboardUser = () => {
           </Button>
           <Button
             onClick={handleSubmit}
+            variant="contained"
             disabled={isSubmitting}
             sx={{
               backgroundColor: '#4A90E2',
