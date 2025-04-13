@@ -10,11 +10,9 @@ const data = [
 ];
 
 export default function HomePage() {
-  // قراءة اللغة من localStorage إذا كانت موجودة، والاستخدام الافتراضي للغة الإنجليزية
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
   const [chartType, setChartType] = useState('bar');
 
-  // تحديث localStorage عند تغيير اللغة
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
@@ -38,6 +36,10 @@ export default function HomePage() {
         incomeExpenseTracking: {
           title: "Income & Expense Tracking",
           description: "Manage and track revenues and expenses efficiently."
+        },
+        dataComparison: {
+          title: "Data Comparison",
+          description: "Compare expenses and revenues over different days to gain insights."
         }
       },
       chartTitle: "Revenue vs. Expenses",
@@ -64,6 +66,10 @@ export default function HomePage() {
         incomeExpenseTracking: {
           title: "متابعة الدخل والمصاريف",
           description: "إدارة وتتبع الإيرادات والمصاريف بكفاءة."
+        },
+        dataComparison: {
+          title: "مقارنة البيانات",
+          description: "قارن بين المصاريف والإيرادات عبر الأيام المختلفة للحصول على رؤى."
         }
       },
       chartTitle: "الإيرادات مقابل المصاريف",
@@ -74,7 +80,6 @@ export default function HomePage() {
     }
   };
 
-  // ترجمة أسماء الأشهر إلى العربية
   const arabicMonths = {
     January: "يناير",
     February: "فبراير",
@@ -82,7 +87,6 @@ export default function HomePage() {
     April: "أبريل"
   };
 
-  // ترجمة أسماء الأشهر في البيانات عند اختيار اللغة العربية
   const translatedData = data.map(item => ({
     ...item,
     period: language === 'ar' ? (arabicMonths[item.period] || item.period) : item.period
@@ -90,7 +94,6 @@ export default function HomePage() {
 
   return (
     <div className="homepage-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* قائمة اختيار اللغة */}
       <div className="language-select">
         <select 
           value={language} 
@@ -120,6 +123,10 @@ export default function HomePage() {
         <div className="feature-card">
           <h2>{translations[language].features.incomeExpenseTracking.title}</h2>
           <p>{translations[language].features.incomeExpenseTracking.description}</p>
+        </div>
+        <div className="feature-card">
+          <h2>{translations[language].features.dataComparison.title}</h2>
+          <p>{translations[language].features.dataComparison.description}</p>
         </div>
       </div>
       
