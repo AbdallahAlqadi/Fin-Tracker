@@ -24,7 +24,6 @@ import FedbackUser from '../Component/fedbackuser';
 import ChatIcon from '@mui/icons-material/Chat';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage';
-import InstallmentCalculator from '../Component/Installments';
 import AcountUser from '../Component/AcountUser';
 import LogOut from '../Component/LogOut';
 
@@ -100,7 +99,6 @@ function DashboardLayoutBasic(props) {
     { path: '/fedback', component: <FeedbackForm /> },
     { path: '/fedbackuser', component: <FedbackUser /> },
     { path: '/homepage', component: <HomePage /> },
-    { path: '/installment', component: <InstallmentCalculator /> },
     { path: '/alluser', component: <AcountUser /> },
     { path: '/logout', component: <LogOut /> },
 
@@ -133,11 +131,7 @@ function DashboardLayoutBasic(props) {
       title: 'Fedback',
       icon: <ChatIcon />,
     },
-    {
-      segment: 'installment',
-      title: 'installment',
-      icon: <ChatIcon />,
-    },
+   
     {
       segment: 'logout',
       title: 'logout',
@@ -191,11 +185,7 @@ function DashboardLayoutBasic(props) {
               title: 'Comparison',
               icon: <SignalCellularAltIcon />,
             },
-            {
-              segment: 'installment',
-              title: 'installment',
-              icon: <ChatIcon />,
-            },
+           
             {
               segment: 'alluser',
               title: 'AllUserAcount',
