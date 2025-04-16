@@ -219,36 +219,50 @@ ${JSON.stringify(fileData)}
 
   function renderMessageContent(message) {
     if (message.formatted) {
-      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/;
-      const match = message.text.match(codeBlockRegex);
+      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+      let lastIndex = 0;
+      const parts = [];
+      let match;
 
-      if (match) {
-        const explanation = message.text.replace(match[0], '').trim();
-        const code = match[2].trim();
-        const language = match[1] || '';
-        return (
-          <div className="message-text">
-            {explanation && (
-              <div className="markdown-content">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {explanation}
-                </ReactMarkdown>
-              </div>
-            )}
-            <CopyableCode code={code} language={language} />
-          </div>
-        );
-      } else {
-        return (
-          <div className="message-text">
-            <div className="markdown-content">
+      while ((match = codeBlockRegex.exec(message.text)) !== null) {
+        const before = message.text.slice(lastIndex, match.index).trim();
+        if (before) {
+          parts.push(
+            <div key={lastIndex} className="markdown-content">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.text}
+                {before}
               </ReactMarkdown>
             </div>
+          );
+        }
+        const code = match[2].trim();
+        const language = match[1] || '';
+        parts.push(
+          <CopyableCode key={match.index} code={code} language={language} />
+        );
+        lastIndex = match.index + match[0].length;
+      }
+
+      const after = message.text.slice(lastIndex).trim();
+      if (after) {
+        parts.push(
+          <div key={lastIndex} className="markdown-content">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {after}
+            </ReactMarkdown>
           </div>
         );
       }
+
+      return parts.length > 0 ? (
+        <div className="message-text">{parts}</div>
+      ) : (
+        <div className="message-text">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message.text}
+          </ReactMarkdown>
+        </div>
+      );
     }
     return <div className="message-text"><p>{message.text}</p></div>;
   }
