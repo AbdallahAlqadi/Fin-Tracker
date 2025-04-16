@@ -2,13 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
-// استيراد SyntaxHighlighter واختيار ثيم معين (يمكنك اختيار ثيمات أخرى مثل atomOneDark أو غيره)
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { 
+  FaUserCircle, 
+  FaRobot, 
+  FaFileExcel, 
+  FaPaperPlane, 
+  FaCopy, 
+  FaCheck, 
+  FaComments 
+} from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
 function Poot() {
-  // الرسالة الابتدائية الخاصة بالبوت
   const initialBotMessage = {
     sender: 'bot',
     text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
@@ -42,7 +49,6 @@ function Poot() {
     return `${h}:${m}`;
   }
 
-  // دالة إعادة بدء محادثة جديدة
   function handleNewChat() {
     setMessages([{
       sender: 'bot',
@@ -55,7 +61,6 @@ function Poot() {
     setAttachedFileData(null);
   }
 
-  // التعامل مع رفع ملف Excel باستخدام مكتبة XLSX
   function handleFileUpload(e) {
     const file = e.target.files[0];
     if (file) {
@@ -77,7 +82,6 @@ function Poot() {
     }
   }
 
-  // مكون فرعي لعرض كتل الكود مع تلوينها باستخدام SyntaxHighlighter وزر نسخ الكود
   function CopyableCode({ code, language = '' }) {
     const [copied, setCopied] = useState(false);
     const copyCode = async () => {
@@ -109,15 +113,18 @@ function Poot() {
             position: 'absolute',
             top: '10px',
             right: '10px',
-            background: '#4361ee',
+            background: 'var(--primary-color)',
             color: 'white',
             border: 'none',
-            borderRadius: '3px',
+            borderRadius: '4px',
             padding: '5px 10px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '14px'
           }}
         >
-          {copied ? '✔' : 'نسخ الكود'}
+          {copied ? <><FaCheck style={{ marginRight: '5px' }} />تم النسخ</> : <><FaCopy style={{ marginRight: '5px' }} />نسخ الكود</>}
         </button>
       </div>
     );
@@ -126,10 +133,8 @@ function Poot() {
   async function handleSubmit(e) {
     e.preventDefault();
     const trimmedMessage = input.trim();
-    // يجب أن يكون هنالك سؤال أو ملف مرفق
-    if (!trimmedMessage && !attachedFileData) return; 
+    if (!trimmedMessage && !attachedFileData) return;
 
-    // إرسال رسالة المستخدم
     const userMsg = {
       sender: 'user',
       text: trimmedMessage || (attachedFile ? attachedFile.name : ''),
@@ -141,7 +146,6 @@ function Poot() {
     setIsTyping(true);
 
     try {
-      // تمرير بيانات الملف إذا وُجد
       const botResponse = await getBotResponse(trimmedMessage, attachedFileData);
       const botMsg = {
         sender: 'bot',
@@ -161,13 +165,11 @@ function Poot() {
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsTyping(false);
-      // إعادة تعيين الملف بعد المعالجة
       setAttachedFile(null);
       setAttachedFileData(null);
     }
   }
 
-  // دالة getBotResponse تأخذ رسالة المستخدم وبيانات الملف إن وُجد، وتُجهز prompt مناسب للإجابة
   async function getBotResponse(message, fileData = null) {
     const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
     const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
@@ -215,57 +217,58 @@ ${JSON.stringify(fileData)}
     return data.candidates[0].content.parts[0].text;
   }
 
-  // دالة لتحليل عرض المحتوى بحيث يتم اكتشاف وجود كتلة كود وعرضها باستخدام CopyableCode
   function renderMessageContent(message) {
     if (message.formatted) {
-      // التعبير النمطي للبحث عن كتلة كود بصيغة Markdown (مع إمكانية تحديد لغة)
       const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/;
       const match = message.text.match(codeBlockRegex);
 
       if (match) {
-        // استخراج الشرح والكود واللغة إن وُجدت
         const explanation = message.text.replace(match[0], '').trim();
         const code = match[2].trim();
         const language = match[1] || '';
         return (
-          <div>
+          <div className="message-text">
             {explanation && (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {explanation}
-              </ReactMarkdown>
+              <div className="markdown-content">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {explanation}
+                </ReactMarkdown>
+              </div>
             )}
             <CopyableCode code={code} language={language} />
           </div>
         );
       } else {
-        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>;
+        return (
+          <div className="message-text">
+            <div className="markdown-content">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.text}
+              </ReactMarkdown>
+            </div>
+          </div>
+        );
       }
     }
-    return <p>{message.text}</p>;
+    return <div className="message-text"><p>{message.text}</p></div>;
   }
 
   return (
     <div className="poot-container">
-      <header>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1>
-            <i className="fas fa-robot" style={{ marginRight: '8px' }}></i>
+      <header className="poot-header">
+        <div className="header-top">
+          <h1 style={{ display: 'flex', alignItems: 'center' }}>
+            <FaComments className="icon" style={{ marginRight: '8px' }} />
+            Poot Chat
           </h1>
           <button 
             onClick={handleNewChat} 
-            style={{
-              backgroundColor: '#4361ee',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              padding: '8px 12px',
-              cursor: 'pointer'
-            }}
+            className="new-chat-btn"
           >
             New Chat
           </button>
         </div>
-        <p>اسأل أي سؤال أو أرفق ملف Excel ليتم تحليله وإرجاع شرح مفصل</p>
+        <p className="header-subtitle">اسأل أي سؤال أو أرفق ملف Excel ليتم تحليله وإرجاع شرح مفصل</p>
       </header>
       <main className="chat-container">
         <div className="chat-messages-wrapper">
@@ -274,15 +277,13 @@ ${JSON.stringify(fileData)}
               <div key={i} className={`message ${msg.sender}`}>
                 <div className="avatar">
                   {msg.sender === 'user' ? (
-                    <i className="fas fa-user-circle"></i>
+                    <FaUserCircle className="icon" size={30} />
                   ) : (
-                    <i className="fas fa-robot"></i>
+                    <FaRobot className="icon" size={30} />
                   )}
                 </div>
                 <div className="message-content">
-                  <div className="message-text">
-                    {renderMessageContent(msg)}
-                  </div>
+                  {renderMessageContent(msg)}
                   <span className="time">{msg.time}</span>
                 </div>
               </div>
@@ -290,7 +291,7 @@ ${JSON.stringify(fileData)}
             {isTyping && (
               <div className="message bot">
                 <div className="avatar">
-                  <i className="fas fa-robot"></i>
+                  <FaRobot className="icon" size={30} />
                 </div>
                 <div className="message-content">
                   <div className="typing-indicator">
@@ -302,10 +303,9 @@ ${JSON.stringify(fileData)}
           </div>
         </div>
         <div className="chat-input">
-          {/* قسم رفع الملف */}
           <div className="file-upload" style={{ marginBottom: '10px' }}>
-            <label htmlFor="file-input" style={{ cursor: 'pointer', color: '#4361ee' }}>
-              <i className="fas fa-file-excel" style={{ marginRight: '4px' }}></i>
+            <label htmlFor="file-input" className="file-upload-label">
+              <FaFileExcel className="icon" style={{ marginRight: '4px' }} />
               إرفاق ملف Excel
             </label>
             <input
@@ -315,9 +315,9 @@ ${JSON.stringify(fileData)}
               onChange={handleFileUpload}
               style={{ display: 'none' }}
             />
-            {attachedFile && <span style={{ marginLeft: '10px' }}>{attachedFile.name}</span>}
+            {attachedFile && <span className="file-name">{attachedFile.name}</span>}
           </div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="message-form">
             <input
               type="text"
               placeholder="اكتب سؤالك هنا..."
@@ -325,15 +325,16 @@ ${JSON.stringify(fileData)}
               onChange={e => setInput(e.target.value)}
               autoComplete="off"
               autoFocus
+              className="message-input"
             />
-            <button type="submit" disabled={!input.trim() && !attachedFileData}>
-              <i className="fas fa-paper-plane"></i>
+            <button type="submit" disabled={!input.trim() && !attachedFileData} className="send-btn">
+              <FaPaperPlane className="icon" size={18} />
             </button>
           </form>
         </div>
       </main>
-      <footer>
-        <p>Manus &copy; {new Date().getFullYear()}</p>
+      <footer className="poot-footer">
+        <p>Manus © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
