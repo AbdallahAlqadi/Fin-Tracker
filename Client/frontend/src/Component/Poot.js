@@ -1,18 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import * as XLSX from 'xlsx';
+// استيراد SyntaxHighlighter واختيار ثيم معين (يمكنك اختيار ثيمات أخرى مثل atomOneDark أو غيره)
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import '../cssStyle/poot.css';
 
 function Poot() {
-  const [messages, setMessages] = useState([
-    {
-      sender: 'bot',
-      text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
-      time: getCurrentTime(),
-      formatted: true
-    }
-  ]);
+  // الرسالة الابتدائية الخاصة بالبوت
+  const initialBotMessage = {
+    sender: 'bot',
+    text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
+    time: getCurrentTime(),
+    formatted: true
+  };
+
+  const [messages, setMessages] = useState([initialBotMessage]);
   const [input, setInput] = useState('');
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [attachedFileData, setAttachedFileData] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const chatMessagesRef = useRef(null);
 
@@ -35,14 +42,97 @@ function Poot() {
     return `${h}:${m}`;
   }
 
+  // دالة إعادة بدء محادثة جديدة
+  function handleNewChat() {
+    setMessages([{
+      sender: 'bot',
+      text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
+      time: getCurrentTime(),
+      formatted: true
+    }]);
+    setInput('');
+    setAttachedFile(null);
+    setAttachedFileData(null);
+  }
+
+  // التعامل مع رفع ملف Excel باستخدام مكتبة XLSX
+  function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (file) {
+      setAttachedFile(file);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = evt.target.result;
+        try {
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          setAttachedFileData(jsonData);
+        } catch (err) {
+          console.error('حدث خطأ في قراءة الملف:', err);
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
+  }
+
+  // مكون فرعي لعرض كتل الكود مع تلوينها باستخدام SyntaxHighlighter وزر نسخ الكود
+  function CopyableCode({ code, language = '' }) {
+    const [copied, setCopied] = useState(false);
+    const copyCode = async () => {
+      try {
+        await navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('فشل النسخ:', err);
+      }
+    };
+
+    return (
+      <div style={{ position: 'relative', marginTop: '10px' }}>
+        <SyntaxHighlighter 
+          language={language} 
+          style={tomorrow}
+          customStyle={{
+            borderRadius: '5px',
+            padding: '15px',
+            fontSize: '0.9em'
+          }}
+        >
+          {code}
+        </SyntaxHighlighter>
+        <button 
+          onClick={copyCode}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            background: '#4361ee',
+            color: 'white',
+            border: 'none',
+            borderRadius: '3px',
+            padding: '5px 10px',
+            cursor: 'pointer'
+          }}
+        >
+          {copied ? '✔' : 'نسخ الكود'}
+        </button>
+      </div>
+    );
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const trimmedMessage = input.trim();
-    if (!trimmedMessage) return;
+    // يجب أن يكون هنالك سؤال أو ملف مرفق
+    if (!trimmedMessage && !attachedFileData) return; 
 
+    // إرسال رسالة المستخدم
     const userMsg = {
       sender: 'user',
-      text: trimmedMessage,
+      text: trimmedMessage || (attachedFile ? attachedFile.name : ''),
       time: getCurrentTime(),
       formatted: false
     };
@@ -51,7 +141,8 @@ function Poot() {
     setIsTyping(true);
 
     try {
-      const botResponse = await getBotResponse(trimmedMessage);
+      // تمرير بيانات الملف إذا وُجد
+      const botResponse = await getBotResponse(trimmedMessage, attachedFileData);
       const botMsg = {
         sender: 'bot',
         text: botResponse,
@@ -70,37 +161,45 @@ function Poot() {
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsTyping(false);
+      // إعادة تعيين الملف بعد المعالجة
+      setAttachedFile(null);
+      setAttachedFileData(null);
     }
   }
 
-  async function getBotResponse(message) {
+  // دالة getBotResponse تأخذ رسالة المستخدم وبيانات الملف إن وُجد، وتُجهز prompt مناسب للإجابة
+  async function getBotResponse(message, fileData = null) {
     const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
     const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-    const prompt = `
-أنت مساعد ذكي يتحدث العربية الفصحى. يجب عليك:
-1. تقديم إجابات واضحة ومنظمة
-2. استخدام تنسيق Markdown للتنظيم (العناوين، النقاط، الترميز)
-3. تقسيم الإجابات الطويلة إلى فقرات
-4. استخدام النقاط المرقمة عند تقديم خطوات أو قوائم
-5. وضع الكود المصدري بين علامات \`\`\` إذا لزم الأمر
+    let prompt = '';
 
+    if (fileData) {
+      prompt = `
+تم إرفاق ملف Excel يحتوي على البيانات التالية:
+${JSON.stringify(fileData)}
+السؤال: ${message || 'برجاء تحليل محتويات الملف'}
+يرجى تقديم شرح مفصل وتحليل محتويات الملف بناءً على السؤال المطروح.
+      `.trim();
+    } else {
+      prompt = `
+إذا كان السؤال متعلقًا بكود برمجي، قم بما يلي:
+1. قدّم شرحاً مفصلاً للكود المطلوب.
+2. بعد الشرح، ضع الكود داخل كتلة منفصلة باستخدام تنسيق Markdown مع زر "نسخ الكود".
+أما إذا كان السؤال غير ذلك، فقم بتقديم إجابة مفصلة.
 السؤال: ${message}
-    `.trim();
+      `.trim();
+    }
 
     const res = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [
-          {
-            parts: [
-              { text: prompt }
-            ]
-          }
+          { parts: [ { text: prompt } ] }
         ],
-        generationConfig: { 
-          temperature: 0.7, 
+        generationConfig: {
+          temperature: 0.7,
           maxOutputTokens: 1500,
           topP: 0.9,
           topK: 40
@@ -116,39 +215,31 @@ function Poot() {
     return data.candidates[0].content.parts[0].text;
   }
 
+  // دالة لتحليل عرض المحتوى بحيث يتم اكتشاف وجود كتلة كود وعرضها باستخدام CopyableCode
   function renderMessageContent(message) {
     if (message.formatted) {
-      return (
-        <ReactMarkdown 
-          remarkPlugins={[remarkGfm]}
-          components={{
-            h1: ({node, ...props}) => <h1 style={{fontSize: '1.3em', margin: '10px 0'}} {...props} />,
-            h2: ({node, ...props}) => <h2 style={{fontSize: '1.2em', margin: '8px 0'}} {...props} />,
-            h3: ({node, ...props}) => <h3 style={{fontSize: '1.1em', margin: '6px 0'}} {...props} />,
-            p: ({node, ...props}) => <p style={{margin: '4px 0', lineHeight: '1.5'}} {...props} />,
-            ul: ({node, ...props}) => <ul style={{paddingLeft: '20px', margin: '6px 0'}} {...props} />,
-            ol: ({node, ...props}) => <ol style={{paddingLeft: '20px', margin: '6px 0'}} {...props} />,
-            li: ({node, ...props}) => <li style={{marginBottom: '4px'}} {...props} />,
-            code: ({node, inline, ...props}) => inline 
-              ? <code style={{background: '#f0f0f0', padding: '2px 4px', borderRadius: '3px'}} {...props} /> 
-              : <pre style={{
-                  background: '#f5f5f5', 
-                  padding: '10px', 
-                  borderRadius: '5px', 
-                  overflowX: 'auto',
-                  margin: '10px 0'
-                }} {...props} />,
-            blockquote: ({node, ...props}) => <blockquote style={{
-              borderLeft: '3px solid #4361ee',
-              paddingLeft: '10px',
-              margin: '10px 0',
-              color: '#555'
-            }} {...props} />
-          }}
-        >
-          {message.text}
-        </ReactMarkdown>
-      );
+      // التعبير النمطي للبحث عن كتلة كود بصيغة Markdown (مع إمكانية تحديد لغة)
+      const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/;
+      const match = message.text.match(codeBlockRegex);
+
+      if (match) {
+        // استخراج الشرح والكود واللغة إن وُجدت
+        const explanation = message.text.replace(match[0], '').trim();
+        const code = match[2].trim();
+        const language = match[1] || '';
+        return (
+          <div>
+            {explanation && (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {explanation}
+              </ReactMarkdown>
+            )}
+            <CopyableCode code={code} language={language} />
+          </div>
+        );
+      } else {
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>;
+      }
     }
     return <p>{message.text}</p>;
   }
@@ -156,8 +247,25 @@ function Poot() {
   return (
     <div className="poot-container">
       <header>
-        <h1>بوت الدردشة الذكي</h1>
-        <p>اسأل أي سؤال وسأقدم لك إجابة مفصلة ومنظمة</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1>
+            <i className="fas fa-robot" style={{ marginRight: '8px' }}></i>
+          </h1>
+          <button 
+            onClick={handleNewChat} 
+            style={{
+              backgroundColor: '#4361ee',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              padding: '8px 12px',
+              cursor: 'pointer'
+            }}
+          >
+            New Chat
+          </button>
+        </div>
+        <p>اسأل أي سؤال أو أرفق ملف Excel ليتم تحليله وإرجاع شرح مفصل</p>
       </header>
       <main className="chat-container">
         <div className="chat-messages-wrapper">
@@ -165,7 +273,11 @@ function Poot() {
             {messages.map((msg, i) => (
               <div key={i} className={`message ${msg.sender}`}>
                 <div className="avatar">
-                  <i className={`fas ${msg.sender === 'user' ? 'fa-user' : 'fa-robot'}`}></i>
+                  {msg.sender === 'user' ? (
+                    <i className="fas fa-user-circle"></i>
+                  ) : (
+                    <i className="fas fa-robot"></i>
+                  )}
                 </div>
                 <div className="message-content">
                   <div className="message-text">
@@ -190,6 +302,21 @@ function Poot() {
           </div>
         </div>
         <div className="chat-input">
+          {/* قسم رفع الملف */}
+          <div className="file-upload" style={{ marginBottom: '10px' }}>
+            <label htmlFor="file-input" style={{ cursor: 'pointer', color: '#4361ee' }}>
+              <i className="fas fa-file-excel" style={{ marginRight: '4px' }}></i>
+              إرفاق ملف Excel
+            </label>
+            <input
+              id="file-input"
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            {attachedFile && <span style={{ marginLeft: '10px' }}>{attachedFile.name}</span>}
+          </div>
           <form onSubmit={handleSubmit}>
             <input
               type="text"
@@ -199,14 +326,14 @@ function Poot() {
               autoComplete="off"
               autoFocus
             />
-            <button type="submit" disabled={!input.trim()}>
+            <button type="submit" disabled={!input.trim() && !attachedFileData}>
               <i className="fas fa-paper-plane"></i>
             </button>
           </form>
         </div>
       </main>
       <footer>
-        <p>تم تطويره بواسطة Manus &copy; {new Date().getFullYear()}</p>
+        <p>Manus &copy; {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
