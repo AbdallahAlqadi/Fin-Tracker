@@ -26,6 +26,7 @@ import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage';
 import AcountUser from '../Component/AcountUser';
 import LogOut from '../Component/LogOut';
+import Poot from '../Component/Poot';
 
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
@@ -100,6 +101,8 @@ function DashboardLayoutBasic(props) {
     { path: '/fedbackuser', component: <FedbackUser /> },
     { path: '/homepage', component: <HomePage /> },
     { path: '/alluser', component: <AcountUser /> },
+    { path: '/poot', component: <Poot /> },
+
     { path: '/logout', component: <LogOut /> },
 
   ];
@@ -129,6 +132,11 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'fedback',
       title: 'Fedback',
+      icon: <ChatIcon />,
+    },
+    {
+      segment: 'poot',
+      title: 'Poot',
       icon: <ChatIcon />,
     },
    
@@ -199,6 +207,11 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'fedback',
               title: 'Fedback',
+              icon: <ChatIcon />,
+            },
+            {
+              segment: 'poot',
+              title: 'Poot',
               icon: <ChatIcon />,
             },
             {
