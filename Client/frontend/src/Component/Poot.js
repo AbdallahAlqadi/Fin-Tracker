@@ -4,14 +4,15 @@ import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { 
-  FaUserCircle, 
-  FaRobot, 
-  FaFileExcel, 
-  FaPaperPlane, 
-  FaCopy, 
-  FaCheck, 
-  FaComments 
+import {
+  FaUserCircle,
+  FaRobot,
+  FaFileExcel,
+  FaPaperPlane,
+  FaCopy,
+  FaCheck,
+  FaComments,
+  FaGlobe
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
@@ -29,6 +30,7 @@ function Poot() {
   const [attachedFileData, setAttachedFileData] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const chatMessagesRef = useRef(null);
+  const [responseLanguage, setResponseLanguage] = useState('ar'); // Default to Arabic
 
   useEffect(() => {
     scrollToBottom();
@@ -59,6 +61,7 @@ function Poot() {
     setInput('');
     setAttachedFile(null);
     setAttachedFileData(null);
+    setResponseLanguage('ar');
   }
 
   function handleFileUpload(e) {
@@ -96,18 +99,20 @@ function Poot() {
 
     return (
       <div style={{ position: 'relative', marginTop: '10px' }}>
-        <SyntaxHighlighter 
-          language={language} 
+        <SyntaxHighlighter
+          language={language}
           style={tomorrow}
           customStyle={{
-            borderRadius: '5px',
+            borderRadius: '8px',
             padding: '15px',
-            fontSize: '0.9em'
+            fontSize: '0.9em',
+            direction: 'ltr', /* Ensure code is left-aligned */
+            textAlign: 'left'
           }}
         >
           {code}
         </SyntaxHighlighter>
-        <button 
+        <button
           onClick={copyCode}
           style={{
             position: 'absolute',
@@ -146,7 +151,7 @@ function Poot() {
     setIsTyping(true);
 
     try {
-      const botResponse = await getBotResponse(trimmedMessage, attachedFileData);
+      const botResponse = await getBotResponse(trimmedMessage, attachedFileData, responseLanguage);
       const botMsg = {
         sender: 'bot',
         text: botResponse,
@@ -170,17 +175,19 @@ function Poot() {
     }
   }
 
-  async function getBotResponse(message, fileData = null) {
+  async function getBotResponse(message, fileData = null, language = 'ar') {
     const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
     const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
     let prompt = '';
+    const languagePrompt = `يرجى تقديم الإجابة باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}.`;
 
     if (fileData) {
       prompt = `
 تم إرفاق ملف Excel يحتوي على البيانات التالية:
 ${JSON.stringify(fileData)}
 السؤال: ${message || 'برجاء تحليل محتويات الملف'}
+${languagePrompt}
 يرجى تقديم شرح مفصل وتحليل محتويات الملف بناءً على السؤال المطروح.
       `.trim();
     } else {
@@ -188,6 +195,7 @@ ${JSON.stringify(fileData)}
 إذا كان السؤال متعلقًا بكود برمجي، قم بما يلي:
 1. قدّم شرحاً مفصلاً للكود المطلوب.
 2. بعد الشرح، ضع الكود داخل كتلة منفصلة باستخدام تنسيق Markdown مع زر "نسخ الكود".
+${languagePrompt}
 أما إذا كان السؤال غير ذلك، فقم بتقديم إجابة مفصلة.
 السؤال: ${message}
       `.trim();
@@ -275,8 +283,8 @@ ${JSON.stringify(fileData)}
             <FaComments className="icon" style={{ marginRight: '8px' }} />
             Poot Chat
           </h1>
-          <button 
-            onClick={handleNewChat} 
+          <button
+            onClick={handleNewChat}
             className="new-chat-btn"
           >
             New Chat
@@ -330,6 +338,19 @@ ${JSON.stringify(fileData)}
               style={{ display: 'none' }}
             />
             {attachedFile && <span className="file-name">{attachedFile.name}</span>}
+          </div>
+          <div className="language-selection" style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+            <FaGlobe className="icon" style={{ marginRight: '4px' }} />
+            <label htmlFor="language" style={{ marginLeft: '5px' }}>لغة الرد:</label>
+            <select
+              id="language"
+              value={responseLanguage}
+              onChange={(e) => setResponseLanguage(e.target.value)}
+              style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            >
+              <option value="ar">العربية</option>
+              <option value="en">الإنجليزية</option>
+            </select>
           </div>
           <form onSubmit={handleSubmit} className="message-form">
             <input
