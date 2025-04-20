@@ -78,12 +78,12 @@ const CategoryCard = styled(Box)(({ theme }) => ({
 }));
 
 const DashboardUser = () => {
-  // Original states
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
+  const [selectedDate, setSelectedDate] = useState(''); // حالة جديدة للتاريخ
   const [visibleItems, setVisibleItems] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
@@ -91,7 +91,6 @@ const DashboardUser = () => {
   const [addedItems, setAddedItems] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState('all');
-
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryType, setNewCategoryType] = useState('');
@@ -101,19 +100,11 @@ const DashboardUser = () => {
 
   const isSmallDevice = useMediaQuery('(max-width:370px)');
 
-  // // Function to get today's date (Amman time)
-  // const getTodayDate = () => {
-  //   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
-  // };
-
-  // Fetch categories from the server
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
         setCategories(response.data.data);
-
-        // Initialize visible items count for each type (default 12)
         const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
             acc[category.categoryType] = 12;
@@ -131,25 +122,25 @@ const DashboardUser = () => {
     fetchCategories();
   }, []);
 
-  // Dialog for adding values to existing category (ex: adding budget)
   const handleClickOpen = (category) => {
-    if (addedItems.includes(category._id)) return; // Prevent click if item already added
+    if (addedItems.includes(category._id)) return;
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
+    setSelectedDate(''); // إعادة تعيين التاريخ عند فتح Dialog
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedCategory(null);
     setValue('');
+    setSelectedDate(''); // إعادة تعيين التاريخ عند الإغلاق
     setErrorMessage('');
   };
 
-  // Submit value for the selected category
   const handleSubmit = async () => {
-    if (!selectedCategory || !value) {
-      setErrorMessage('Please enter a valid value.');
+    if (!selectedCategory || !value || !selectedDate) {
+      setErrorMessage('Please enter a valid value and select a date.');
       return;
     }
 
@@ -171,6 +162,7 @@ const DashboardUser = () => {
         {
           CategoriesId: currentCategory._id,
           valueitem: parsedValue,
+          date: selectedDate, // إرسال التاريخ المحدد
         },
         {
           headers: {
@@ -184,7 +176,7 @@ const DashboardUser = () => {
       setAddedItems((prev) => [...prev, currentCategory._id]);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.error(error.response.data.error || 'You have already added this item today.');
+        console.error(error.response.data.error || 'You have already added this item on this date.');
         setAddedItems((prev) => [...prev, currentCategory._id]);
       } else {
         console.error('Error submitting value:', error);
@@ -201,7 +193,6 @@ const DashboardUser = () => {
     }));
   };
 
-  // Search options based on category names
   const categoryOptions = categories.map((cat) => cat.categoryName);
 
   if (loading) {
@@ -212,7 +203,6 @@ const DashboardUser = () => {
     );
   }
 
-  // Filter categories based on search query and type
   let filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -227,7 +217,6 @@ const DashboardUser = () => {
     );
   }
 
-  // Group categories by type after filtering
   const groupedCategories = filteredCategories.reduce((acc, category) => {
     if (!acc[category.categoryType]) {
       acc[category.categoryType] = [];
@@ -236,11 +225,9 @@ const DashboardUser = () => {
     return acc;
   }, {});
 
-  // Function to return category icon based on type
   const getCategoryIcon = (type) =>
     type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
 
-  // Handlers for the "Add New Category" dialog
   const handleNewDialogOpen = () => {
     setNewDialogOpen(true);
     setNewErrorMessage('');
@@ -260,7 +247,6 @@ const DashboardUser = () => {
     }
   };
 
-  // Submit new category
   const handleNewCategorySubmit = async () => {
     if (!newCategoryName || !newCategoryType) {
       setNewErrorMessage('Please fill in all required fields.');
@@ -270,7 +256,6 @@ const DashboardUser = () => {
     setIsNewSubmitting(true);
     const token = sessionStorage.getItem('jwt');
 
-    // Prepare data using FormData if an image is attached
     const formData = new FormData();
     formData.append('categoryName', newCategoryName);
     formData.append('categoryType', newCategoryType);
@@ -290,7 +275,6 @@ const DashboardUser = () => {
         }
       );
       console.log('New Category Response:', response.data);
-      // Update the category list with the newly created category
       setCategories((prev) => [...prev, response.data.data]);
       handleNewDialogClose();
     } catch (error) {
@@ -333,7 +317,6 @@ const DashboardUser = () => {
         Finance Tracker
       </Typography>
 
-      {/* Search field with autocomplete suggestions */}
       <Autocomplete
         freeSolo
         options={categoryOptions}
@@ -383,7 +366,6 @@ const DashboardUser = () => {
         )}
       />
 
-      {/* Button group for filtering categories */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
         <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden' }}>
           <Button
@@ -485,7 +467,7 @@ const DashboardUser = () => {
                   .map((category) => {
                     const isAdded = addedItems.includes(category._id);
                     return (
-                      <Tooltip key={category._id} title={isAdded ? 'Added Today' : ''}>
+                      <Tooltip key={category._id} title={isAdded ? 'Added' : ''}>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                           <CategoryCard
                             component="div"
@@ -530,7 +512,7 @@ const DashboardUser = () => {
                             </Typography>
                             {isAdded && (
                               <Typography variant="caption" sx={{ color: '#FF0000', fontWeight: 'bold', mt: 1 }}>
-                                Added Today
+                                Added
                               </Typography>
                             )}
                           </CategoryCard>
@@ -546,7 +528,7 @@ const DashboardUser = () => {
                   .map((category) => {
                     const isAdded = addedItems.includes(category._id);
                     return (
-                      <Tooltip key={category._id} title={isAdded ? 'Added Today' : ''}>
+                      <Tooltip key={category._id} title={isAdded ? 'Added' : ''}>
                         <Box>
                           <CategoryCard
                             component="div"
@@ -591,7 +573,7 @@ const DashboardUser = () => {
                             </Typography>
                             {isAdded && (
                               <Typography variant="caption" sx={{ color: '#FF0000', fontWeight: 'bold', mt: 1 }}>
-                                Added Today
+                                Added
                               </Typography>
                             )}
                           </CategoryCard>
@@ -625,7 +607,6 @@ const DashboardUser = () => {
         ))
       )}
 
-      {/* Dialog for adding value to an existing category */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -695,6 +676,17 @@ const DashboardUser = () => {
             onChange={(e) => setValue(e.target.value)}
             sx={{ mb: 2 }}
           />
+          <TextField
+            margin="dense"
+            label="Date"
+            type="date"
+            fullWidth
+            variant="outlined"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ mb: 2 }}
+          />
           {errorMessage && (
             <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center' }}>
               {errorMessage}
@@ -744,7 +736,6 @@ const DashboardUser = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog for adding a new category with improved styling */}
       <Dialog
         open={newDialogOpen}
         onClose={handleNewDialogClose}
@@ -852,7 +843,6 @@ const DashboardUser = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Floating Action Button for adding a new category */}
       <Fab
         color="primary"
         aria-label="add"

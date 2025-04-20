@@ -5,7 +5,7 @@ const BudgetSchema = new mongoose.Schema({
     products: [{
         CategoriesId: { type: mongoose.Schema.Types.ObjectId, ref: 'categories', required: true },
         valueitem: { type: Number, default: 0, required: true },
-        date: { type: Date, default: Date.now } // إضافة حقل التاريخ
+        date: { type: Date } // حقل التاريخ موجود
     }]
 });
 

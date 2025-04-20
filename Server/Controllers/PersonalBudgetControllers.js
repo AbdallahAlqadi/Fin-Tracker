@@ -13,43 +13,41 @@ exports.getUserBudget = async (req, res) => {
 }
 
 
-
 exports.addBudget = async (req, res) => {
-    const { CategoriesId, valueitem } = req.body;
-    const userId = req.user; // تأكد أن الـ middleware للمصادقة يملأ req.user
-  
-    // الحصول على التاريخ بتوقيت عمّان (تاريخ اليوم فقط بصيغة ISO مثل "2025-02-08")
-    const todayJordan = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Amman" });
-  
+    const { CategoriesId, valueitem, date } = req.body;
+    const userId = req.user;
+
+    // تحويل التاريخ إلى صيغة YYYY-MM-DD
+    const selectedDate = new Date(date).toISOString().split('T')[0];
+
     try {
-      /**
-       * نستخدم findOneAndUpdate مع شرط أن لا يوجد في مصفوفة المنتجات عنصر بنفس الـ CategoriesId وتاريخ اليوم.
-       * في حالة عدم وجود وثيقة Budget للمستخدم، نستخدم upsert لإنشائها.
-       * إذا لم يتم تحديث الوثيقة فهذا يعني أن العنصر موجود مسبقًا.
-       */
-      const updatedBudget = await Budget.findOneAndUpdate(
-        {
-          userId,
-          $or: [
-            { products: { $eq: [] } }, // حالة الوثيقة جديدة أو لا تحتوي على منتجات
-            { products: { $not: { $elemMatch: { CategoriesId, date: todayJordan } } } } // لا يوجد عنصر بنفس الـ CategoriesId وتاريخ اليوم
-          ]
-        },
-        { $push: { products: { CategoriesId, valueitem, date: todayJordan } } },
-        { new: true, upsert: true }
-      );
-  
-      // إذا لم يتم التحديث فهذا يعني أن العنصر موجود بالفعل
-      if (!updatedBudget) {
-        return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في اليوم.' });
-      }
-  
-      return res.status(200).json({ message: 'تمت الإضافة بنجاح.', budget: updatedBudget });
+        // التحقق مما إذا كانت الفئة موجودة في نفس التاريخ
+        const existingBudget = await Budget.findOne({
+            userId,
+            'products.CategoriesId': CategoriesId,
+            'products.date': {
+                $gte: new Date(selectedDate),
+                $lt: new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() + 1))
+            }
+        });
+
+        if (existingBudget) {
+            return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في نفس التاريخ.' });
+        }
+
+        // إضافة العنصر الجديد
+        const updatedBudget = await Budget.findOneAndUpdate(
+            { userId },
+            { $push: { products: { CategoriesId, valueitem, date: new Date(selectedDate) } } },
+            { new: true, upsert: true }
+        );
+
+        return res.status(200).json({ message: 'تمت الإضافة بنجاح.', budget: updatedBudget });
     } catch (error) {
-      console.error('Error in addBudget:', error);
-      return res.status(500).json({ error: error.message });
+        console.error('Error in addBudget:', error);
+        return res.status(500).json({ error: error.message });
     }
-  };
+};
 
 
 
@@ -59,14 +57,19 @@ exports.updateBudget = async (req, res) => {
     const { CategoriesId, valueitem, date } = req.body;
     const userId = req.user;
 
+    // تحويل التاريخ إلى صيغة YYYY-MM-DD
+    const selectedDate = new Date(date).toISOString().split('T')[0];
+
     try {
         const budget = await Budget.findOne({ userId });
         if (!budget) {
-            return res.status(404).json({ error: 'Budget not found' });
+            return res.status(404).json({ error: 'الميزانية غير موجودة' });
         }
 
-        const budgetIndex = budget.products.findIndex((item) => 
-            item.CategoriesId.toString() === CategoriesId && new Date(item.date).toISOString() === new Date(date).toISOString()
+        // البحث عن العنصر بناءً على CategoriesId والتاريخ
+        const budgetIndex = budget.products.findIndex((item) =>
+            item.CategoriesId.toString() === CategoriesId &&
+            new Date(item.date).toISOString().split('T')[0] === selectedDate
         );
 
         if (budgetIndex > -1) {
@@ -74,7 +77,7 @@ exports.updateBudget = async (req, res) => {
             await budget.save();
             res.status(200).json(budget);
         } else {
-            res.status(404).json({ error: 'Category not found in budget' });
+            res.status(404).json({ error: 'الفئة غير موجودة في الميزانية لهذا التاريخ' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -88,22 +91,27 @@ exports.deleteBudget = async (req, res) => {
     const { CategoriesId, date } = req.body;
     const userId = req.user;
 
+    // تحويل التاريخ إلى صيغة YYYY-MM-DD
+    const selectedDate = new Date(date).toISOString().split('T')[0];
+
     try {
         const budget = await Budget.findOne({ userId });
         if (!budget) {
-            return res.status(404).json({ error: 'Budget not found' });
+            return res.status(404).json({ error: 'الميزانية غير موجودة' });
         }
 
-        const budgetIndex = budget.products.findIndex((item) => 
-            item.CategoriesId.toString() === CategoriesId && new Date(item.date).toISOString() === new Date(date).toISOString()
+        // البحث عن العنصر بناءً على CategoriesId والتاريخ
+        const budgetIndex = budget.products.findIndex((item) =>
+            item.CategoriesId.toString() === CategoriesId &&
+            new Date(item.date).toISOString().split('T')[0] === selectedDate
         );
 
         if (budgetIndex > -1) {
             budget.products.splice(budgetIndex, 1);
             await budget.save();
-            res.status(200).json({ message: 'Category deleted successfully', budget });
+            res.status(200).json({ message: 'تم الحذف بنجاح', budget });
         } else {
-            res.status(404).json({ error: 'Category not found in budget' });
+            res.status(404).json({ error: 'الفئة غير موجودة في الميزانية لهذا التاريخ' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
