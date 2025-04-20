@@ -43,7 +43,8 @@ exports.userLogin=async(req,res)=>{
     const {email,password}=req.body;
     try{
 
-       const user=await User.findOne({email})
+        //delete .lean() to get the full object
+       const user=await User.findOne({email}).lean(); 
        if(!user){
         return res.status(400).json({message:'username is not found'})
        }
