@@ -1,33 +1,35 @@
 const Budget = require('../models/PersonalBudget ');
 const Category = require('../models/categoryData');
 
-
-// get all products
 exports.getUserBudget = async (req, res) => {
-    try {                                                          //populate  :هاي يلي بتخليني اوصل للبيانات الموجوده في الداتابيز ل model ثانيه
+    try {
         const budget = await Budget.findOne({ userId: req.user }).populate('products.CategoriesId');
         res.status(200).json(budget);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
+};
 
-
+// Add budget item
 exports.addBudget = async (req, res) => {
     const { CategoriesId, valueitem, date } = req.body;
     const userId = req.user;
 
-    // تحويل التاريخ إلى صيغة YYYY-MM-DD
+    // تحويل التاريخ المرسل إلى صيغة YYYY-MM-DD
     const selectedDate = new Date(date).toISOString().split('T')[0];
 
     try {
-        // التحقق مما إذا كانت الفئة موجودة في نفس التاريخ
+        // التحقق من وجود الفئة في نفس التاريخ
         const existingBudget = await Budget.findOne({
             userId,
-            'products.CategoriesId': CategoriesId,
-            'products.date': {
-                $gte: new Date(selectedDate),
-                $lt: new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() + 1))
+            products: {
+                $elemMatch: {
+                    CategoriesId,
+                    date: {
+                        $gte: new Date(selectedDate),
+                        $lt: new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() + 1))
+                    }
+                }
             }
         });
 
@@ -38,7 +40,15 @@ exports.addBudget = async (req, res) => {
         // إضافة العنصر الجديد
         const updatedBudget = await Budget.findOneAndUpdate(
             { userId },
-            { $push: { products: { CategoriesId, valueitem, date: new Date(selectedDate) } } },
+            {
+                $push: {
+                    products: {
+                        CategoriesId,
+                        valueitem,
+                        date: new Date(selectedDate)
+                    }
+                }
+            },
             { new: true, upsert: true }
         );
 
@@ -48,9 +58,6 @@ exports.addBudget = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
-
-
-
 
 // Update budget item
 exports.updateBudget = async (req, res) => {
@@ -63,7 +70,7 @@ exports.updateBudget = async (req, res) => {
     try {
         const budget = await Budget.findOne({ userId });
         if (!budget) {
-            return res.status(404).json({ error: 'الميزانية غير موجودة' });
+            return res.status(404).json({ error: 'Budget not found' });
         }
 
         // البحث عن العنصر بناءً على CategoriesId والتاريخ
@@ -77,14 +84,12 @@ exports.updateBudget = async (req, res) => {
             await budget.save();
             res.status(200).json(budget);
         } else {
-            res.status(404).json({ error: 'الفئة غير موجودة في الميزانية لهذا التاريخ' });
+            res.status(404).json({ error: 'Category not found in budget for the specified date' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
-
-
 
 // Delete budget item
 exports.deleteBudget = async (req, res) => {
@@ -97,7 +102,7 @@ exports.deleteBudget = async (req, res) => {
     try {
         const budget = await Budget.findOne({ userId });
         if (!budget) {
-            return res.status(404).json({ error: 'الميزانية غير موجودة' });
+            return res.status(404).json({ error: 'Budget not found' });
         }
 
         // البحث عن العنصر بناءً على CategoriesId والتاريخ
@@ -109,9 +114,9 @@ exports.deleteBudget = async (req, res) => {
         if (budgetIndex > -1) {
             budget.products.splice(budgetIndex, 1);
             await budget.save();
-            res.status(200).json({ message: 'تم الحذف بنجاح', budget });
+            res.status(200).json({ message: 'Category deleted successfully', budget });
         } else {
-            res.status(404).json({ error: 'الفئة غير موجودة في الميزانية لهذا التاريخ' });
+            res.status(404).json({ error: 'Category not found in budget for the specified date' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
