@@ -13,12 +13,13 @@ import {
   FaCopy,
   FaCheck,
   FaComments,
-  FaGlobe
+  FaGlobe,
+  FaFilePdf
 } from 'react-icons/fa';
+import jsPDF from 'jspdf';
 import '../cssStyle/poot.css';
 
 function Poot() {
-  // Chat & file states
   const initialBotMessage = {
     sender: 'bot',
     text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
@@ -33,14 +34,12 @@ function Poot() {
   const [responseLanguage, setResponseLanguage] = useState('ar');
   const chatMessagesRef = useRef(null);
 
-  // Budget & filter states
   const [budgetItems, setBudgetItems] = useState([]);
   const [loadingBudget, setLoadingBudget] = useState(true);
-  const [dateType, setDateType] = useState('month');       // 'full' | 'month' | 'year'
+  const [dateType, setDateType] = useState('month');
   const [filterDate, setFilterDate] = useState(new Date());
-  const [filterType, setFilterType] = useState('Revenues'); // 'Revenues' | 'Expenses'
+  const [filterType, setFilterType] = useState('Revenues');
 
-  // Fetch JWT & config
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'https://fin-tracker-ncbx.onrender.com/api/getUserBudget';
   const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
@@ -54,14 +53,12 @@ function Poot() {
     scrollToBottom();
   }, [messages]);
 
-  // Scroll chat to bottom
   function scrollToBottom() {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }
 
-  // Time helper
   function getCurrentTime() {
     const now = new Date();
     let h = now.getHours(), m = now.getMinutes();
@@ -69,7 +66,6 @@ function Poot() {
     return `${h}:${m}`;
   }
 
-  // Fetch budget data
   async function fetchBudget() {
     setLoadingBudget(true);
     try {
@@ -84,7 +80,6 @@ function Poot() {
     }
   }
 
-  // Group & filter logic (adapted from Graph component)
   function groupByCategory(items) {
     return items.reduce((acc, item) => {
       const cat = item.CategoriesId?.categoryName || 'Unknown';
@@ -106,7 +101,6 @@ function Poot() {
         if (dateType === 'year') {
           return d.getFullYear() === sel.getFullYear();
         }
-        // full
         return (
           d.getFullYear() === sel.getFullYear() &&
           d.getMonth() === sel.getMonth() &&
@@ -121,7 +115,6 @@ function Poot() {
     return Object.values(grouped).filter(i => i.CategoriesId?.categoryName && i.CategoriesId.categoryName !== 'Unknown');
   }
 
-  // Call Google Gemini for report on filtered data
   async function getReport(items) {
     const prompt = `
 الرجاء تقديم تقرير مُفصّل وحلول عملية للبيانات التالية باللغة ${responseLanguage === 'en' ? 'الإنجليزية' : 'العربية'}:
@@ -140,7 +133,6 @@ ${JSON.stringify(items, null, 2)}
     return data.candidates[0].content.parts[0].text;
   }
 
-  // Handle "Generate Report" button
   async function handleGenerateReport() {
     const items = filterItems(budgetItems);
     setIsTyping(true);
@@ -161,7 +153,15 @@ ${JSON.stringify(items, null, 2)}
     }
   }
 
-  // Existing file-upload & chat submit logic unchanged
+  function exportReportAsPDF(reportText) {
+    const doc = new jsPDF();
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(12);
+    const splitText = doc.splitTextToSize(reportText, 180);
+    doc.text(splitText, 10, 10);
+    doc.save('report.pdf');
+  }
+
   function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -239,24 +239,31 @@ ${JSON.stringify(items, null, 2)}
 
   function renderMessageContent(message) {
     if (message.formatted) {
-      const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-      let last = 0, match, parts = [];
-      while ((match = codeRegex.exec(message.text)) !== null) {
-        const before = message.text.slice(last, match.index).trim();
-        if (before) parts.push(<ReactMarkdown key={last} remarkPlugins={[remarkGfm]}>{before}</ReactMarkdown>);
-        parts.push(<CopyableCode key={match.index} code={match[2]} language={match[1] || ''} />);
-        last = match.index + match[0].length;
-      }
-      const after = message.text.slice(last).trim();
-      if (after) parts.push(<ReactMarkdown key={last} remarkPlugins={[remarkGfm]}>{after}</ReactMarkdown>);
-      return <div className="message-text">{parts}</div>;
+      return (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            code({ node, inline, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || '');
+              return !inline && match ? (
+                <CopyableCode code={String(children).replace(/\n$/, '')} language={match[1]} />
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+          }}
+        >
+          {message.text}
+        </ReactMarkdown>
+      );
     }
-    return <div className="message-text"><p>{message.text}</p></div>;
+    return <p>{message.text}</p>;
   }
 
   return (
     <div className="poot-container">
-      {/* Header */}
       <header className="poot-header">
         <div className="header-top">
           <h1 style={{ display: 'flex', alignItems: 'center' }}>
@@ -267,7 +274,6 @@ ${JSON.stringify(items, null, 2)}
         <p className="header-subtitle">اسأل أي سؤال أو أرفق ملف Excel ليتم تحليله وإرجاع شرح مفصل</p>
       </header>
 
-      {/* Filter Panel */}
       <section className="filter-panel">
         <label>نوع التاريخ:</label>
         <select value={dateType} onChange={e => setDateType(e.target.value)}>
@@ -313,35 +319,34 @@ ${JSON.stringify(items, null, 2)}
         <button onClick={handleGenerateReport} disabled={loadingBudget}>
           {loadingBudget ? 'تحميل...' : 'توليد التقرير'}
         </button>
+        <button onClick={() => exportReportAsPDF(messages.find(msg => msg.sender === 'bot' && msg.formatted)?.text || 'لا يوجد تقرير')}>
+          <FaFilePdf style={{ marginRight: 4 }} /> تصدير التقرير ك PDF
+        </button>
       </section>
 
-      {/* Chat */}
       <main className="chat-container">
-        <div className="chat-messages-wrapper">
-          <div className="chat-messages" ref={chatMessagesRef}>
-            {messages.map((msg, i) => (
-              <div key={i} className={`message ${msg.sender}`}>
-                <div className="avatar">
-                  {msg.sender === 'user' ? <FaUserCircle size={30} /> : <FaRobot size={30} />}
-                </div>
-                <div className="message-content">
-                  {renderMessageContent(msg)}
-                  <span className="time">{msg.time}</span>
-                </div>
+        <div className="chat-messages-wrapper" ref={chatMessagesRef}>
+          {messages.map((msg, i) => (
+            <div key={i} className={`message ${msg.sender}`}>
+              <div className="avatar">
+                {msg.sender === 'user' ? <FaUserCircle size={30} /> : <FaRobot size={30} />}
               </div>
-            ))}
-            {isTyping && (
-              <div className="message bot">
-                <div className="avatar"><FaRobot size={30} /></div>
-                <div className="message-content">
-                  <div className="typing-indicator"><span/><span/><span/></div>
-                </div>
+              <div className="message-content">
+                {renderMessageContent(msg)}
+                <span className="time">{msg.time}</span>
               </div>
-            )}
-          </div>
+            </div>
+          ))}
+          {isTyping && (
+            <div className="message bot">
+              <div className="avatar"><FaRobot size={30} /></div>
+              <div className="message-content">
+                <div className="typing-indicator"><span/><span/><span/></div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Input & File Upload */}
         <div className="chat-input">
           <div className="file-upload">
             <label htmlFor="file-input" className="file-upload-label">

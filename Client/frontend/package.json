@@ -23,6 +23,7 @@
     "jspdf": "^2.5.2",
     "katex": "^0.16.22",
     "pdfjs-dist": "^5.1.91",
+    "pdfmake": "^0.2.19",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-copy-to-clipboard": "^5.1.0",
