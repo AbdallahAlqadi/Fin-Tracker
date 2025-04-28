@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
@@ -14,9 +14,7 @@ import {
   FaCheck,
   FaComments,
   FaGlobe,
-  FaFilePdf
 } from 'react-icons/fa';
-import jsPDF from 'jspdf';
 import '../cssStyle/poot.css';
 
 function Poot() {
@@ -26,7 +24,10 @@ function Poot() {
     time: getCurrentTime(),
     formatted: true
   };
-  const [messages, setMessages] = useState([initialBotMessage]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('chatHistory');
+    return saved ? JSON.parse(saved) : [initialBotMessage];
+  });
   const [input, setInput] = useState('');
   const [attachedFile, setAttachedFile] = useState(null);
   const [attachedFileData, setAttachedFileData] = useState(null);
@@ -38,7 +39,7 @@ function Poot() {
   const [loadingBudget, setLoadingBudget] = useState(true);
   const [dateType, setDateType] = useState('month');
   const [filterDate, setFilterDate] = useState(new Date());
-  const [filterType, setFilterType] = useState('Revenues');
+  const [filterType, setFilterType] = useState('All');
 
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'https://fin-tracker-ncbx.onrender.com/api/getUserBudget';
@@ -51,6 +52,7 @@ function Poot() {
 
   useEffect(() => {
     scrollToBottom();
+    localStorage.setItem('chatHistory', JSON.stringify(messages));
   }, [messages]);
 
   function scrollToBottom() {
@@ -75,10 +77,22 @@ function Poot() {
       setBudgetItems(res.data.products || []);
     } catch (err) {
       console.error('Error fetching budget:', err);
+      if (err.response) {
+        if (err.response.status === 401) {
+          alert('غير مصرح. يرجى تسجيل الدخول مرة أخرى.');
+        } else {
+          alert('خطأ في جلب بيانات الميزانية. حاول لاحقًا.');
+        }
+      } else {
+        alert('خطأ في الشبكة. تحقق من اتصالك.');
+      }
     } finally {
       setLoadingBudget(false);
     }
   }
+
+  const groupedBudgetItems = useMemo(() => groupByCategory(budgetItems), [budgetItems]);
+  const filteredItems = useMemo(() => filterItems(budgetItems), [budgetItems, filterDate, dateType, filterType]);
 
   function groupByCategory(items) {
     return items.reduce((acc, item) => {
@@ -108,7 +122,7 @@ function Poot() {
         );
       });
     }
-    if (filterType) {
+    if (filterType && filterType !== "All") {
       filtered = filtered.filter(item => item.CategoriesId?.categoryType === filterType);
     }
     const grouped = groupByCategory(filtered);
@@ -117,7 +131,7 @@ function Poot() {
 
   async function getReport(items) {
     const prompt = `
-الرجاء تقديم تقرير مُفصّل وحلول عملية للبيانات التالية باللغة ${responseLanguage === 'en' ? 'الإنجليزية' : 'العربية'}:
+الرجاء تقديم تقرير مُفصّل وحلول عملية للبيانات التالية باللغة ${responseLanguage === 'en' ? 'الإنجليزية' : 'العربية'}، مع استخدام تنسيق Markdown للعناوين والقوائم:
 ${JSON.stringify(items, null, 2)}
     `.trim();
     const res = await fetch(GEMINI_URL, {
@@ -134,56 +148,88 @@ ${JSON.stringify(items, null, 2)}
   }
 
   async function handleGenerateReport() {
-    const items = filterItems(budgetItems);
+    const items = filteredItems;
     setIsTyping(true);
     try {
       const report = await getReport(items);
+      const locale = responseLanguage === 'ar' ? 'ar-EG' : 'en-US';
+      let dateStr;
+      if (dateType === 'full') {
+        dateStr = filterDate.toLocaleDateString(locale);
+      } else if (dateType === 'month') {
+        dateStr = filterDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+      } else {
+        dateStr = filterDate.toLocaleDateString(locale, { year: 'numeric' });
+      }
+      const header = responseLanguage === 'ar'
+        ? `### تقرير لـ ${filterType === "All" ? "جميع الأنواع" : filterType} في ${dateStr}\n\n`
+        : `### Report for ${filterType === "All" ? "All Types" : filterType} in ${dateStr}\n\n`;
+      const reportWithHeader = header + report;
       setMessages(prev => [
         ...prev,
-        { sender: 'bot', text: report, time: getCurrentTime(), formatted: true }
+        { sender: 'bot', text: reportWithHeader, time: getCurrentTime(), formatted: true, type: 'report' }
       ]);
     } catch (err) {
       console.error(err);
-      setMessages(prev => [
-        ...prev,
-        { sender: 'bot', text: 'عذراً، لم أتمكن من جلب التقرير.', time: getCurrentTime(), formatted: false }
-      ]);
+      if (err.message.includes('Network error')) {
+        setMessages(prev => [
+          ...prev,
+          { sender: 'bot', text: 'خطأ في الشبكة. تحقق من اتصالك.', time: getCurrentTime(), formatted: false }
+        ]);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          { sender: 'bot', text: 'عذراً، لم أتمكن من جلب التقرير.', time: getCurrentTime(), formatted: false }
+        ]);
+      }
     } finally {
       setIsTyping(false);
     }
   }
 
-  function exportReportAsPDF(reportText) {
-    const doc = new jsPDF();
-    doc.setFont("Amiri", "normal");
-    doc.setFontSize(12);
-    const splitText = doc.splitTextToSize(reportText, 180);
-    doc.text(splitText, 10, 10);
-    doc.save('report.pdf');
-  }
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      alert('الملف كبير جدًا. الحد الأقصى 5 ميجابايت.');
+      return;
+    }
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
+      alert('مسموح فقط بملفات Excel وCSV.');
+      return;
+    }
     setAttachedFile(file);
     const reader = new FileReader();
     reader.onload = evt => {
       try {
-        const wb = XLSX.read(evt.target.result, { type: 'binary' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        setAttachedFileData(json);
+        if (file.name.endsWith('.csv')) {
+          const text = evt.target.result;
+          const rows = text.split('\n').map(row => row.split(','));
+          setAttachedFileData(rows);
+        } else {
+          const wb = XLSX.read(evt.target.result, { type: 'binary' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          setAttachedFileData(json);
+        }
       } catch (err) {
         console.error('Error reading file:', err);
+        alert('خطأ في قراءة الملف. حاول مرة أخرى.');
       }
     };
-    reader.readAsBinaryString(file);
+    if (file.name.endsWith('.csv')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsBinaryString(file);
+    }
   }
 
   async function getBotResponse(message, fileData = null, language = 'ar') {
     const prompt = fileData
-      ? `تم إرفاق ملف Excel يحتوي على البيانات التالية:\n${JSON.stringify(fileData)}\nالسؤال: ${message}\nيرجى الرد باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}.`
-      : `السؤال: ${message}\nيرجى الرد باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}.`;
+      ? `تم إرفاق ملف (${attachedFile.name.endsWith('.csv') ? 'CSV' : 'Excel'}) يحتوي على البيانات التالية:\n${JSON.stringify(fileData)}\nالسؤال: ${message}\nيرجى الرد باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}، واستخدم تنسيق Markdown عند الضرورة.`
+      : `السؤال: ${message}\nيرجى الرد باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}، واستخدم تنسيق Markdown عند الضرورة.`;
     const res = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -209,13 +255,19 @@ ${JSON.stringify(items, null, 2)}
     try {
       const reply = await getBotResponse(msg, attachedFileData, responseLanguage);
       setMessages(prev => [...prev, { sender: 'bot', text: reply, time: getCurrentTime(), formatted: true }]);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setMessages(prev => [...prev, { sender: 'bot', text: 'حدث خطأ. حاول مرة أخرى.', time: getCurrentTime(), formatted: false }]);
     } finally {
       setIsTyping(false);
       setAttachedFile(null);
       setAttachedFileData(null);
     }
+  }
+
+  function clearChatHistory() {
+    setMessages([initialBotMessage]);
+    localStorage.removeItem('chatHistory');
   }
 
   function CopyableCode({ code, language = '' }) {
@@ -234,6 +286,20 @@ ${JSON.stringify(items, null, 2)}
           {copied ? <><FaCheck style={{ marginRight: 5 }} />تم النسخ</> : <><FaCopy style={{ marginRight: 5 }} />نسخ الكود</>}
         </button>
       </div>
+    );
+  }
+
+  function CopyButton({ text }) {
+    const [copied, setCopied] = useState(false);
+    const copy = async () => {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+    return (
+      <button onClick={copy} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-color)' }}>
+        {copied ? <FaCheck /> : <FaCopy />}
+      </button>
     );
   }
 
@@ -269,9 +335,11 @@ ${JSON.stringify(items, null, 2)}
           <h1 style={{ display: 'flex', alignItems: 'center' }}>
             <FaComments style={{ marginRight: 8 }} /> Poot Chat
           </h1>
-          <button onClick={() => window.location.reload()} className="new-chat-btn">New Chat</button>
+          <div>
+            <button onClick={clearChatHistory} className="new-chat-btn">New Chat</button>
+          </div>
         </div>
-        <p className="header-subtitle">اسأل أي سؤال أو أرفق ملف Excel ليتم تحليله وإرجاع شرح مفصل</p>
+        <p className="header-subtitle">اسأل أي سؤال أو أرفق ملف Excel/CSV ليتم تحليله وإرجاع شرح مفصل</p>
       </header>
 
       <section className="filter-panel">
@@ -312,6 +380,7 @@ ${JSON.stringify(items, null, 2)}
 
         <label>النوع:</label>
         <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+          <option value="All">All</option>
           <option value="Revenues">Revenues</option>
           <option value="Expenses">Expenses</option>
         </select>
@@ -319,21 +388,19 @@ ${JSON.stringify(items, null, 2)}
         <button onClick={handleGenerateReport} disabled={loadingBudget}>
           {loadingBudget ? 'تحميل...' : 'توليد التقرير'}
         </button>
-        <button onClick={() => exportReportAsPDF(messages.find(msg => msg.sender === 'bot' && msg.formatted)?.text || 'لا يوجد تقرير')}>
-          <FaFilePdf style={{ marginRight: 4 }} /> تصدير التقرير ك PDF
-        </button>
       </section>
 
       <main className="chat-container">
         <div className="chat-messages-wrapper" ref={chatMessagesRef}>
           {messages.map((msg, i) => (
-            <div key={i} className={`message ${msg.sender}`}>
+            <div key={i} className={`message ${msg.sender} ${msg.type || ''}`}>
               <div className="avatar">
                 {msg.sender === 'user' ? <FaUserCircle size={30} /> : <FaRobot size={30} />}
               </div>
               <div className="message-content">
                 {renderMessageContent(msg)}
                 <span className="time">{msg.time}</span>
+                <CopyButton text={msg.text} />
               </div>
             </div>
           ))}
@@ -350,9 +417,9 @@ ${JSON.stringify(items, null, 2)}
         <div className="chat-input">
           <div className="file-upload">
             <label htmlFor="file-input" className="file-upload-label">
-              <FaFileExcel style={{ marginRight: 4 }} /> إرفاق ملف Excel
+              <FaFileExcel style={{ marginRight: 4 }} /> إرفاق ملف Excel/CSV
             </label>
-            <input id="file-input" type="file" accept=".xlsx,.xls" onChange={handleFileUpload} hidden />
+            <input id="file-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} hidden />
             {attachedFile && <span className="file-name">{attachedFile.name}</span>}
           </div>
 
@@ -365,20 +432,21 @@ ${JSON.stringify(items, null, 2)}
             </select>
           </div>
 
-          <form onSubmit={handleSubmit} className="message-form">
+          <div className="message-form">
             <input
               type="text"
               placeholder="اكتب سؤالك هنا..."
               value={input}
               onChange={e => setInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSubmit(e)}
               autoComplete="off"
               autoFocus
               className="message-input"
             />
-            <button type="submit" disabled={!input.trim() && !attachedFileData} className="send-btn">
+            <button onClick={handleSubmit} disabled={!input.trim() && !attachedFileData} className="send-btn">
               <FaPaperPlane size={18} />
             </button>
-          </form>
+          </div>
         </div>
       </main>
 

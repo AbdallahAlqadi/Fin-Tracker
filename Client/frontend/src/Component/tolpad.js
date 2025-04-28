@@ -27,8 +27,14 @@ import HomePage from '../Component/Homepage';
 import AcountUser from '../Component/AcountUser';
 import LogOut from '../Component/LogOut';
 import Poot from '../Component/Poot';
-
+import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import Fab from '@mui/material/Fab';
+import Badge from '@mui/material/Badge';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import Popover from '@mui/material/Popover';
 
 const demoTheme = createTheme({
   palette: {
@@ -50,7 +56,6 @@ const demoTheme = createTheme({
 
 function useDemoRouter(initialPath) {
   const [pathname, setPathname] = React.useState(initialPath);
-
   const router = React.useMemo(() => {
     return {
       pathname,
@@ -58,7 +63,6 @@ function useDemoRouter(initialPath) {
       navigate: (path) => setPathname(String(path)),
     };
   }, [pathname]);
-
   return router;
 }
 
@@ -73,16 +77,75 @@ function DemoPageContent({ pathname }) {
         textAlign: 'center',
       }}
     >
-      {/* تم تعديل Typography ليستخدم عنصر div بدلاً من p */}
       <Typography component="div">{pathname}</Typography>
     </Box>
   );
 }
 
 DemoPageContent.propTypes = {
-  // يمكن أن يكون المحتوى نصاً أو مكوناً
   pathname: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
 };
+
+function NotificationFab() {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const notValue = localStorage.getItem('not');
+  const hasNotification = notValue === '0';
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+
+  return (
+    <>
+      <Fab
+        color="primary"
+        aria-label="notifications"
+        onClick={handleClick}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+          '&:hover': {
+            transform: 'scale(1.1)',
+            transition: 'transform 0.2s',
+          },
+        }}
+      >
+        <Badge badgeContent={hasNotification ? 1 : 0} color="error">
+          <LightbulbIcon />
+        </Badge>
+      </Fab>
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+      >
+        <Box p={2}>
+          {hasNotification ? (
+            <Typography>انت ما دخلت لا مصروفاتك ولا إيراداتك لليوم!</Typography>
+          ) : (
+            <Typography>لا توجد إشعارات</Typography>
+          )}
+        </Box>
+      </Popover>
+    </>
+  );
+}
 
 function DashboardLayoutBasic(props) {
   const { window } = props;
@@ -90,7 +153,6 @@ function DashboardLayoutBasic(props) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // قائمة الصفحات والمكونات
   const allPages = [
     { path: '/dashboard', component: <CategoryForm /> },
     { path: '/dashboarduser', component: <DashboardUser /> },
@@ -102,9 +164,7 @@ function DashboardLayoutBasic(props) {
     { path: '/homepage', component: <HomePage /> },
     { path: '/alluser', component: <AcountUser /> },
     { path: '/poot', component: <Poot /> },
-
     { path: '/logout', component: <LogOut /> },
-
   ];
 
   const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
@@ -137,18 +197,17 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'poot',
       title: 'Poot',
-      icon: <ChatIcon />,
+      icon: <FaceIcon />,
     },
-   
     {
       segment: 'logout',
       title: 'logout',
-      icon: <ExitToAppIcon />
+      icon: <ExitToAppIcon />,
     },
   ]);
 
-  // الصفحة الافتراضية
   const router = useDemoRouter('/homepage');
+  const [openNotification, setOpenNotification] = useState(false);
 
   useEffect(() => {
     const token = sessionStorage.getItem('jwt');
@@ -162,7 +221,6 @@ function DashboardLayoutBasic(props) {
         });
 
         sessionStorage.setItem('username', res.data.user);
-
         setUser(res.data.user);
 
         if (res.data.roul === 'admin') {
@@ -193,7 +251,6 @@ function DashboardLayoutBasic(props) {
               title: 'Comparison',
               icon: <SignalCellularAltIcon />,
             },
-           
             {
               segment: 'alluser',
               title: 'AllUserAcount',
@@ -212,18 +269,17 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'poot',
               title: 'Poot',
-              icon: <ChatIcon />,
+              icon: <FaceIcon />,
             },
             {
               segment: 'logout',
               title: 'logout',
-              icon: <ExitToAppIcon />
+              icon: <ExitToAppIcon />,
             },
           ]);
         }
       } catch (err) {
         console.error('Error fetching data:', err);
-
         if (err.response && err.response.status === 401) {
           navigate('/');
         } else {
@@ -233,7 +289,14 @@ function DashboardLayoutBasic(props) {
     };
 
     invaliedToken();
-    // تحديث الصفحة الحالية بناءً على router.pathname
+
+    const notValue = localStorage.getItem('not');
+    if (notValue === '0') {
+      setOpenNotification(true);
+    } else {
+      setOpenNotification(false);
+    }
+
     setCurrentComponent(allPages.find((page) => page.path === router.pathname)?.component);
   }, [router]);
 
@@ -247,6 +310,13 @@ function DashboardLayoutBasic(props) {
 
   const demoWindow = window !== undefined ? window() : undefined;
 
+  const handleCloseNotification = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenNotification(false);
+  };
+
   return (
     <AppProvider navigation={dashNavigate} router={router} theme={demoTheme} window={demoWindow}>
       <DashboardLayout>
@@ -254,6 +324,17 @@ function DashboardLayoutBasic(props) {
         <PageContainer>
           <DemoPageContent pathname={currentComponent} />
         </PageContainer>
+        <NotificationFab />
+        <Snackbar
+          open={openNotification}
+          autoHideDuration={6000}
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={handleCloseNotification} severity="warning" sx={{ width: '100%' }}>
+            انت ما دخلت لا مصروفاتك ولا إيراداتك لليوم!
+          </Alert>
+        </Snackbar>
       </DashboardLayout>
     </AppProvider>
   );

@@ -18,6 +18,7 @@
     "d3-scale-chromatic": "^3.1.0",
     "date-fns": "^2.16.1",
     "distinct-colors": "^3.0.0",
+    "docx": "^9.4.1",
     "html2canvas": "^1.4.1",
     "i18next": "^24.2.2",
     "jspdf": "^2.5.2",

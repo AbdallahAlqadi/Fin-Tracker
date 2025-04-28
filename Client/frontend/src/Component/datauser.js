@@ -47,13 +47,11 @@ const StyledCard = styled(Card)(({ theme }) => ({
   width: "100%",
   maxWidth: "450px",
   boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-  // عند الشاشات حتى 880 بكسل (بما في ذلك الأجهزة بين 600-880)
   "@media (max-width:880px)": {
     flexDirection: "column",
     alignItems: "center",
     textAlign: "center",
   },
-  // تقليل عرض الكارد للأجهزة التي يقل عرضها عن 575 بكسل
   "@media (max-width:575px)": {
     maxWidth: "350px",
   },
@@ -71,7 +69,6 @@ const ImageContainer = styled("div")(({ theme }) => ({
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
   width: "100px",
   height: "100px",
-  // تعديل الهوامش ليصبح تحت الصورة في الشاشات حتى 880 بكسل
   "@media (max-width:880px)": {
     marginRight: 0,
     marginBottom: "16px",
@@ -226,7 +223,6 @@ const ExportButton = styled(StyledButton)(({ theme }) => ({
   gap: "8px",
 }));
 
-// مكوّن جديد لتزيين التاريخ الذي يظهر في أعلى الكارد
 const StyledDateCard = styled(Box)(({ theme }) => ({
   background: "linear-gradient(135deg, #007BFF, #00C6FF)",
   color: "#fff",
@@ -238,7 +234,6 @@ const StyledDateCard = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(2),
 }));
 
-// دالة مساعدة لبناء رابط الصورة بشكل صحيح
 const getImageUrl = (image) => {
   if (!image) return "";
   return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
@@ -260,11 +255,9 @@ const BudgetItems = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
-  // حالة وبيانات نافذة تأكيد الحذف
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  // حالات التنبيه لعرض الشريط (Snackbar)
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -283,7 +276,6 @@ const BudgetItems = () => {
           "Content-Type": "application/json",
         },
       });
-      // فلترة العناصر التي لا تحتوي على CategoriesId لتجنب حدوث الخطأ
       setBudgetItems((response.data.products || []).filter((item) => item.CategoriesId));
     } catch (error) {
       console.error("Error fetching budget", error);
@@ -292,7 +284,13 @@ const BudgetItems = () => {
     }
   };
 
-  // دالة لفتح نافذة تأكيد الحذف
+  // Check if there are budget items for today and set localStorage.not accordingly
+  useEffect(() => {
+    const todayString = format(new Date(), "yyyy-MM-dd");
+    const hasItemsToday = budgetItems.some(item => format(new Date(item.date), "yyyy-MM-dd") === todayString);
+    localStorage.setItem("not", hasItemsToday ? "1" : "0");
+  }, [budgetItems]);
+
   const handleDeleteClick = (item) => {
     setItemToDelete(item);
     setDeleteDialogOpen(true);
@@ -303,7 +301,6 @@ const BudgetItems = () => {
     setItemToDelete(null);
   };
 
-  // دالة تأكيد الحذف واستدعاء API الحذف
   const confirmDelete = async () => {
     if (!itemToDelete) return;
     handleCloseDeleteDialog();
@@ -405,7 +402,6 @@ const BudgetItems = () => {
     return Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0]));
   };
 
-  // دالة التصفية مع التأكد من وجود بيانات الفئة
   const filterItems = (items) => {
     let filteredItems = items.filter((item) => item.CategoriesId);
 
@@ -496,7 +492,6 @@ const BudgetItems = () => {
     }
   }, [balance]);
 
-  // دالة التصدير إلى Excel
   const exportToExcel = async () => {
     setExportLoading(true);
     setExportProgress(0);
