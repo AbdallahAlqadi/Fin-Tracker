@@ -109,8 +109,8 @@ function NotificationFab() {
         onClick={handleClick}
         sx={{
           position: 'fixed',
-          bottom: 16,
-          right: 16,
+          bottom: 100, // Modified from 16 to 24
+          right: 25,
           boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
           '&:hover': {
             transform: 'scale(1.1)',
@@ -258,7 +258,7 @@ function DashboardLayoutBasic(props) {
             },
             {
               segment: 'fedbackuser',
-              title: 'FedbakUser',
+              title: 'Fed planksUser',
               icon: <ChatBubbleIcon />,
             },
             {
