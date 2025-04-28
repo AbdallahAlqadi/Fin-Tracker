@@ -7,6 +7,9 @@
   --surface-color: #ffffff;
   --text-color: #333333;
   --text-light: #777777;
+  --message-font-family: 'Inter', sans-serif;
+  --message-font-size: 1rem;
+  --message-line-height: 1.6;
   --border-radius: 10px;
   --transition-speed: 0.3s;
   --font-family: 'Inter', sans-serif;
@@ -152,6 +155,12 @@ body, html {
   border-radius: 20px 20px 0 20px;
   position: relative;
   transition: background var(--transition-speed);
+  /* Enhanced font styling */
+  font-family: var(--message-font-family);
+  font-size: var(--message-font-size);
+  line-height: var(--message-line-height);
+  font-weight: 400;
+  color: var(--text-color);
 }
 .message.user .message-content {
   background: var(--primary-color);
@@ -160,7 +169,7 @@ body, html {
 }
 .message.bot .message-content {
   background: #e9e9eb;
-  color: #333;
+  color: var(--text-color);
   border-radius: 20px 20px 20px 0;
 }
 .message-content .time {
@@ -263,3 +272,4 @@ body, html {
   font-size: 0.8rem;
   color: var(--text-light);
 }
+
