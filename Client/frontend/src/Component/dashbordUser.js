@@ -53,9 +53,9 @@ const CategoryCard = styled(Box)(({ theme }) => ({
   border: '2px solid #4A90E2',
   backgroundColor: '#FFFFFF',
   borderRadius: '16px',
-  padding: theme.spacing(2.5),
-  width: '180px',
-  height: '180px',
+  padding: theme.spacing(3),
+  width: '200px',
+  height: '200px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
@@ -71,9 +71,9 @@ const CategoryCard = styled(Box)(({ theme }) => ({
     animation: `${floatAnimation} 2s ease-in-out infinite`,
   },
   [theme.breakpoints.down('sm')]: {
-    width: '140px',
-    height: '140px',
-    padding: theme.spacing(2),
+    width: '160px',
+    height: '160px',
+    padding: theme.spacing(2.5),
   },
 }));
 
@@ -83,7 +83,7 @@ const DashboardUser = () => {
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
-  const [selectedDate, setSelectedDate] = useState(''); // حالة جديدة للتاريخ
+  const [selectedDate, setSelectedDate] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
@@ -127,14 +127,14 @@ const DashboardUser = () => {
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
-    setSelectedDate(''); // إعادة تعيين التاريخ عند فتح Dialog
+    setSelectedDate('');
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedCategory(null);
     setValue('');
-    setSelectedDate(''); // إعادة تعيين التاريخ عند الإغلاق
+    setSelectedDate('');
     setErrorMessage('');
   };
 
@@ -162,7 +162,7 @@ const DashboardUser = () => {
         {
           CategoriesId: currentCategory._id,
           valueitem: parsedValue,
-          date: selectedDate, // إرسال التاريخ المحدد
+          date: selectedDate,
         },
         {
           headers: {
@@ -197,9 +197,9 @@ const DashboardUser = () => {
 
   if (loading) {
     return (
-      <Typography variant="h6" align="center" sx={{ mt: 4 }}>
-        Loading...
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress sx={{ color: '#4A90E2' }} />
+      </Box>
     );
   }
 
@@ -309,7 +309,7 @@ const DashboardUser = () => {
           transform: `scale(${scale})`,
           cursor: 'pointer',
           mb: 4,
-          fontSize: { xs: '2rem', md: '3rem' },
+          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
         }}
         onMouseEnter={() => setScale(1.1)}
         onMouseLeave={() => setScale(1)}
@@ -445,7 +445,7 @@ const DashboardUser = () => {
                 p: 2,
                 borderRadius: 2,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                mb: 3,
+                mb: 4,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
@@ -458,7 +458,7 @@ const DashboardUser = () => {
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: 3,
+                  gap: 4,
                   justifyContent: 'center',
                 }}
               >
@@ -499,8 +499,8 @@ const DashboardUser = () => {
                                 }
                                 alt={category.categoryName}
                                 sx={{
-                                  width: { xs: 50, sm: 70 },
-                                  height: { xs: 50, sm: 70 },
+                                  width: { xs: 60, sm: 80 },
+                                  height: { xs: 60, sm: 80 },
                                   borderRadius: '50%',
                                   mb: 1,
                                   objectFit: 'cover',
@@ -522,7 +522,7 @@ const DashboardUser = () => {
                   })}
               </Box>
             ) : (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
                 {groupedCategories[type]
                   .slice(0, visibleItems[type])
                   .map((category) => {
@@ -560,8 +560,8 @@ const DashboardUser = () => {
                                 }
                                 alt={category.categoryName}
                                 sx={{
-                                  width: { xs: 50, sm: 70 },
-                                  height: { xs: 50, sm: 70 },
+                                  width: { xs: 60, sm: 80 },
+                                  height: { xs: 60, sm: 80 },
                                   borderRadius: '50%',
                                   mb: 1,
                                   objectFit: 'cover',
@@ -675,6 +675,7 @@ const DashboardUser = () => {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             sx={{ mb: 2 }}
+            helperText="Enter a non-negative decimal number"
           />
           <TextField
             margin="dense"
@@ -686,9 +687,10 @@ const DashboardUser = () => {
             onChange={(e) => setSelectedDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
             sx={{ mb: 2 }}
+            helperText="Select the date for this entry"
           />
           {errorMessage && (
-            <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center', fontWeight: 'bold', mt: 2 }}>
               {errorMessage}
             </Typography>
           )}
@@ -795,7 +797,7 @@ const DashboardUser = () => {
             <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
           {newErrorMessage && (
-            <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center', fontWeight: 'bold', mt: 2 }}>
               {newErrorMessage}
             </Typography>
           )}
