@@ -282,7 +282,7 @@ ${JSON.stringify(items, null, 2)}
         <SyntaxHighlighter language={language} style={tomorrow} customStyle={{ borderRadius: 8, padding: 15, fontSize: '0.9em', direction: 'ltr', textAlign: 'left' }}>
           {code}
         </SyntaxHighlighter>
-        <button onClick={copy} style={{ position: 'absolute', top: 10, right: 10, background: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: 4, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: 14 }}>
+        <button onClick={copy} className="copy-code-button" style={{ position: 'absolute', top: 10, right: 10, display: 'flex', alignItems: 'center' }}>
           {copied ? <><FaCheck style={{ marginRight: 5 }} />تم النسخ</> : <><FaCopy style={{ marginRight: 5 }} />نسخ الكود</>}
         </button>
       </div>
@@ -297,7 +297,7 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <button onClick={copy} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-color)' }}>
+      <button onClick={copy} className="copy-text-button">
         {copied ? <FaCheck /> : <FaCopy />}
       </button>
     );
@@ -332,8 +332,8 @@ ${JSON.stringify(items, null, 2)}
     <div className="poot-container">
       <header className="poot-header">
         <div className="header-top">
-          <h1 style={{ display: 'flex', alignItems: 'center' }}>
-            <FaComments style={{ marginRight: 8 }} /> Poot Chat
+          <h1>
+            <FaComments /> Poot Chat
           </h1>
           <div>
             <button onClick={clearChatHistory} className="new-chat-btn">New Chat</button>
@@ -360,7 +360,7 @@ ${JSON.stringify(items, null, 2)}
         {dateType === 'month' && (
           <input 
             type="month" 
-            value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`} 
+            value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`}
             onChange={e => {
               const [year, month] = e.target.value.split('-');
               setFilterDate(new Date(year, month - 1, 1));
@@ -393,9 +393,9 @@ ${JSON.stringify(items, null, 2)}
       <main className="chat-container">
         <div className="chat-messages-wrapper" ref={chatMessagesRef}>
           {messages.map((msg, i) => (
-            <div key={i} className={`message ${msg.sender} ${msg.type || ''}`}>
+            <div key={i} className={`message ${msg.sender}${msg.type === 'report' ? ' report' : ''}`}>
               <div className="avatar">
-                {msg.sender === 'user' ? <FaUserCircle size={30} /> : <FaRobot size={30} />}
+                {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
               </div>
               <div className="message-content">
                 {renderMessageContent(msg)}
@@ -415,22 +415,24 @@ ${JSON.stringify(items, null, 2)}
         </div>
 
         <div className="chat-input">
-          <div className="file-upload">
-            <label htmlFor="file-input" className="file-upload-label">
-              <FaFileExcel style={{ marginRight: 4 }} /> إرفاق ملف Excel/CSV
-            </label>
-            <input id="file-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} hidden />
-            {attachedFile && <span className="file-name">{attachedFile.name}</span>}
-          </div>
+          <div className="input-controls"> {/* New wrapper */}
+            <div className="file-upload">
+              <label htmlFor="file-input" className="file-upload-label">
+                <FaFileExcel /> إرفاق ملف Excel/CSV
+              </label>
+              <input id="file-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} hidden />
+              {attachedFile && <span className="file-name">{attachedFile.name}</span>}
+            </div>
 
-          <div className="language-selection">
-            <FaGlobe style={{ marginRight: 4 }} />
-            <label htmlFor="language">لغة الرد:</label>
-            <select id="language" value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
-              <option value="ar">العربية</option>
-              <option value="en">الإنجليزية</option>
-            </select>
-          </div>
+            <div className="language-selection">
+              <FaGlobe />
+              <label htmlFor="language">لغة الرد:</label>
+              <select id="language" value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
+                <option value="ar">العربية</option>
+                <option value="en">الإنجليزية</option>
+              </select>
+            </div>
+          </div> {/* End new wrapper */}
 
           <div className="message-form">
             <input
@@ -457,4 +459,5 @@ ${JSON.stringify(items, null, 2)}
   );
 }
 
-export default Poot;   
+export default Poot;
+
