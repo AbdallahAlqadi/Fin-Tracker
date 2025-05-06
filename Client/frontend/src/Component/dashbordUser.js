@@ -28,6 +28,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
 // Smooth animation for cards
 const floatAnimation = keyframes`
@@ -48,9 +51,11 @@ const fadeIn = keyframes`
   }
 `;
 
-// Modern design for category card
-const CategoryCard = styled(Box)(({ theme }) => ({
-  border: '2px solid #4A90E2',
+// Modern design for category card with dynamic border color based on type
+const CategoryCard = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'type',
+})(({ theme, type }) => ({
+  border: `2px solid ${type && type.toLowerCase().startsWith('expens') ? '#FF5252' : '#4CAF50'}`,
   backgroundColor: '#FFFFFF',
   borderRadius: '16px',
   padding: theme.spacing(2.5),
@@ -83,7 +88,7 @@ const DashboardUser = () => {
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
-  const [selectedDate, setSelectedDate] = useState(''); // حالة جديدة للتاريخ
+  const [selectedDate, setSelectedDate] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
@@ -127,14 +132,14 @@ const DashboardUser = () => {
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
-    setSelectedDate(''); // إعادة تعيين التاريخ عند فتح Dialog
+    setSelectedDate('');
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedCategory(null);
     setValue('');
-    setSelectedDate(''); // إعادة تعيين التاريخ عند الإغلاق
+    setSelectedDate('');
     setErrorMessage('');
   };
 
@@ -162,7 +167,7 @@ const DashboardUser = () => {
         {
           CategoriesId: currentCategory._id,
           valueitem: parsedValue,
-          date: selectedDate, // إرسال التاريخ المحدد
+          date: selectedDate,
         },
         {
           headers: {
@@ -296,26 +301,29 @@ const DashboardUser = () => {
         position: 'relative',
       }}
     >
-      <Typography
-        variant="h2"
-        align="center"
-        sx={{
-          fontWeight: 'bold',
-          textTransform: 'uppercase',
-          color: '#4A90E2',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-          letterSpacing: 2,
-          transition: 'transform 0.3s ease-in-out',
-          transform: `scale(${scale})`,
-          cursor: 'pointer',
-          mb: 4,
-          fontSize: { xs: '2rem', md: '3rem' },
-        }}
-        onMouseEnter={() => setScale(1.1)}
-        onMouseLeave={() => setScale(1)}
-      >
-        Finance Tracker
-      </Typography>
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Typography
+          variant="h2"
+          sx={{
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            color: '#4A90E2',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+            letterSpacing: 2,
+            transition: 'transform 0.3s ease-in-out',
+            transform: `scale(${scale})`,
+            cursor: 'pointer',
+            fontSize: { xs: '2rem', md: '3rem' },
+          }}
+          onMouseEnter={() => setScale(1.1)}
+          onMouseLeave={() => setScale(1)}
+        >
+          Finance Tracker
+        </Typography>
+        <Typography variant="h6" sx={{ color: '#666', mt: 1 }}>
+          Manage your finances with ease
+        </Typography>
+      </Box>
 
       <Autocomplete
         freeSolo
@@ -330,15 +338,14 @@ const DashboardUser = () => {
               mb: 4,
               backgroundColor: '#fff',
               borderRadius: '50px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               '& .MuiOutlinedInput-root': {
                 borderRadius: '50px',
-                transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
                 '&:hover': {
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                 },
                 '&.Mui-focused': {
-                  boxShadow: '0 0 8px rgba(74,144,226,0.6)',
-                  borderColor: '#4A90E2',
+                  boxShadow: '0 0 0 3px rgba(74,144,226,0.3)',
                 },
               },
             }}
@@ -371,6 +378,7 @@ const DashboardUser = () => {
           <Button
             onClick={() => setFilterType('all')}
             variant={filterType === 'all' ? 'contained' : 'outlined'}
+            startIcon={<AccountBalanceWalletIcon />}
             sx={{
               borderRadius: '20px 0 0 20px',
               textTransform: 'none',
@@ -391,6 +399,7 @@ const DashboardUser = () => {
           <Button
             onClick={() => setFilterType('income')}
             variant={filterType === 'income' ? 'contained' : 'outlined'}
+            startIcon={<AddCircleIcon />}
             sx={{
               textTransform: 'none',
               fontWeight: filterType === 'income' ? 'bold' : 'normal',
@@ -410,6 +419,7 @@ const DashboardUser = () => {
           <Button
             onClick={() => setFilterType('expenses')}
             variant={filterType === 'expenses' ? 'contained' : 'outlined'}
+            startIcon={<RemoveCircleIcon />}
             sx={{
               borderRadius: '0 20px 20px 0',
               textTransform: 'none',
@@ -470,6 +480,7 @@ const DashboardUser = () => {
                       <Tooltip key={category._id} title={isAdded ? 'Added' : ''}>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                           <CategoryCard
+                            type={category.categoryType}
                             component="div"
                             role="button"
                             tabIndex={isAdded ? -1 : 0}
@@ -531,6 +542,7 @@ const DashboardUser = () => {
                       <Tooltip key={category._id} title={isAdded ? 'Added' : ''}>
                         <Box>
                           <CategoryCard
+                            type={category.categoryType}
                             component="div"
                             role="button"
                             tabIndex={isAdded ? -1 : 0}
@@ -656,12 +668,12 @@ const DashboardUser = () => {
                 width: 100,
                 height: 100,
                 borderRadius: '50%',
-                mb: 2,
+                mb: 3,
                 objectFit: 'cover',
               }}
             />
           )}
-          <Typography variant="subtitle1" sx={{ fontSize: 18, color: '#4A90E2', mb: 2, fontWeight: 500 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: 18, color: '#4A90E2', mb: 3, fontWeight: 500 }}>
             Type: {selectedCategory?.categoryType}
           </Typography>
           <TextField
@@ -674,7 +686,7 @@ const DashboardUser = () => {
             variant="outlined"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            sx={{ mb: 2 }}
+            sx={{ mb: 3 }}
           />
           <TextField
             margin="dense"
@@ -685,7 +697,7 @@ const DashboardUser = () => {
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{ mb: 2 }}
+            sx={{ mb: 3 }}
           />
           {errorMessage && (
             <Typography variant="body2" sx={{ color: '#4A90E2', textAlign: 'center' }}>
@@ -768,6 +780,15 @@ const DashboardUser = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: 3, backgroundColor: '#FAFAFA' }}>
+          {newCategoryImage && (
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+              <img
+                src={URL.createObjectURL(newCategoryImage)}
+                alt="Preview"
+                style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover' }}
+              />
+            </Box>
+          )}
           <TextField
             autoFocus
             margin="dense"
@@ -791,7 +812,7 @@ const DashboardUser = () => {
             </Select>
           </FormControl>
           <Button variant="outlined" component="label" fullWidth sx={{ mb: 3 }}>
-            {newCategoryImage ? 'Image Selected' : 'Choose Image'}
+            {newCategoryImage ? 'Change Image' : 'Choose Image'}
             <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
           {newErrorMessage && (
