@@ -330,12 +330,9 @@ const Comparison = () => {
     setSelectedDays([]);
   };
 
-  const handleDayChange = (day) => {
-    setSelectedDays((prevSelectedDays) =>
-      prevSelectedDays.includes(day)
-        ? prevSelectedDays.filter((d) => d !== day)
-        : [...prevSelectedDays, day]
-    );
+  const handleDayChangeForMonth = (monthKey, selectedDaysForMonth) => {
+    const updatedSelectedDays = selectedDays.filter(day => !day.startsWith(`${monthKey}-`));
+    setSelectedDays([...updatedSelectedDays, ...selectedDaysForMonth]);
   };
 
   return (
@@ -523,37 +520,39 @@ const Comparison = () => {
                           >
                             {`Month ${month.padStart(2, "0")} (${year})`}
                           </Typography>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: 2,
-                              marginTop: 1,
-                            }}
-                          >
-                            {days.map((day) => (
-                              <FormControlLabel
-                                key={day}
-                                control={
-                                  <StyledCheckbox
-                                    checked={selectedDays.includes(day)}
-                                    onChange={() => handleDayChange(day)}
-                                  />
+                          <FormControl sx={{ minWidth: 200, marginTop: 1 }}>
+                            <InputLabel>Days</InputLabel>
+                            <StyledSelect
+                              multiple
+                              value={selectedDays.filter(day => days.includes(day))}
+                              onChange={(e) => handleDayChangeForMonth(key, e.target.value)}
+                              label="Days"
+                              renderValue={(selected) => {
+                                if (selected.length === 0) {
+                                  return "No days selected";
+                                } else if (selected.length <= 3) {
+                                  return selected.join(", ");
+                                } else {
+                                  return `${selected.length} days selected`;
                                 }
-                                label={day}
-                                sx={{
-                                  backgroundColor: "#fff",
-                                  borderRadius: "8px",
-                                  padding: "8px",
-                                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
-                                  transition: "all 0.3s ease",
-                                  "&:hover": {
-                                    boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)",
+                              }}
+                              MenuProps={{
+                                PaperProps: {
+                                  style: {
+                                    maxHeight: 300,
+                                    overflowY: "auto",
                                   },
-                                }}
-                              />
-                            ))}
-                          </Box>
+                                },
+                              }}
+                            >
+                              {days.map((day) => (
+                                <MenuItem key={day} value={day}>
+                                  <StyledCheckbox checked={selectedDays.includes(day)} />
+                                  {day}
+                                </MenuItem>
+                              ))}
+                            </StyledSelect>
+                          </FormControl>
                         </Box>
                       );
                     })}

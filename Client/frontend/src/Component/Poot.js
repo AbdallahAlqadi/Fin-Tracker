@@ -339,7 +339,6 @@ ${JSON.stringify(items, null, 2)}
             <button onClick={clearChatHistory} className="new-chat-btn">New Chat</button>
           </div>
         </div>
-        <p className="header-subtitle">اسأل أي سؤال أو أرفق ملف Excel/CSV ليتم تحليله وإرجاع شرح مفصل</p>
       </header>
 
       <section className="filter-panel">
@@ -452,9 +451,7 @@ ${JSON.stringify(items, null, 2)}
         </div>
       </main>
 
-      <footer className="poot-footer">
-        <p>Manus © {new Date().getFullYear()}</p>
-      </footer>
+     
     </div>
   );
 }
