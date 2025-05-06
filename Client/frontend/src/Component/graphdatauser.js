@@ -37,6 +37,12 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
 import { schemeSet3, schemeTableau10 } from "d3-scale-chromatic";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CategoryIcon from "@mui/icons-material/Category";
+import InfoIcon from "@mui/icons-material/Info";
 
 // Helper function to build image URL correctly
 const getImageUrl = (image) => {
@@ -180,7 +186,6 @@ const Graph = () => {
         } else if (dateType === "year") {
           return selectedDate.getFullYear() === itemDate.getFullYear();
         } else if (dateType === "full") {
-          // التحقق من تطابق اليوم والشهر والسنة
           return (
             selectedDate.getDate() === itemDate.getDate() &&
             selectedDate.getMonth() === itemDate.getMonth() &&
@@ -357,6 +362,10 @@ const Graph = () => {
               boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
             }}
           >
+            <Box display="flex" alignItems="center" gap={1}>
+              <FilterListIcon sx={{ fontSize: 30, color: "#007BFF" }} />
+              <Typography variant="h5">Filters</Typography>
+            </Box>
             <FormControl sx={{ minWidth: 120 }}>
               <InputLabel>Date Type</InputLabel>
               <Select
@@ -440,9 +449,12 @@ const Graph = () => {
           >
             <TotalCard bgColor="linear-gradient(135deg, #66BB6A, #43A047)">
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Total Revenues
-                </Typography>
+                <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                  <TrendingUpIcon sx={{ fontSize: 30 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Total Revenues
+                  </Typography>
+                </Box>
                 <Typography variant="h4" sx={{ fontWeight: "bold" }}>
                   {totals.Revenues.toFixed(2)}
                 </Typography>
@@ -451,9 +463,12 @@ const Graph = () => {
 
             <TotalCard bgColor="linear-gradient(135deg, #EF5350, #E53935)">
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Total Expenses
-                </Typography>
+                <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                  <TrendingDownIcon sx={{ fontSize: 30 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Total Expenses
+                  </Typography>
+                </Box>
                 <Typography variant="h4" sx={{ fontWeight: "bold" }}>
                   {totals.Expenses.toFixed(2)}
                 </Typography>
@@ -468,9 +483,12 @@ const Graph = () => {
               }
             >
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Balance
-                </Typography>
+                <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                  <AccountBalanceIcon sx={{ fontSize: 30 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Balance
+                  </Typography>
+                </Box>
                 <Typography variant="h4" sx={{ fontWeight: "bold" }}>
                   {balance.toFixed(2)}
                 </Typography>
@@ -538,11 +556,9 @@ const Graph = () => {
                         }}
                       >
                         <ListItemIcon>
-                          <Box
+                          <CategoryIcon
                             sx={{
-                              width: "20px",
-                              height: "20px",
-                              backgroundColor: colorScale(index),
+                              color: colorScale(index),
                             }}
                           />
                         </ListItemIcon>
@@ -578,9 +594,19 @@ const Graph = () => {
                           title={item.CategoriesId?.categoryName || "Unknown"}
                         />
                         <RectangularCardContent>
-                          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1976d2" }}>
-                            {item.CategoriesId?.categoryName || "Unknown"}
-                          </Typography>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <CategoryIcon
+                              sx={{
+                                color:
+                                  item.CategoriesId?.categoryType === "Revenues"
+                                    ? "#4CAF50"
+                                    : "#F44336",
+                              }}
+                            />
+                            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1976d2" }}>
+                              {item.CategoriesId?.categoryName || "Unknown"}
+                            </Typography>
+                          </Box>
                           <Typography
                             variant="body1"
                             sx={{
@@ -628,8 +654,12 @@ const Graph = () => {
               fontSize: "18px",
               fontWeight: "bold",
               p: 1.5,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
             }}
           >
+            <InfoIcon />
             Category Details
           </DialogTitle>
           <DialogContent sx={{ p: 2 }}>
