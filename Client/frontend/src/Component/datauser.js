@@ -26,15 +26,21 @@ import { styled } from "@mui/system";
 import CategoryIcon from "@mui/icons-material/Category";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
-// ==========================
-// تعريف المكونات المُنسّقة (Styled Components)
-// ==========================
+// Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
@@ -239,9 +245,7 @@ const getImageUrl = (image) => {
   return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
 };
 
-// ==========================
-// المكون الرئيسي BudgetItems
-// ==========================
+// Main Component
 const BudgetItems = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -254,10 +258,8 @@ const BudgetItems = () => {
   const [dateType, setDateType] = useState("month");
   const [exportLoading, setExportLoading] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -267,7 +269,6 @@ const BudgetItems = () => {
     fetchBudget();
   }, []);
 
-  // دالة جلب البيانات مع فلترة العناصر التي ليس لها فئة
   const fetchBudget = async () => {
     try {
       const response = await axios.get("https://fin-tracker-ncbx.onrender.com/api/getUserBudget", {
@@ -284,7 +285,6 @@ const BudgetItems = () => {
     }
   };
 
-  // Check if there are budget items for today and set localStorage.not accordingly
   useEffect(() => {
     const todayString = format(new Date(), "yyyy-MM-dd");
     const hasItemsToday = budgetItems.some(item => format(new Date(item.date), "yyyy-MM-dd") === todayString);
@@ -614,8 +614,13 @@ const BudgetItems = () => {
             justifyContent: "center",
             gap: 2,
             flexWrap: "wrap",
+            alignItems: "center",
           }}
         >
+          <Box display="flex" alignItems="center" gap={1}>
+            <FilterListIcon sx={{ fontSize: 30, color: "#007BFF" }} />
+            <Typography variant="h5">Filters</Typography>
+          </Box>
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel>Date Type</InputLabel>
             <StyledSelect
@@ -714,9 +719,12 @@ const BudgetItems = () => {
             }}
           >
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Revenues
-              </Typography>
+              <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                <TrendingUpIcon sx={{ fontSize: 30 }} />
+                <Typography variant="h6" gutterBottom>
+                  Total Revenues
+                </Typography>
+              </Box>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
                 {totals.Revenues.toFixed(2)}
               </Typography>
@@ -733,9 +741,12 @@ const BudgetItems = () => {
             }}
           >
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Expenses
-              </Typography>
+              <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                <TrendingDownIcon sx={{ fontSize: 30 }} />
+                <Typography variant="h6" gutterBottom>
+                  Total Expenses
+                </Typography>
+              </Box>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
                 {totals.Expenses.toFixed(2)}
               </Typography>
@@ -755,9 +766,12 @@ const BudgetItems = () => {
             }}
           >
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Balance
-              </Typography>
+              <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                <AccountBalanceIcon sx={{ fontSize: 30 }} />
+                <Typography variant="h6" gutterBottom>
+                  Balance
+                </Typography>
+              </Box>
               <Typography variant="h4" sx={{ fontWeight: "bold" }}>
                 {balance.toFixed(2)}
               </Typography>
@@ -779,9 +793,12 @@ const BudgetItems = () => {
           groupByDate(filteredItems).map(([date, items]) => (
             <Box key={date} sx={{ marginBottom: 4 }}>
               <StyledDateCard>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                  {format(new Date(date), "dd MMMM yyyy")}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={1} justifyContent="center">
+                  <CalendarTodayIcon sx={{ fontSize: 24, color: "#fff" }} />
+                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                    {format(new Date(date), "dd MMMM yyyy")}
+                  </Typography>
+                </Box>
               </StyledDateCard>
               <Grid container spacing={3} justifyContent="center">
                 {items
@@ -825,8 +842,24 @@ const BudgetItems = () => {
                               : item.valueitem}
                           </Typography>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <CategoryIcon sx={{ color: "#007BFF" }} />
-                            <Typography variant="h5" sx={{ color: "#007BFF", fontWeight: "bold" }}>
+                            <CategoryIcon
+                              sx={{
+                                color:
+                                  item.CategoriesId.categoryType === "Revenues"
+                                    ? "#4CAF50"
+                                    : "#F44336",
+                              }}
+                            />
+                            <Typography
+                              variant="h5"
+                              sx={{
+                                color:
+                                  item.CategoriesId.categoryType === "Revenues"
+                                    ? "#4CAF50"
+                                    : "#F44336",
+                                fontWeight: "bold",
+                              }}
+                            >
                               {item.CategoriesId.categoryName}
                             </Typography>
                           </Box>
@@ -840,6 +873,7 @@ const BudgetItems = () => {
                               variant="contained"
                               color="error"
                               onClick={() => handleDeleteClick(item)}
+                              startIcon={<DeleteIcon />}
                             >
                               Delete
                             </StyledButton>
@@ -847,6 +881,7 @@ const BudgetItems = () => {
                               variant="contained"
                               color="primary"
                               onClick={() => handleUpdateClick(item)}
+                              startIcon={<EditIcon />}
                             >
                               Update
                             </StyledButton>
@@ -879,10 +914,20 @@ const BudgetItems = () => {
             />
           </StyledDialogContent>
           <StyledDialogActions>
-            <StyledButton onClick={handleCloseDialog} color="secondary" variant="outlined">
+            <StyledButton
+              onClick={handleCloseDialog}
+              color="secondary"
+              variant="outlined"
+              startIcon={<CloseIcon />}
+            >
               Cancel
             </StyledButton>
-            <StyledButton onClick={handleSaveUpdate} color="primary" variant="contained">
+            <StyledButton
+              onClick={handleSaveUpdate}
+              color="primary"
+              variant="contained"
+              startIcon={<SaveIcon />}
+            >
               Save
             </StyledButton>
           </StyledDialogActions>
@@ -899,10 +944,20 @@ const BudgetItems = () => {
             </Typography>
           </StyledDialogContent>
           <StyledDialogActions>
-            <StyledButton onClick={handleCloseDeleteDialog} color="secondary" variant="outlined">
+            <StyledButton
+              onClick={handleCloseDeleteDialog}
+              color="secondary"
+              variant="outlined"
+              startIcon={<CloseIcon />}
+            >
               Cancel
             </StyledButton>
-            <StyledButton onClick={confirmDelete} color="error" variant="contained">
+            <StyledButton
+              onClick={confirmDelete}
+              color="error"
+              variant="contained"
+              startIcon={<DeleteIcon />}
+            >
               Delete
             </StyledButton>
           </StyledDialogActions>
