@@ -25,7 +25,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:hover': {
     backgroundColor: theme.palette.action.selected,
   },
-  // إزالة الحدود للسطر الأخير
   '&:last-child td, &:last-child th': {
     border: 0,
   },

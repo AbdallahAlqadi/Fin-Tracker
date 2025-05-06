@@ -32,7 +32,7 @@ import {
 } from "chart.js";
 import "../cssStyle/comparsion.css";
 
-// تسجيل المكونات اللازمة لمكتبة Chart.js
+// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -44,11 +44,12 @@ ChartJS.register(
   Legend
 );
 
-// مكون Select مُخصص مع تحسينات تصميم
+// Styled Select component
 const StyledSelect = styled(Select)(({ theme }) => ({
-  borderRadius: "10px",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
-  backgroundColor: "#fafafa",
+  borderRadius: "12px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)",
+  transition: "all 0.3s ease",
   "& .MuiOutlinedInput-notchedOutline": {
     borderColor: theme.palette.primary.main,
   },
@@ -56,27 +57,34 @@ const StyledSelect = styled(Select)(({ theme }) => ({
     borderColor: theme.palette.primary.dark,
   },
   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.primary.main,
-    borderWidth: "2px",
+    borderColor: theme.palette.secondary.main,
+    borderWidth: "3px",
   },
 }));
 
-// مكون Checkbox مُخصص
+// Styled Checkbox component
 const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
-  color: theme.palette.primary.main,
+  color: theme.palette.secondary.main,
   "&.Mui-checked": {
-    color: theme.palette.primary.main,
+    color: theme.palette.secondary.main,
   },
   "& .MuiSvgIcon-root": {
-    fontSize: 26,
+    fontSize: 28,
+    transition: "transform 0.2s ease",
+  },
+  "&:hover": {
+    transform: "scale(1.1)",
   },
 }));
 
-// مكون Radio مُخصص
+// Styled Radio component
 const StyledRadio = styled(Radio)(({ theme }) => ({
   color: theme.palette.primary.main,
   "&.Mui-checked": {
     color: theme.palette.primary.main,
+  },
+  "&:hover": {
+    transform: "scale(1.1)",
   },
 }));
 
@@ -91,7 +99,6 @@ const Comparison = () => {
   const [showRevenues, setShowRevenues] = useState(true);
   const [showExpenses, setShowExpenses] = useState(true);
 
-  // جلب البيانات من الخادم
   useEffect(() => {
     fetchBudget();
   }, []);
@@ -117,7 +124,6 @@ const Comparison = () => {
     }
   };
 
-  // تجميع البيانات بحسب التاريخ مع التحقق من وجود بيانات CategoriesId
   const groupByDate = (items) => {
     const groupedData = {};
     items.forEach((item) => {
@@ -140,7 +146,6 @@ const Comparison = () => {
       }
       groupedData[key][categoryType] += parseFloat(item.valueitem);
     });
-    // ترتيب المفاتيح بحيث يكون الأحدث أولاً
     const sortedKeys = Object.keys(groupedData).sort(
       (a, b) => new Date(a) - new Date(b)
     );
@@ -151,7 +156,6 @@ const Comparison = () => {
     return sortedData;
   };
 
-  // تصفية البيانات بناءً على اختيارات المستخدم للتاريخ
   const filterItems = (items) => {
     let filteredItems = items.filter(
       (item) => item.CategoriesId && item.CategoriesId.categoryType
@@ -202,7 +206,6 @@ const Comparison = () => {
 
   const filteredItems = filterItems(budgetItems);
 
-  // إعداد بيانات الرسم البياني لـ Chart.js بناءً على البيانات المفلترة
   const getChartData = () => {
     const labels = Object.keys(filteredItems);
     const datasets = [];
@@ -210,20 +213,22 @@ const Comparison = () => {
       datasets.push({
         label: "Revenues",
         data: labels.map((label) => filteredItems[label].Revenues || 0),
-        backgroundColor: "rgba(46, 204, 113, 0.6)",
+        backgroundColor: "rgba(46, 204, 113, 0.8)",
         borderColor: "rgba(46, 204, 113, 1)",
-        borderWidth: 1,
+        borderWidth: 2,
         fill: chartType === "line" ? false : true,
+        tension: 0.4,
       });
     }
     if (showExpenses) {
       datasets.push({
         label: "Expenses",
         data: labels.map((label) => filteredItems[label].Expenses || 0),
-        backgroundColor: "rgba(231, 76, 60, 0.6)",
+        backgroundColor: "rgba(231, 76, 60, 0.8)",
         borderColor: "rgba(231, 76, 60, 1)",
-        borderWidth: 1,
+        borderWidth: 2,
         fill: chartType === "line" ? false : true,
+        tension: 0.4,
       });
     }
     return {
@@ -232,25 +237,46 @@ const Comparison = () => {
     };
   };
 
-  // خيارات الرسم البياني العامة
   const chartOptions = {
     responsive: true,
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          font: { size: 16, weight: "bold" },
+          padding: 20,
+        },
       },
       title: {
         display: true,
         text: "Budget Comparison",
-        font: {
-          size: 24,
-        },
+        font: { size: 28, weight: "bold" },
+        color: "#2c3e50",
+        padding: { top: 20, bottom: 20 },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleFont: { size: 16 },
+        bodyFont: { size: 14 },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { size: 14 } },
+      },
+      y: {
+        grid: { color: "rgba(0, 0, 0, 0.1)" },
+        ticks: { font: { size: 14 }, beginAtZero: true },
       },
     },
     maintainAspectRatio: false,
+    animation: {
+      duration: 1500,
+      easing: "easeOutBounce",
+    },
   };
 
-  // المتغيرات الخاصة بالتواريخ المتاحة حسب البيانات
   const availableYears = [
     ...new Set(budgetItems.map((item) => new Date(item.date).getFullYear())),
   ];
@@ -318,33 +344,37 @@ const Comparison = () => {
         id="main-container"
         sx={{
           padding: { xs: 2, sm: 3, md: 4 },
-          background: "linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%)",
-          borderRadius: "16px",
-          boxShadow: "0 6px 30px rgba(0, 0, 0, 0.15)",
-          transition: "all 0.3s ease",
+          background: "linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%)",
+          borderRadius: "20px",
+          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
           maxWidth: { xs: "95%", sm: "90%", md: "1200px" },
-          margin: "20px auto",
+          margin: "30px auto",
+          transition: "transform 0.3s ease",
+          "&:hover": {
+            transform: "translateY(-5px)",
+          },
         }}
       >
         <Paper
           id="controls-container"
-          elevation={4}
+          elevation={6}
           sx={{
-            marginBottom: 3,
+            marginBottom: 4,
             padding: { xs: 2, sm: 3 },
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+            borderRadius: "16px",
+            background: "linear-gradient(135deg, #ffffff 0%, #eef2f7 100%)",
+            boxShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
           }}
         >
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} sm="auto">
               <FormControl
                 id="date-type-select"
                 sx={{
-                  minWidth: 150,
+                  minWidth: 160,
                 }}
               >
-                <InputLabel>Date Type</InputLabel>
+                <InputLabel sx={{ fontWeight: "bold" }}>Date Type</InputLabel>
                 <StyledSelect
                   value={dateType}
                   onChange={(e) => setDateType(e.target.value)}
@@ -366,11 +396,13 @@ const Comparison = () => {
                   value="bar"
                   control={<StyledRadio />}
                   label="Bar Chart"
+                  sx={{ fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="line"
                   control={<StyledRadio />}
                   label="Line Chart"
+                  sx={{ fontWeight: "bold" }}
                 />
               </RadioGroup>
             </Grid>
@@ -383,6 +415,7 @@ const Comparison = () => {
                   />
                 }
                 label="Show Revenues"
+                sx={{ fontWeight: "bold" }}
               />
             </Grid>
             <Grid item xs={12} sm="auto">
@@ -394,12 +427,13 @@ const Comparison = () => {
                   />
                 }
                 label="Show Expenses"
+                sx={{ fontWeight: "bold" }}
               />
             </Grid>
           </Grid>
         </Paper>
 
-        <Box id="date-selection-container" sx={{ marginBottom: 3 }}>
+        <Box id="date-selection-container" sx={{ marginBottom: 4 }}>
           {dateType === "year" && (
             <Grid container spacing={2}>
               {availableYears.map((year) => (
@@ -412,6 +446,14 @@ const Comparison = () => {
                       />
                     }
                     label={year}
+                    sx={{
+                      backgroundColor: "#fff",
+                      borderRadius: "8px",
+                      padding: "8px",
+                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
+                      transition: "all 0.3s ease",
+                      "&:hover": { boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)" },
+                    }}
                   />
                 </Grid>
               ))}
@@ -430,6 +472,14 @@ const Comparison = () => {
                       />
                     }
                     label={`Month ${month}`}
+                    sx={{
+                      backgroundColor: "#fff",
+                      borderRadius: "8px",
+                      padding: "8px",
+                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
+                      transition: "all 0.3s ease",
+                      "&:hover": { boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)" },
+                    }}
                   />
                 </Grid>
               ))}
@@ -456,22 +506,29 @@ const Comparison = () => {
                         <Box
                           key={key}
                           sx={{
-                            marginBottom: 2,
-                            padding: { xs: 1, sm: 2 },
-                            border: "1px solid #ccc",
-                            borderRadius: "8px",
-                            backgroundColor: "#f9f9f9",
+                            marginBottom: 3,
+                            padding: { xs: 2, sm: 3 },
+                            borderRadius: "12px",
+                            background: "linear-gradient(135deg, #ffffff 0%, #f9fbfc 100%)",
+                            boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
+                            },
                           }}
                         >
-                          <Typography variant="h6">{`الشهر ${month.padStart(
-                            2,
-                            "0"
-                          )} (${year})`}</Typography>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: "bold", color: "#2c3e50" }}
+                          >
+                            {`Month ${month.padStart(2, "0")} (${year})`}
+                          </Typography>
                           <Box
                             sx={{
                               display: "flex",
                               flexWrap: "wrap",
-                              gap: 1,
+                              gap: 2,
+                              marginTop: 1,
                             }}
                           >
                             {days.map((day) => (
@@ -484,6 +541,16 @@ const Comparison = () => {
                                   />
                                 }
                                 label={day}
+                                sx={{
+                                  backgroundColor: "#fff",
+                                  borderRadius: "8px",
+                                  padding: "8px",
+                                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
+                                  transition: "all 0.3s ease",
+                                  "&:hover": {
+                                    boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)",
+                                  },
+                                }}
                               />
                             ))}
                           </Box>
@@ -506,7 +573,7 @@ const Comparison = () => {
               height: { xs: "250px", sm: "300px" },
             }}
           >
-            <CircularProgress size={60} />
+            <CircularProgress size={70} sx={{ color: "#3498db" }} />
           </Box>
         ) : Object.keys(filteredItems).length === 0 ? (
           <Box
@@ -518,7 +585,10 @@ const Comparison = () => {
               height: { xs: "250px", sm: "300px" },
             }}
           >
-            <Typography variant="h4" color="textSecondary">
+            <Typography
+              variant="h4"
+              sx={{ color: "#7f8c8d", fontWeight: "bold" }}
+            >
               No Items
             </Typography>
           </Box>
@@ -529,6 +599,10 @@ const Comparison = () => {
               width: "100%",
               height: { xs: "400px", sm: "500px" },
               position: "relative",
+              backgroundColor: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
+              padding: 2,
             }}
           >
             {chartType === "bar" ? (
