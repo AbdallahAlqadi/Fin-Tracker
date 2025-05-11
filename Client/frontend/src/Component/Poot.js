@@ -130,8 +130,11 @@ function Poot() {
   }
 
   async function getReport(items) {
+    if (items.length === 0) {
+      return responseLanguage === 'ar' ? 'لا توجد بيانات.' : 'No data found.';
+    }
     const prompt = `
-الرجاء تقديم تقرير مُفصّل وحلول عملية للبيانات التالية باللغة ${responseLanguage === 'en' ? 'الإنجليزية' : 'العربية'}، مع استخدام تنسيق Markdown للعناوين والقوائم:
+Please provide a detailed report and practical solutions for the following data in ${responseLanguage === 'en' ? 'English' : 'Arabic'}, using Markdown formatting for headings and lists:
 ${JSON.stringify(items, null, 2)}
     `.trim();
     const res = await fetch(GEMINI_URL, {
@@ -149,6 +152,13 @@ ${JSON.stringify(items, null, 2)}
 
   async function handleGenerateReport() {
     const items = filteredItems;
+    if (items.length === 0) {
+      setMessages(prev => [
+        ...prev,
+        { sender: 'bot', text: responseLanguage === 'ar' ? 'لا توجد بيانات.' : 'No data found.', time: getCurrentTime(), formatted: false }
+      ]);
+      return;
+    }
     setIsTyping(true);
     try {
       const report = await getReport(items);
@@ -174,12 +184,12 @@ ${JSON.stringify(items, null, 2)}
       if (err.message.includes('Network error')) {
         setMessages(prev => [
           ...prev,
-          { sender: 'bot', text: 'خطأ في الشبكة. تحقق من اتصالك.', time: getCurrentTime(), formatted: false }
+          { sender: 'bot', text: responseLanguage === 'ar' ? 'خطأ في الشبكة. تحقق من اتصالك.' : 'Network error. Check your connection.', time: getCurrentTime(), formatted: false }
         ]);
       } else {
         setMessages(prev => [
           ...prev,
-          { sender: 'bot', text: 'عذراً، لم أتمكن من جلب التقرير.', time: getCurrentTime(), formatted: false }
+          { sender: 'bot', text: responseLanguage === 'ar' ? 'عذراً، لم أتمكن من جلب التقرير.' : 'Sorry, I couldn\'t retrieve the report.', time: getCurrentTime(), formatted: false }
         ]);
       }
     } finally {
@@ -193,11 +203,11 @@ ${JSON.stringify(items, null, 2)}
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
-      alert('الملف كبير جدًا. الحد الأقصى 5 ميجابايت.');
+      alert(responseLanguage === 'ar' ? 'الملف كبير جدًا. الحد الأقصى 5 ميجابايت.' : 'File is too large. Maximum size is 5MB.');
       return;
     }
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      alert('مسموح فقط بملفات Excel وCSV.');
+      alert(responseLanguage === 'ar' ? 'مسموح فقط بملفات Excel وCSV.' : 'Only Excel and CSV files are allowed.');
       return;
     }
     setAttachedFile(file);
@@ -216,7 +226,7 @@ ${JSON.stringify(items, null, 2)}
         }
       } catch (err) {
         console.error('Error reading file:', err);
-        alert('خطأ في قراءة الملف. حاول مرة أخرى.');
+        alert(responseLanguage === 'ar' ? 'خطأ في قراءة الملف. حاول مرة أخرى.' : 'Error reading file. Please try again.');
       }
     };
     if (file.name.endsWith('.csv')) {
@@ -228,8 +238,8 @@ ${JSON.stringify(items, null, 2)}
 
   async function getBotResponse(message, fileData = null, language = 'ar') {
     const prompt = fileData
-      ? `تم إرفاق ملف (${attachedFile.name.endsWith('.csv') ? 'CSV' : 'Excel'}) يحتوي على البيانات التالية:\n${JSON.stringify(fileData)}\nالسؤال: ${message}\nيرجى الرد باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}، واستخدم تنسيق Markdown عند الضرورة.`
-      : `السؤال: ${message}\nيرجى الرد باللغة ${language === 'en' ? 'الإنجليزية' : 'العربية'}، واستخدم تنسيق Markdown عند الضرورة.`;
+      ? `Attached file (${attachedFile.name.endsWith('.csv') ? 'CSV' : 'Excel'}) contains the following data:\n${JSON.stringify(fileData)}\nQuestion: ${message}\nPlease respond in ${language === 'en' ? 'English' : 'Arabic'}, using Markdown formatting where necessary.`
+      : `Question: ${message}\nPlease respond in ${language === 'en' ? 'English' : 'Arabic'}, using Markdown formatting where necessary.`;
     const res = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -257,7 +267,7 @@ ${JSON.stringify(items, null, 2)}
       setMessages(prev => [...prev, { sender: 'bot', text: reply, time: getCurrentTime(), formatted: true }]);
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { sender: 'bot', text: 'حدث خطأ. حاول مرة أخرى.', time: getCurrentTime(), formatted: false }]);
+      setMessages(prev => [...prev, { sender: 'bot', text: responseLanguage === 'ar' ? 'حدث خطأ. حاول مرة أخرى.' : 'An error occurred. Please try again.', time: getCurrentTime(), formatted: false }]);
     } finally {
       setIsTyping(false);
       setAttachedFile(null);
@@ -283,7 +293,7 @@ ${JSON.stringify(items, null, 2)}
           {code}
         </SyntaxHighlighter>
         <button onClick={copy} className="copy-code-button" style={{ position: 'absolute', top: 10, right: 10, display: 'flex', alignItems: 'center' }}>
-          {copied ? <><FaCheck style={{ marginRight: 5 }} />تم النسخ</> : <><FaCopy style={{ marginRight: 5 }} />نسخ الكود</>}
+          {copied ? <><FaCheck style={{ marginRight: 5 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 5 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
         </button>
       </div>
     );
@@ -336,17 +346,17 @@ ${JSON.stringify(items, null, 2)}
             <FaComments /> Poot Chat
           </h1>
           <div>
-            <button onClick={clearChatHistory} className="new-chat-btn">New Chat</button>
+            <button onClick={clearChatHistory} className="new-chat-btn">{responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}</button>
           </div>
         </div>
       </header>
 
       <section className="filter-panel">
-        <label>نوع التاريخ:</label>
+        <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
         <select value={dateType} onChange={e => setDateType(e.target.value)}>
-          <option value="full">تاريخ كامل</option>
-          <option value="month">شهر</option>
-          <option value="year">سنة</option>
+          <option value="full">{responseLanguage === 'ar' ? 'تاريخ كامل' : 'Full Date'}</option>
+          <option value="month">{responseLanguage === 'ar' ? 'شهر' : 'Month'}</option>
+          <option value="year">{responseLanguage === 'ar' ? 'سنة' : 'Year'}</option>
         </select>
 
         {dateType === 'full' && (
@@ -377,15 +387,15 @@ ${JSON.stringify(items, null, 2)}
           />
         )}
 
-        <label>النوع:</label>
+        <label>{responseLanguage === 'ar' ? 'النوع:' : 'Type:'}</label>
         <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="All">All</option>
-          <option value="Revenues">Revenues</option>
-          <option value="Expenses">Expenses</option>
+          <option value="All">{responseLanguage === 'ar' ? 'الكل' : 'All'}</option>
+          <option value="Revenues">{responseLanguage === 'ar' ? 'الإيرادات' : 'Revenues'}</option>
+          <option value="Expenses">{responseLanguage === 'ar' ? 'المصروفات' : 'Expenses'}</option>
         </select>
 
         <button onClick={handleGenerateReport} disabled={loadingBudget}>
-          {loadingBudget ? 'تحميل...' : 'توليد التقرير'}
+          {loadingBudget ? (responseLanguage === 'ar' ? 'تحميل...' : 'Loading...') : (responseLanguage === 'ar' ? 'توليد التقرير' : 'Generate Report')}
         </button>
       </section>
 
@@ -414,10 +424,10 @@ ${JSON.stringify(items, null, 2)}
         </div>
 
         <div className="chat-input">
-          <div className="input-controls"> {/* New wrapper */}
+          <div className="input-controls">
             <div className="file-upload">
               <label htmlFor="file-input" className="file-upload-label">
-                <FaFileExcel /> إرفاق ملف Excel/CSV
+                <FaFileExcel /> {responseLanguage === 'ar' ? 'إرفاق ملف Excel/CSV' : 'Attach Excel/CSV'}
               </label>
               <input id="file-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} hidden />
               {attachedFile && <span className="file-name">{attachedFile.name}</span>}
@@ -425,18 +435,18 @@ ${JSON.stringify(items, null, 2)}
 
             <div className="language-selection">
               <FaGlobe />
-              <label htmlFor="language">لغة الرد:</label>
+              <label htmlFor="language">{responseLanguage === 'ar' ? 'لغة الرد:' : 'Response Language:'}</label>
               <select id="language" value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
                 <option value="ar">العربية</option>
-                <option value="en">الإنجليزية</option>
+                <option value="en">English</option>
               </select>
             </div>
-          </div> {/* End new wrapper */}
+          </div>
 
           <div className="message-form">
             <input
               type="text"
-              placeholder="اكتب سؤالك هنا..."
+              placeholder={responseLanguage === 'ar' ? 'اكتب سؤالك هنا...' : 'Type your question here...'}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && handleSubmit(e)}
@@ -450,11 +460,8 @@ ${JSON.stringify(items, null, 2)}
           </div>
         </div>
       </main>
-
-     
     </div>
   );
 }
 
 export default Poot;
-
