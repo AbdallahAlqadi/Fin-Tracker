@@ -4,21 +4,22 @@ import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Or a light theme like 'ghcolors' or 'solarizedlight'
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   FaUserCircle,
   FaRobot,
-  FaPaperclip, // Changed from FaFileExcel for a more generic attachment icon
+  FaPaperclip,
   FaPaperPlane,
   FaCopy,
   FaCheck,
-  FaComments, // App icon
+  FaComments,
   FaGlobe,
-  FaSun, // Icon for light theme, or a more abstract professional icon
+  FaTimes, // For modal close button
+  FaExternalLinkAlt // For a button to open report in modal
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
-function ClarityChat() { // Renamed component
+function ClarityChat() {
   const initialBotMessage = {
     sender: 'bot',
     text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
@@ -43,6 +44,11 @@ function ClarityChat() { // Renamed component
   const [filterDate, setFilterDate] = useState(new Date());
   const [filterType, setFilterType] = useState('All');
 
+  // State for Report Modal
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportModalContent, setReportModalContent] = useState('');
+  const [reportModalTitle, setReportModalTitle] = useState('');
+
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'https://fin-tracker-ncbx.onrender.com/api/getUserBudget';
   const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
@@ -56,6 +62,19 @@ function ClarityChat() { // Renamed component
     scrollToBottom();
     localStorage.setItem('chatHistory', JSON.stringify(messages));
   }, [messages]);
+
+  useEffect(() => {
+    // Add/remove class to body when modal opens/closes to prevent background scroll
+    if (isReportModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    // Cleanup function to restore scroll on component unmount
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isReportModalOpen]);
 
   function scrollToBottom() {
     if (chatMessagesRef.current) {
@@ -131,25 +150,60 @@ function ClarityChat() { // Renamed component
     return Object.values(grouped).filter(i => i.CategoriesId?.categoryName && i.CategoriesId.categoryName !== 'Unknown');
   }
 
-  async function getReport(items) {
+  async function getReportContent(items) { // Renamed from getReport to avoid confusion
     if (items.length === 0) {
       return responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير مفصل.' : 'Insufficient data to generate a detailed report.';
     }
-
     const languageSpecificInstructions = responseLanguage === 'ar' ? 
-      `الرجاء تقديم تقرير مالي مفصل للغاية باللغة العربية بناءً على البيانات التالية. يجب أن يتضمن التقرير:
-1.  **تحليل شامل**: تحليل عميق لكل فئة وكل بند، مع إبراز الاتجاهات الرئيسية، والمقارنات (إذا أمكن)، وأي نقاط قوة أو ضعف ملحوظة.
-2.  **رؤى قابلة للتنفيذ**: تقديم رؤى واضحة ومحددة مستخلصة من البيانات.
-3.  **حلول عملية ومبتكرة**: اقتراح ما لا يقل عن 3-5 حلول عملية ومبتكرة لمعالجة أي تحديات تم تحديدها أو لتحسين الوضع المالي. يجب أن تكون الحلول مفصلة وقابلة للتطبيق.
-4.  **توقعات مستقبلية (إذا أمكن)**: بناءً على البيانات، قدم توقعات موجزة أو سيناريوهات محتملة.
-5.  **تنسيق احترافي وجذاب**: استخدم تنسيق Markdown بشكل مكثف لجعل التقرير جذابًا وسهل القراءة. استخدم العناوين (H2, H3, H4)، والقوائم النقطية والرقمية، والنص الغامق، والمائل، وربما جداول بسيطة إذا كانت مناسبة لعرض البيانات بشكل أفضل. يجب أن يكون التقرير منظمًا بشكل جيد وقويًا في عرضه.
+      `الرجاء تقديم تقرير مالي مفصل للغاية ومنظم وجذاب بصريًا باللغة العربية بناءً على البيانات التالية. يجب أن يتضمن التقرير:
+1.  **📊 عنوان رئيسي للتقرير واضح وجذاب** (مثال: "تحليل الأداء المالي لشهر [الشهر] [السنة] 📈")
+2.  **✨ مقدمة موجزة ومشوقة**: تلخيص لأهمية التقرير والفترة التي يغطيها، مع استخدام رمز تعبيري مناسب.
+3.  **🔍 تحليل شامل ومفصل**: 
+    *   لكل فئة رئيسية، استخدم عنوانًا فرعيًا (H3) مع رمز تعبيري ذي صلة (مثال: 💰 الإيرادات، 💸 المصروفات).
+    *   تحليل عميق لكل بند ضمن الفئة، مع إبراز الاتجاهات الرئيسية، والمقارنات (إذا أمكن)، وأي نقاط قوة (✅) أو ضعف (⚠️) ملحوظة.
+    *   استخدم فقرات قصيرة ومنظمة.
+4.  **💡 رؤى قابلة للتنفيذ**: 
+    *   تقديم رؤى واضحة ومحددة مستخلصة من البيانات، معنونة بـ "🎯 أهم الرؤى والاستنتاجات".
+    *   استخدم قائمة نقطية (bullet points) مع رموز تعبيرية لكل نقطة (مثال: •️⃣, 💡, 🔑).
+5.  **🚀 حلول عملية ومبتكرة**: 
+    *   اقتراح ما لا يقل عن 3-5 حلول عملية ومبتكرة لمعالجة أي تحديات تم تحديدها أو لتحسين الوضع المالي، معنونة بـ "🛠️ توصيات وحلول مقترحة".
+    *   يجب أن تكون الحلول مفصلة وقابلة للتطبيق، مع استخدام قائمة مرقمة وربما رموز تعبيرية لتوضيح كل حل.
+6.  **🔮 توقعات مستقبلية (إذا أمكن)**: 
+    *   بناءً على البيانات، قدم توقعات موجزة أو سيناريوهات محتملة، معنونة بـ "🔭 نظرة مستقبلية".
+    *   استخدم فقرة واضحة مع رمز تعبيري مناسب.
+7.  **🏁 خاتمة قوية**: 
+    *   ملخص لأهم النقاط والتوصيات الرئيسية، معنونة بـ "📌 الخلاصة والتوصيات النهائية".
+    *   استخدم فقرة ختامية مشجعة.
+8.  **🎨 تنسيق احترافي وجذاب**: 
+    *   استخدم تنسيق Markdown بشكل مكثف لجعل التقرير جذابًا وسهل القراءة.
+    *   استخدم العناوين (H1, H2, H3, H4)، والقوائم النقطية والرقمية، والنص الغامق والمائل.
+    *   تأكد من وجود مسافات بيضاء كافية بين الفقرات والأقسام لسهولة القراءة.
+    *   يجب أن يكون التقرير منظمًا بشكل جيد وقويًا في عرضه البصري والمحتوى.
 ` :
-      `Please provide a highly detailed financial report in English based on the following data. The report must include:
-1.  **Comprehensive Analysis**: In-depth analysis of each category and item, highlighting key trends, comparisons (if possible), and any notable strengths or weaknesses.
-2.  **Actionable Insights**: Clear and specific insights derived from the data.
-3.  **Practical and Innovative Solutions**: Propose at least 3-5 practical and innovative solutions to address any identified challenges or to improve the financial situation. Solutions should be detailed and actionable.
-4.  **Future Outlook (if applicable)**: Based on the data, provide a brief outlook or potential scenarios.
-5.  **Professional and Attractive Formatting**: Utilize Markdown extensively to make the report engaging and easy to read. Use headings (H2, H3, H4), bulleted and numbered lists, bold and italic text, and potentially simple tables if appropriate for better data presentation. The report should be well-structured and strong in its presentation.
+      `Please provide a highly detailed, well-organized, and visually engaging financial report in English based on the following data. The report must include:
+1.  **📊 Clear and Engaging Main Report Title** (e.g., "Financial Performance Analysis for [Month] [Year] 📈")
+2.  **✨ Brief and Engaging Introduction**: Summarizing the report's importance and the period it covers, using a relevant emoji.
+3.  **🔍 Comprehensive and Detailed Analysis**: 
+    *   For each main category, use a subheading (H3) with a relevant emoji (e.g., 💰 Revenues, 💸 Expenses).
+    *   In-depth analysis of each item within the category, highlighting key trends, comparisons (if possible), and any notable strengths (✅) or weaknesses (⚠️).
+    *   Use short, well-structured paragraphs.
+4.  **💡 Actionable Insights**: 
+    *   Present clear and specific insights derived from the data, titled "🎯 Key Insights and Conclusions".
+    *   Use bullet points with emojis for each point (e.g., •️⃣, 💡, 🔑).
+5.  **🚀 Practical and Innovative Solutions**: 
+    *   Propose at least 3-5 practical and innovative solutions to address any identified challenges or to improve the financial situation, titled "🛠️ Recommendations and Proposed Solutions".
+    *   Solutions should be detailed and actionable, using a numbered list and perhaps emojis to illustrate each solution.
+6.  **🔮 Future Outlook (if applicable)**: 
+    *   Based on the data, provide a brief outlook or potential scenarios, titled "🔭 Future Outlook".
+    *   Use a clear paragraph with a relevant emoji.
+7.  **🏁 Strong Conclusion**: 
+    *   Summary of the main points and key recommendations, titled "📌 Summary and Final Recommendations".
+    *   Use an encouraging concluding paragraph.
+8.  **🎨 Professional and Attractive Formatting**: 
+    *   Utilize Markdown extensively to make the report engaging and easy to read.
+    *   Use headings (H1, H2, H3, H4), bulleted and numbered lists, bold and italic text.
+    *   Ensure sufficient white space between paragraphs and sections for readability.
+    *   The report should be well-structured and strong in its visual presentation and content.
 `;
 
     const prompt = `${languageSpecificInstructions}
@@ -163,7 +217,7 @@ ${JSON.stringify(items, null, 2)}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.6, maxOutputTokens: 2048, topP: 0.9, topK: 40 } // Adjusted temperature slightly, increased max tokens
+        generationConfig: { temperature: 0.65, maxOutputTokens: 3500, topP: 0.9, topK: 40 } // Adjusted temp, increased max tokens for richer content
       })
     });
     if (!res.ok) {
@@ -185,13 +239,13 @@ ${JSON.stringify(items, null, 2)}
     if (items.length === 0) {
       setMessages(prev => [
         ...prev,
-        { sender: 'bot', text: responseLanguage === 'ar' ? 'لا توجد بيانات.' : 'No data found.', time: getCurrentTime(), formatted: false }
+        { sender: 'bot', text: responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير.' : 'Not enough data to generate a report.', time: getCurrentTime(), formatted: false }
       ]);
       return;
     }
     setIsTyping(true);
     try {
-      const report = await getReport(items);
+      const reportText = await getReportContent(items);
       const locale = responseLanguage === 'ar' ? 'ar-EG' : 'en-US';
       let dateStr;
       if (dateType === 'full') {
@@ -201,33 +255,40 @@ ${JSON.stringify(items, null, 2)}
       } else {
         dateStr = filterDate.toLocaleDateString(locale, { year: 'numeric' });
       }
-      const header = responseLanguage === 'ar'
-        ? `### تقرير لـ ${filterType === "All" ? "جميع الأنواع" : filterType} في ${dateStr}\n\n`
-        : `### Report for ${filterType === "All" ? "All Types" : filterType} in ${dateStr}\n\n`;
-      const reportWithHeader = header + report;
+      const title = responseLanguage === 'ar'
+        ? `التقرير المالي لـ ${filterType === "All" ? "جميع الأنواع" : filterType} في ${dateStr}`
+        : `Financial Report for ${filterType === "All" ? "All Types" : filterType} in ${dateStr}`;
+      
+      setReportModalTitle(title);
+      setReportModalContent(reportText); // The report text already includes its own H1 from the prompt
+      setIsReportModalOpen(true);
+
+      // Add a message to chat indicating report is ready and can be viewed
       setMessages(prev => [
         ...prev,
-        { sender: 'bot', text: reportWithHeader, time: getCurrentTime(), formatted: true, type: 'report' }
+        {
+          sender: 'bot',
+          text: responseLanguage === 'ar' ? `تم إنشاء تقريرك بنجاح. يمكنك عرضه الآن.` : `Your report has been generated successfully. You can view it now.`,
+          time: getCurrentTime(),
+          formatted: false, // Keep it simple, or make it a button-like text
+          isReportNotification: true, // Custom flag to potentially style it differently or add action
+          reportTitleForModal: title, // Pass title and content for re-opening
+          reportContentForModal: reportText
+        }
       ]);
+
     } catch (err) {
       console.error(err);
-      if (err.message.includes('Network error')) {
-        setMessages(prev => [
-          ...prev,
-          { sender: 'bot', text: responseLanguage === 'ar' ? 'خطأ في الشبكة. تحقق من اتصالك.' : 'Network error. Check your connection.', time: getCurrentTime(), formatted: false }
-        ]);
-      } else {
-        setMessages(prev => [
-          ...prev,
-          { sender: 'bot', text: responseLanguage === 'ar' ? 'عذراً، لم أتمكن من جلب التقرير.' : 'Sorry, I couldn\'t retrieve the report.', time: getCurrentTime(), formatted: false }
-        ]);
-      }
+      setMessages(prev => [
+        ...prev,
+        { sender: 'bot', text: responseLanguage === 'ar' ? 'عذراً، لم أتمكن من جلب التقرير.' : 'Sorry, I couldn\'t retrieve the report.', time: getCurrentTime(), formatted: false }
+      ]);
     } finally {
       setIsTyping(false);
     }
   }
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   function handleFileUpload(e) {
     const file = e.target.files[0];
@@ -321,22 +382,22 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <div className="clarity-chat-copyable-code"> {/* Updated class */}
+      <div className="clarity-chat-copyable-code">
         <SyntaxHighlighter 
           language={language} 
-          style={tomorrow} // Consider a light theme like 'ghcolors' or 'solarizedLight'
+          style={tomorrow} 
           customStyle={{ 
             borderRadius: '6px', 
             padding: '12px', 
             fontSize: '0.8em',
-            backgroundColor: '#F7FAFC', // Match CSS
-            color: '#2D3748', // Match CSS
+            backgroundColor: '#F7FAFC',
+            color: '#2D3748',
           }}
           showLineNumbers={false}
         >
           {code}
         </SyntaxHighlighter>
-        <button onClick={copy} className="clarity-chat-copy-code-button"> {/* Updated class */}
+        <button onClick={copy} className="clarity-chat-copy-code-button">
           {copied ? <><FaCheck style={{ marginRight: 3 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 3 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
         </button>
       </div>
@@ -351,13 +412,68 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <button onClick={copy} className="clarity-chat-copy-text-button"> {/* Updated class */}
+      <button onClick={copy} className="clarity-chat-copy-text-button">
         {copied ? <FaCheck /> : <FaCopy />}
       </button>
     );
   }
 
+  // Component for Report Modal
+  const ReportModal = ({ isOpen, onClose, title, content }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className={`clarity-chat-report-modal-overlay ${isOpen ? 'visible' : ''}`} onClick={onClose}>
+        <div className="clarity-chat-report-modal" onClick={e => e.stopPropagation()}> {/* Prevent closing when clicking inside modal */}
+          <div className="clarity-chat-report-modal-header">
+            <h2>{title}</h2>
+            <button onClick={onClose} className="clarity-chat-report-modal-close-btn">
+              <FaTimes />
+            </button>
+          </div>
+          <div className="clarity-chat-report-modal-content">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({ node, inline, className, children, ...props }) {
+                  const match = /language-(\w+)/.exec(className || '');
+                  return !inline && match ? (
+                    <CopyableCode code={String(children).replace(/\n$/, '')} language={match[1]} />
+                  ) : (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                },
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   function renderMessageContent(message) {
+    if (message.isReportNotification) {
+        return (
+            <p>
+                {message.text} 
+                <button 
+                    className="clarity-chat-view-report-btn" 
+                    onClick={() => {
+                        setReportModalTitle(message.reportTitleForModal);
+                        setReportModalContent(message.reportContentForModal);
+                        setIsReportModalOpen(true);
+                    }}
+                >
+                    <FaExternalLinkAlt style={{ marginRight: '5px' }} /> 
+                    {responseLanguage === 'ar' ? 'عرض التقرير' : 'View Report'}
+                </button>
+            </p>
+        );
+    }
     if (message.formatted) {
       return (
         <ReactMarkdown
@@ -383,22 +499,22 @@ ${JSON.stringify(items, null, 2)}
   }
 
   return (
-    <div className="clarity-chat-container"> {/* Updated class */}
-      <header className="clarity-chat-header"> {/* Updated class */}
-        <div className="clarity-chat-header-top"> {/* Updated class */}
+    <div className="clarity-chat-container">
+      <header className="clarity-chat-header">
+        <div className="clarity-chat-header-top">
           <h1>
-            <span className="app-icon"><FaComments /></span> {/* Using FaComments as a generic chat icon */}
-            Clarity Chat {/* Updated App Name */}
+            <span className="app-icon"><FaComments /></span>
+            Clarity Chat
           </h1>
           <div>
-            <button onClick={clearChatHistory} className="clarity-chat-new-chat-btn"> {/* Updated class */}
+            <button onClick={clearChatHistory} className="clarity-chat-new-chat-btn">
               {responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}
             </button>
           </div>
         </div>
       </header>
 
-      <section className="clarity-chat-filter-panel"> {/* Updated class */}
+      <section className="clarity-chat-filter-panel">
         <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
         <select value={dateType} onChange={e => setDateType(e.target.value)}>
           <option value="full">{responseLanguage === 'ar' ? 'تاريخ كامل' : 'Full Date'}</option>
@@ -446,24 +562,24 @@ ${JSON.stringify(items, null, 2)}
         </button>
       </section>
 
-      <main className="clarity-chat-main-container" ref={chatMessagesRef}> {/* Updated class & ref */}
-        <div className="clarity-chat-messages-wrapper"> {/* Updated class */}
+      <main className="clarity-chat-main-container" ref={chatMessagesRef}>
+        <div className="clarity-chat-messages-wrapper">
           {messages.map((msg, i) => (
-            <div key={i} className={`clarity-chat-message ${msg.sender}${msg.type === 'report' ? ' report' : ''}`}> {/* Updated class */}
+            <div key={i} className={`clarity-chat-message ${msg.sender}${msg.isReportNotification ? ' report-notification' : ''}`}>
               <div className="avatar">
                 {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
               </div>
               <div className="clarity-chat-message-content-wrapper">
-                <div className="clarity-chat-message-content"> {/* Updated class */}
+                <div className="clarity-chat-message-content">
                   {renderMessageContent(msg)}
                   <span className="time">{msg.time}</span>
-                  {msg.text && msg.type !== 'report' && <CopyButton text={msg.text} />} {/* Copy button for non-report messages */}
+                  {msg.text && !msg.isReportNotification && <CopyButton text={msg.text} />}
                 </div>
               </div>
             </div>
           ))}
           {isTyping && (
-            <div className="clarity-chat-message bot typing"> {/* Updated class for typing */}
+            <div className="clarity-chat-message bot typing">
               <div className="avatar"><FaRobot /></div>
               <div className="clarity-chat-message-content-wrapper">
                 <div className="clarity-chat-message-content"> 
@@ -477,9 +593,9 @@ ${JSON.stringify(items, null, 2)}
         </div>
       </main>
 
-      <form className="clarity-chat-form" onSubmit={handleSubmit}> {/* Updated class */}
-        <label htmlFor="file-upload" className="clarity-chat-file-attach-label"> {/* Updated class */}
-          <FaPaperclip /> {/* Updated Icon */}
+      <form className="clarity-chat-form" onSubmit={handleSubmit}>
+        <label htmlFor="file-upload" className="clarity-chat-file-attach-label">
+          <FaPaperclip />
         </label>
         <input id="file-upload" type="file" onChange={handleFileUpload} ref={fileInputRef} />
         
@@ -495,21 +611,28 @@ ${JSON.stringify(items, null, 2)}
           }}
         />
         <div className="clarity-chat-form-controls">
-            <div className="clarity-chat-language-selector-wrapper"> {/* Updated class */}
+            <div className="clarity-chat-language-selector-wrapper">
                 <FaGlobe />
                 <select value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
                     <option value="ar">العربية</option>
                     <option value="en">English</option>
                 </select>
             </div>
-            <button type="submit" className="clarity-chat-send-btn" disabled={(!input.trim() && !attachedFile) || isTyping}> {/* Updated class */}
+            <button type="submit" className="clarity-chat-send-btn" disabled={(!input.trim() && !attachedFile) || isTyping}>
               <FaPaperPlane />
             </button>
         </div>
       </form>
+
+      <ReportModal 
+        isOpen={isReportModalOpen} 
+        onClose={() => setIsReportModalOpen(false)} 
+        title={reportModalTitle}
+        content={reportModalContent} 
+      />
     </div>
   );
 }
 
-export default ClarityChat; // Exporting the updated component
+export default ClarityChat;
 

@@ -539,3 +539,187 @@ body {
   }
 }
 
+
+
+
+/* Report Viewer Modal Styling */
+.clarity-chat-report-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(45, 55, 72, 0.6); /* Dimmed background (dark gray-blue with opacity) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.clarity-chat-report-modal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.clarity-chat-report-modal {
+  background-color: #FFFFFF; /* White modal background */
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 800px; /* Max width for the modal */
+  max-height: 90vh; /* Max height */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.clarity-chat-report-modal-overlay.visible .clarity-chat-report-modal {
+  transform: scale(1);
+}
+
+.clarity-chat-report-modal-header {
+  padding: 15px 20px;
+  background-color: #EBF8FF; /* Light blue header */
+  border-bottom: 1px solid #BEE3F8; /* Slightly darker light blue border */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clarity-chat-report-modal-header h2 {
+  margin: 0;
+  font-size: 1.3em;
+  color: #2C5282; /* Darker blue for header text */
+  font-weight: 600;
+}
+
+.clarity-chat-report-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.8em;
+  color: #718096; /* Medium gray for close icon */
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.clarity-chat-report-modal-close-btn:hover {
+  color: #2C5282; /* Darker blue on hover */
+}
+
+.clarity-chat-report-modal-content {
+  padding: 25px 30px;
+  overflow-y: auto;
+  flex-grow: 1;
+  color: #2D3748; /* Default text color for modal content */
+}
+
+/* Styling for Markdown content within the modal */
+.clarity-chat-report-modal-content h1,
+.clarity-chat-report-modal-content h2,
+.clarity-chat-report-modal-content h3,
+.clarity-chat-report-modal-content h4 {
+  color: #2C5282; /* Dark blue for headings */
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #E2E8F0; /* Light border for separation */
+}
+.clarity-chat-report-modal-content h1:first-child,
+.clarity-chat-report-modal-content h2:first-child,
+.clarity-chat-report-modal-content h3:first-child,
+.clarity-chat-report-modal-content h4:first-child {
+    margin-top: 0;
+}
+
+.clarity-chat-report-modal-content p {
+  margin-bottom: 1em;
+  line-height: 1.7;
+  color: #4A5568; /* Medium gray-blue for paragraph text */
+}
+
+.clarity-chat-report-modal-content ul,
+.clarity-chat-report-modal-content ol {
+  margin-bottom: 1em;
+  padding-left: 1.8em;
+  color: #4A5568;
+}
+
+.clarity-chat-report-modal-content li {
+  margin-bottom: 0.5em;
+}
+
+.clarity-chat-report-modal-content strong {
+  color: #2D3748; /* Slightly darker for emphasis */
+}
+
+.clarity-chat-report-modal-content em {
+  color: #2B6CB0; /* Blue for italicized emphasis */
+}
+
+.clarity-chat-report-modal-content blockquote {
+  border-left: 4px solid #BEE3F8; /* Light blue border for blockquotes */
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 1em;
+  color: #718096; /* Lighter text for blockquotes */
+  font-style: italic;
+}
+
+.clarity-chat-report-modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5em;
+  font-size: 0.9em;
+}
+
+.clarity-chat-report-modal-content th,
+.clarity-chat-report-modal-content td {
+  border: 1px solid #CBD5E0; /* Light gray borders for table cells */
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.clarity-chat-report-modal-content th {
+  background-color: #F0F4F8; /* Light grayish-blue for table headers */
+  color: #2C5282;
+  font-weight: 600;
+}
+
+.clarity-chat-report-modal-content code:not(pre code) {
+  background-color: #E2E8F0;
+  color: #2D3748;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.clarity-chat-report-modal-content .clarity-chat-copyable-code pre {
+  background-color: #F7FAFC !important;
+  border: 1px solid #E2E8F0;
+  padding: 15px !important;
+}
+
+/* Placeholder for chart if needed */
+.clarity-chat-report-modal-content .report-chart-placeholder {
+  background-color: #EBF8FF;
+  border: 1px dashed #BEE3F8;
+  padding: 20px;
+  text-align: center;
+  color: #718096;
+  border-radius: 6px;
+  margin: 1.5em 0;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
