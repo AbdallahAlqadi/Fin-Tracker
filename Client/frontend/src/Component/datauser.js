@@ -23,6 +23,7 @@ import {
   Alert,
 } from "@mui/material";
 import { styled } from "@mui/system";
+import { alpha } from "@mui/material/styles";
 import CategoryIcon from "@mui/icons-material/Category";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
@@ -45,55 +46,61 @@ const StyledCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  padding: "20px",
-  borderRadius: "16px",
-  border: "none",
+  padding: theme.spacing(3), // Use theme spacing
+  borderRadius: "12px", // Slightly less rounded
+  border: "1px solid #e0e0e0", // Subtle border
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  background: "linear-gradient(135deg, #ffffff, #f8f8f8)",
+  background: "#ffffff", // Cleaner background
   width: "100%",
   maxWidth: "450px",
-  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+  boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)", // Softer shadow
   "@media (max-width:880px)": {
     flexDirection: "column",
     alignItems: "center",
     textAlign: "center",
+    padding: theme.spacing(2.5),
   },
   "@media (max-width:575px)": {
     maxWidth: "350px",
   },
   "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
+    transform: "translateY(-4px)",
+    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12)", // Enhanced hover shadow
   },
 }));
 
 const ImageContainer = styled("div")(({ theme }) => ({
   flex: "0 0 100px",
-  marginRight: "16px",
+  marginRight: theme.spacing(2.5), // Use theme spacing
   borderRadius: "50%",
   overflow: "hidden",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)", // Softer shadow
   width: "100px",
   height: "100px",
+  border: `2px solid ${theme.palette.grey[200]}`, // Subtle border for definition
   "@media (max-width:880px)": {
     marginRight: 0,
-    marginBottom: "16px",
+    marginBottom: theme.spacing(2),
   },
 }));
 
 const StyledSelect = styled(Select)(({ theme }) => ({
   borderRadius: "8px",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  // boxShadow: "0 1px 3px rgba(0,0,0,0.05)", // Softer shadow
+  backgroundColor: theme.palette.background.paper,
   "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#007BFF",
+    borderColor: theme.palette.grey[400], // Lighter default border
   },
   "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#0056b3",
+    borderColor: theme.palette.primary.main, // Use theme primary color on hover
   },
   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#007BFF",
+    borderColor: theme.palette.primary.main,
     borderWidth: "2px",
   },
+  "& .MuiSelect-icon": {
+    color: theme.palette.primary.main, // Icon color
+  }
 }));
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
@@ -119,7 +126,7 @@ const StyledUpdateDialog = styled(StyledDialog)(({ theme }) => ({
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
-  background: "linear-gradient(90deg, #007BFF, #00C6FF)",
+  background: "linear-gradient(90deg, #4A90E2, #7AC7E8)", // Enhanced: Softer blue gradient
   color: "#fff",
   textAlign: "center",
   padding: theme.spacing(2),
@@ -129,7 +136,7 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
 }));
 
 const DeleteDialogTitle = styled(DialogTitle)(({ theme }) => ({
-  background: "linear-gradient(90deg, #ef5350, #e53935)",
+  background: "linear-gradient(90deg, #FF7D7D, #FF5A5A)", // Enhanced: Softer red gradient
   color: "#fff",
   textAlign: "center",
   padding: theme.spacing(2),
@@ -186,15 +193,23 @@ const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
 const StyledTextField = styled(TextField)(({ theme }) => ({
   "& .MuiOutlinedInput-root": {
     borderRadius: "8px",
+    backgroundColor: theme.palette.background.paper, // Add background color for consistency
     "& fieldset": {
-      borderColor: "#007BFF",
+      borderColor: theme.palette.grey[400], // Lighter default border
     },
     "&:hover fieldset": {
-      borderColor: "#0056b3",
+      borderColor: theme.palette.primary.main, // Use theme primary color on hover
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#007BFF",
+      borderColor: theme.palette.primary.main, // Use theme primary color on focus
+      borderWidth: "2px", // Keep focused border width
     },
+  },
+  "& .MuiInputLabel-root": { // Style label
+    color: theme.palette.text.secondary,
+  },
+  "& .MuiInputLabel-root.Mui-focused": { // Style focused label
+    color: theme.palette.primary.main,
   },
 }));
 
@@ -205,39 +220,52 @@ const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
   gap: theme.spacing(1),
 }));
 
-const StyledButton = styled(Button)(({ theme }) => ({
+const StyledButton = styled(Button)(({ theme, variant = "contained", color = "primary" }) => ({
   borderRadius: "8px",
   fontWeight: "600",
   padding: "10px 20px",
   textTransform: "none",
-  transition: "all 0.3s ease",
-  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+  transition: "all 0.2s ease-in-out",
+  boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.1)}`,
+  color: variant === "outlined" ? theme.palette[color]?.main : theme.palette[color]?.contrastText,
+  backgroundColor: variant === "outlined" ? "transparent" : theme.palette[color]?.main,
+  border: variant === "outlined" ? `1px solid ${theme.palette[color]?.main}` : "none",
   "&:hover": {
-    transform: "translateY(-2px)",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+    transform: "translateY(-1px)",
+    boxShadow: `0 2px 6px ${alpha(theme.palette.common.black, 0.15)}`,
+    backgroundColor: variant === "outlined" ? alpha(theme.palette[color].main, 0.08) : theme.palette[color]?.dark,
+    borderColor: variant === "outlined" ? theme.palette[color]?.dark : "none",
   },
 }));
 
 const ExportButton = styled(StyledButton)(({ theme }) => ({
-  background: "linear-gradient(135deg, #4CAF50, #43A047)",
-  color: "#fff",
+  // background: "linear-gradient(135deg, #4CAF50, #43A047)", // Original
+  // color: "#fff", // Original
+  // "&:hover": {
+  //   background: "linear-gradient(135deg, #43A047, #388E3C)", // Original
+  // },
+  // Inherits from StyledButton, but we can override if needed, e.g., specific green theme
+  backgroundColor: theme.palette.success.main,
+  color: theme.palette.success.contrastText,
   "&:hover": {
-    background: "linear-gradient(135deg, #43A047, #388E3C)",
+    backgroundColor: theme.palette.success.dark,
   },
   display: "flex",
   alignItems: "center",
-  gap: "8px",
+  gap: theme.spacing(1), // Use theme spacing
 }));
 
 const StyledDateCard = styled(Box)(({ theme }) => ({
-  background: "linear-gradient(135deg, #007BFF, #00C6FF)",
-  color: "#fff",
-  padding: theme.spacing(1.5),
-  borderRadius: "12px",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  // background: "linear-gradient(135deg, #007BFF, #00C6FF)", // Original
+  background: `linear-gradient(135deg, ${theme.palette.primary.light}, ${theme.palette.primary.main})`,
+  color: theme.palette.primary.contrastText,
+  padding: theme.spacing(1.5, 2.5), // Adjusted padding
+  borderRadius: "10px", // Slightly less rounded
+  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.1)}`, // Softer shadow
   display: "inline-block",
   textAlign: "center",
   marginBottom: theme.spacing(2),
+  fontWeight: 500,
 }));
 
 const getImageUrl = (image) => {
