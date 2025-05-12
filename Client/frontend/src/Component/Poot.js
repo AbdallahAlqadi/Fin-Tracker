@@ -4,20 +4,21 @@ import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Keep for code content styling
 import {
   FaUserCircle,
   FaRobot,
-  FaFileExcel,
+  FaFileExcel, // Will be used for file attach icon
   FaPaperPlane,
   FaCopy,
   FaCheck,
-  FaComments,
+  FaComments, // App icon
   FaGlobe,
+  FaMoon, // Example for a potential new icon for Aurora Flow
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
-function Poot() {
+function AuroraFlowChat() { // Renamed component
   const initialBotMessage = {
     sender: 'bot',
     text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
@@ -34,6 +35,7 @@ function Poot() {
   const [isTyping, setIsTyping] = useState(false);
   const [responseLanguage, setResponseLanguage] = useState('ar');
   const chatMessagesRef = useRef(null);
+  const fileInputRef = useRef(null); // Ref for file input
 
   const [budgetItems, setBudgetItems] = useState([]);
   const [loadingBudget, setLoadingBudget] = useState(true);
@@ -43,7 +45,7 @@ function Poot() {
 
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'https://fin-tracker-ncbx.onrender.com/api/getUserBudget';
-  const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
+  const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w'; // Keep as is from original code
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   useEffect(() => {
@@ -234,6 +236,10 @@ ${JSON.stringify(items, null, 2)}
     } else {
       reader.readAsBinaryString(file);
     }
+    // Clear the file input after selection so the same file can be re-uploaded
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
   }
 
   async function getBotResponse(message, fileData = null, language = 'ar') {
@@ -259,7 +265,7 @@ ${JSON.stringify(items, null, 2)}
     if (!msg && !attachedFileData) return;
     setMessages(prev => [
       ...prev,
-      { sender: 'user', text: msg || attachedFile.name, time: getCurrentTime(), formatted: false }
+      { sender: 'user', text: msg || (attachedFile ? attachedFile.name : 'File attached'), time: getCurrentTime(), formatted: false }
     ]);
     setInput(''); setIsTyping(true);
     try {
@@ -288,12 +294,24 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <div style={{ position: 'relative', marginTop: 10 }}>
-        <SyntaxHighlighter language={language} style={tomorrow} customStyle={{ borderRadius: 8, padding: 15, fontSize: '0.9em', direction: 'ltr', textAlign: 'left' }}>
+      <div className="aurora-copyable-code"> {/* Updated class */}
+        <SyntaxHighlighter 
+          language={language} 
+          style={tomorrow} 
+          customStyle={{ 
+            borderRadius: '8px', 
+            padding: '15px', 
+            fontSize: '0.85em', 
+            direction: 'ltr', 
+            textAlign: 'left',
+            backgroundColor: '#0D121C', // Match CSS for pre background
+          }}
+          showLineNumbers={false} // Optional: to match common styles
+        >
           {code}
         </SyntaxHighlighter>
-        <button onClick={copy} className="copy-code-button" style={{ position: 'absolute', top: 10, right: 10, display: 'flex', alignItems: 'center' }}>
-          {copied ? <><FaCheck style={{ marginRight: 5 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 5 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
+        <button onClick={copy} className="aurora-copy-code-button"> {/* Updated class */}
+          {copied ? <><FaCheck style={{ marginRight: 4 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 4 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
         </button>
       </div>
     );
@@ -307,7 +325,7 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <button onClick={copy} className="copy-text-button">
+      <button onClick={copy} className="aurora-copy-text-button"> {/* Updated class */}
         {copied ? <FaCheck /> : <FaCopy />}
       </button>
     );
@@ -339,19 +357,22 @@ ${JSON.stringify(items, null, 2)}
   }
 
   return (
-    <div className="poot-container">
-      <header className="poot-header">
-        <div className="header-top">
+    <div className="aurora-flow-container"> {/* Updated class */}
+      <header className="aurora-header"> {/* Updated class */}
+        <div className="aurora-header-top"> {/* Updated class */}
           <h1>
-            <FaComments /> Poot Chat
+            <span className="aurora-icon"><FaMoon /></span> {/* Using FaMoon as an example icon */}
+            Aurora Flow {/* Updated App Name */}
           </h1>
           <div>
-            <button onClick={clearChatHistory} className="new-chat-btn">{responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}</button>
+            <button onClick={clearChatHistory} className="aurora-new-chat-btn"> {/* Updated class */}
+              {responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}
+            </button>
           </div>
         </div>
       </header>
 
-      <section className="filter-panel">
+      <section className="aurora-filter-panel"> {/* Updated class */}
         <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
         <select value={dateType} onChange={e => setDateType(e.target.value)}>
           <option value="full">{responseLanguage === 'ar' ? 'تاريخ كامل' : 'Full Date'}</option>
@@ -394,74 +415,75 @@ ${JSON.stringify(items, null, 2)}
           <option value="Expenses">{responseLanguage === 'ar' ? 'المصروفات' : 'Expenses'}</option>
         </select>
 
-        <button onClick={handleGenerateReport} disabled={loadingBudget}>
+        <button onClick={handleGenerateReport} disabled={loadingBudget || filteredItems.length === 0}>
           {loadingBudget ? (responseLanguage === 'ar' ? 'تحميل...' : 'Loading...') : (responseLanguage === 'ar' ? 'توليد التقرير' : 'Generate Report')}
         </button>
       </section>
 
-      <main className="chat-container">
-        <div className="chat-messages-wrapper" ref={chatMessagesRef}>
+      <main className="aurora-chat-container" ref={chatMessagesRef}> {/* Updated class & ref moved here*/}
+        <div className="aurora-chat-messages-wrapper"> {/* Updated class */}
           {messages.map((msg, i) => (
-            <div key={i} className={`message ${msg.sender}${msg.type === 'report' ? ' report' : ''}`}>
+            <div key={i} className={`aurora-message ${msg.sender}${msg.type === 'report' ? ' report' : ''}`}> {/* Updated class */}
               <div className="avatar">
                 {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
               </div>
-              <div className="message-content">
-                {renderMessageContent(msg)}
-                <span className="time">{msg.time}</span>
-                <CopyButton text={msg.text} />
+              <div className="aurora-message-content-wrapper">
+                <div className="aurora-message-content"> {/* Updated class */}
+                  {renderMessageContent(msg)}
+                  <span className="time">{msg.time}</span>
+                  {msg.text && <CopyButton text={msg.text} />} {/* Conditionally render copy button */}
+                </div>
               </div>
             </div>
           ))}
           {isTyping && (
-            <div className="message bot">
-              <div className="avatar"><FaRobot size={30} /></div>
-              <div className="message-content">
-                <div className="typing-indicator"><span/><span/><span/></div>
+            <div className="aurora-message bot typing"> {/* Updated class for typing */}
+              <div className="avatar"><FaRobot /></div>
+              <div className="aurora-message-content-wrapper">
+                <div className="aurora-message-content"> 
+                  <div className="aurora-typing-indicator">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
-
-        <div className="chat-input">
-          <div className="input-controls">
-            <div className="file-upload">
-              <label htmlFor="file-input" className="file-upload-label">
-                <FaFileExcel /> {responseLanguage === 'ar' ? 'إرفاق ملف Excel/CSV' : 'Attach Excel/CSV'}
-              </label>
-              <input id="file-input" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} hidden />
-              {attachedFile && <span className="file-name">{attachedFile.name}</span>}
-            </div>
-
-            <div className="language-selection">
-              <FaGlobe />
-              <label htmlFor="language">{responseLanguage === 'ar' ? 'لغة الرد:' : 'Response Language:'}</label>
-              <select id="language" value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
-                <option value="ar">العربية</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="message-form">
-            <input
-              type="text"
-              placeholder={responseLanguage === 'ar' ? 'اكتب سؤالك هنا...' : 'Type your question here...'}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && handleSubmit(e)}
-              autoComplete="off"
-              autoFocus
-              className="message-input"
-            />
-            <button onClick={handleSubmit} disabled={!input.trim() && !attachedFileData} className="send-btn">
-              <FaPaperPlane size={18} />
-            </button>
-          </div>
-        </div>
       </main>
+
+      <form className="aurora-chat-form" onSubmit={handleSubmit}> {/* Updated class */}
+        <label htmlFor="file-upload" className="aurora-file-attach-label"> {/* Updated class */}
+          <FaFileExcel />
+        </label>
+        <input id="file-upload" type="file" onChange={handleFileUpload} ref={fileInputRef} />
+        
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder={responseLanguage === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message here...'}
+          onKeyPress={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+        />
+        <div className="aurora-form-controls">
+            <div className="aurora-language-selector-wrapper"> {/* Updated class */}
+                <FaGlobe />
+                <select value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <button type="submit" className="aurora-send-btn" disabled={(!input.trim() && !attachedFile) || isTyping}> {/* Updated class */}
+              <FaPaperPlane />
+            </button>
+        </div>
+      </form>
     </div>
   );
 }
 
-export default Poot;
+export default AuroraFlowChat; // Exporting the component
+
