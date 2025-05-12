@@ -4,21 +4,21 @@ import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Keep for code content styling
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Or a light theme like 'ghcolors' or 'solarizedlight'
 import {
   FaUserCircle,
   FaRobot,
-  FaFileExcel, // Will be used for file attach icon
+  FaPaperclip, // Changed from FaFileExcel for a more generic attachment icon
   FaPaperPlane,
   FaCopy,
   FaCheck,
   FaComments, // App icon
   FaGlobe,
-  FaMoon, // Example for a potential new icon for Aurora Flow
+  FaSun, // Icon for light theme, or a more abstract professional icon
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
-function AuroraFlowChat() { // Renamed component
+function ClarityChat() { // Renamed component
   const initialBotMessage = {
     sender: 'bot',
     text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
@@ -35,7 +35,7 @@ function AuroraFlowChat() { // Renamed component
   const [isTyping, setIsTyping] = useState(false);
   const [responseLanguage, setResponseLanguage] = useState('ar');
   const chatMessagesRef = useRef(null);
-  const fileInputRef = useRef(null); // Ref for file input
+  const fileInputRef = useRef(null);
 
   const [budgetItems, setBudgetItems] = useState([]);
   const [loadingBudget, setLoadingBudget] = useState(true);
@@ -45,7 +45,7 @@ function AuroraFlowChat() { // Renamed component
 
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'https://fin-tracker-ncbx.onrender.com/api/getUserBudget';
-  const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w'; // Keep as is from original code
+  const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   useEffect(() => {
@@ -133,23 +133,51 @@ function AuroraFlowChat() { // Renamed component
 
   async function getReport(items) {
     if (items.length === 0) {
-      return responseLanguage === 'ar' ? 'لا توجد بيانات.' : 'No data found.';
+      return responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير مفصل.' : 'Insufficient data to generate a detailed report.';
     }
-    const prompt = `
-Please provide a detailed report and practical solutions for the following data in ${responseLanguage === 'en' ? 'English' : 'Arabic'}, using Markdown formatting for headings and lists:
+
+    const languageSpecificInstructions = responseLanguage === 'ar' ? 
+      `الرجاء تقديم تقرير مالي مفصل للغاية باللغة العربية بناءً على البيانات التالية. يجب أن يتضمن التقرير:
+1.  **تحليل شامل**: تحليل عميق لكل فئة وكل بند، مع إبراز الاتجاهات الرئيسية، والمقارنات (إذا أمكن)، وأي نقاط قوة أو ضعف ملحوظة.
+2.  **رؤى قابلة للتنفيذ**: تقديم رؤى واضحة ومحددة مستخلصة من البيانات.
+3.  **حلول عملية ومبتكرة**: اقتراح ما لا يقل عن 3-5 حلول عملية ومبتكرة لمعالجة أي تحديات تم تحديدها أو لتحسين الوضع المالي. يجب أن تكون الحلول مفصلة وقابلة للتطبيق.
+4.  **توقعات مستقبلية (إذا أمكن)**: بناءً على البيانات، قدم توقعات موجزة أو سيناريوهات محتملة.
+5.  **تنسيق احترافي وجذاب**: استخدم تنسيق Markdown بشكل مكثف لجعل التقرير جذابًا وسهل القراءة. استخدم العناوين (H2, H3, H4)، والقوائم النقطية والرقمية، والنص الغامق، والمائل، وربما جداول بسيطة إذا كانت مناسبة لعرض البيانات بشكل أفضل. يجب أن يكون التقرير منظمًا بشكل جيد وقويًا في عرضه.
+` :
+      `Please provide a highly detailed financial report in English based on the following data. The report must include:
+1.  **Comprehensive Analysis**: In-depth analysis of each category and item, highlighting key trends, comparisons (if possible), and any notable strengths or weaknesses.
+2.  **Actionable Insights**: Clear and specific insights derived from the data.
+3.  **Practical and Innovative Solutions**: Propose at least 3-5 practical and innovative solutions to address any identified challenges or to improve the financial situation. Solutions should be detailed and actionable.
+4.  **Future Outlook (if applicable)**: Based on the data, provide a brief outlook or potential scenarios.
+5.  **Professional and Attractive Formatting**: Utilize Markdown extensively to make the report engaging and easy to read. Use headings (H2, H3, H4), bulleted and numbered lists, bold and italic text, and potentially simple tables if appropriate for better data presentation. The report should be well-structured and strong in its presentation.
+`;
+
+    const prompt = `${languageSpecificInstructions}
+البيانات:
+Data:
 ${JSON.stringify(items, null, 2)}
     `.trim();
+
     const res = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1500, topP: 0.9, topK: 40 }
+        generationConfig: { temperature: 0.6, maxOutputTokens: 2048, topP: 0.9, topK: 40 } // Adjusted temperature slightly, increased max tokens
       })
     });
-    if (!res.ok) throw new Error('Failed to get report');
+    if (!res.ok) {
+        const errorBody = await res.text();
+        console.error('Error from API:', res.status, errorBody);
+        throw new Error('Failed to get report from API');
+    }
     const data = await res.json();
-    return data.candidates[0].content.parts[0].text;
+    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+        return data.candidates[0].content.parts[0].text;
+    } else {
+        console.error('Unexpected API response structure:', data);
+        return responseLanguage === 'ar' ? 'تم استلام رد غير متوقع من خدمة إنشاء التقارير.' : 'Received an unexpected response from the report generation service.';
+    }
   }
 
   async function handleGenerateReport() {
@@ -236,7 +264,6 @@ ${JSON.stringify(items, null, 2)}
     } else {
       reader.readAsBinaryString(file);
     }
-    // Clear the file input after selection so the same file can be re-uploaded
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -294,24 +321,23 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <div className="aurora-copyable-code"> {/* Updated class */}
+      <div className="clarity-chat-copyable-code"> {/* Updated class */}
         <SyntaxHighlighter 
           language={language} 
-          style={tomorrow} 
+          style={tomorrow} // Consider a light theme like 'ghcolors' or 'solarizedLight'
           customStyle={{ 
-            borderRadius: '8px', 
-            padding: '15px', 
-            fontSize: '0.85em', 
-            direction: 'ltr', 
-            textAlign: 'left',
-            backgroundColor: '#0D121C', // Match CSS for pre background
+            borderRadius: '6px', 
+            padding: '12px', 
+            fontSize: '0.8em',
+            backgroundColor: '#F7FAFC', // Match CSS
+            color: '#2D3748', // Match CSS
           }}
-          showLineNumbers={false} // Optional: to match common styles
+          showLineNumbers={false}
         >
           {code}
         </SyntaxHighlighter>
-        <button onClick={copy} className="aurora-copy-code-button"> {/* Updated class */}
-          {copied ? <><FaCheck style={{ marginRight: 4 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 4 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
+        <button onClick={copy} className="clarity-chat-copy-code-button"> {/* Updated class */}
+          {copied ? <><FaCheck style={{ marginRight: 3 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 3 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
         </button>
       </div>
     );
@@ -325,7 +351,7 @@ ${JSON.stringify(items, null, 2)}
       setTimeout(() => setCopied(false), 2000);
     };
     return (
-      <button onClick={copy} className="aurora-copy-text-button"> {/* Updated class */}
+      <button onClick={copy} className="clarity-chat-copy-text-button"> {/* Updated class */}
         {copied ? <FaCheck /> : <FaCopy />}
       </button>
     );
@@ -357,22 +383,22 @@ ${JSON.stringify(items, null, 2)}
   }
 
   return (
-    <div className="aurora-flow-container"> {/* Updated class */}
-      <header className="aurora-header"> {/* Updated class */}
-        <div className="aurora-header-top"> {/* Updated class */}
+    <div className="clarity-chat-container"> {/* Updated class */}
+      <header className="clarity-chat-header"> {/* Updated class */}
+        <div className="clarity-chat-header-top"> {/* Updated class */}
           <h1>
-            <span className="aurora-icon"><FaMoon /></span> {/* Using FaMoon as an example icon */}
-            Aurora Flow {/* Updated App Name */}
+            <span className="app-icon"><FaComments /></span> {/* Using FaComments as a generic chat icon */}
+            Clarity Chat {/* Updated App Name */}
           </h1>
           <div>
-            <button onClick={clearChatHistory} className="aurora-new-chat-btn"> {/* Updated class */}
+            <button onClick={clearChatHistory} className="clarity-chat-new-chat-btn"> {/* Updated class */}
               {responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}
             </button>
           </div>
         </div>
       </header>
 
-      <section className="aurora-filter-panel"> {/* Updated class */}
+      <section className="clarity-chat-filter-panel"> {/* Updated class */}
         <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
         <select value={dateType} onChange={e => setDateType(e.target.value)}>
           <option value="full">{responseLanguage === 'ar' ? 'تاريخ كامل' : 'Full Date'}</option>
@@ -420,28 +446,28 @@ ${JSON.stringify(items, null, 2)}
         </button>
       </section>
 
-      <main className="aurora-chat-container" ref={chatMessagesRef}> {/* Updated class & ref moved here*/}
-        <div className="aurora-chat-messages-wrapper"> {/* Updated class */}
+      <main className="clarity-chat-main-container" ref={chatMessagesRef}> {/* Updated class & ref */}
+        <div className="clarity-chat-messages-wrapper"> {/* Updated class */}
           {messages.map((msg, i) => (
-            <div key={i} className={`aurora-message ${msg.sender}${msg.type === 'report' ? ' report' : ''}`}> {/* Updated class */}
+            <div key={i} className={`clarity-chat-message ${msg.sender}${msg.type === 'report' ? ' report' : ''}`}> {/* Updated class */}
               <div className="avatar">
                 {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
               </div>
-              <div className="aurora-message-content-wrapper">
-                <div className="aurora-message-content"> {/* Updated class */}
+              <div className="clarity-chat-message-content-wrapper">
+                <div className="clarity-chat-message-content"> {/* Updated class */}
                   {renderMessageContent(msg)}
                   <span className="time">{msg.time}</span>
-                  {msg.text && <CopyButton text={msg.text} />} {/* Conditionally render copy button */}
+                  {msg.text && msg.type !== 'report' && <CopyButton text={msg.text} />} {/* Copy button for non-report messages */}
                 </div>
               </div>
             </div>
           ))}
           {isTyping && (
-            <div className="aurora-message bot typing"> {/* Updated class for typing */}
+            <div className="clarity-chat-message bot typing"> {/* Updated class for typing */}
               <div className="avatar"><FaRobot /></div>
-              <div className="aurora-message-content-wrapper">
-                <div className="aurora-message-content"> 
-                  <div className="aurora-typing-indicator">
+              <div className="clarity-chat-message-content-wrapper">
+                <div className="clarity-chat-message-content"> 
+                  <div className="clarity-chat-typing-indicator">
                     <span></span><span></span><span></span>
                   </div>
                 </div>
@@ -451,9 +477,9 @@ ${JSON.stringify(items, null, 2)}
         </div>
       </main>
 
-      <form className="aurora-chat-form" onSubmit={handleSubmit}> {/* Updated class */}
-        <label htmlFor="file-upload" className="aurora-file-attach-label"> {/* Updated class */}
-          <FaFileExcel />
+      <form className="clarity-chat-form" onSubmit={handleSubmit}> {/* Updated class */}
+        <label htmlFor="file-upload" className="clarity-chat-file-attach-label"> {/* Updated class */}
+          <FaPaperclip /> {/* Updated Icon */}
         </label>
         <input id="file-upload" type="file" onChange={handleFileUpload} ref={fileInputRef} />
         
@@ -468,15 +494,15 @@ ${JSON.stringify(items, null, 2)}
             }
           }}
         />
-        <div className="aurora-form-controls">
-            <div className="aurora-language-selector-wrapper"> {/* Updated class */}
+        <div className="clarity-chat-form-controls">
+            <div className="clarity-chat-language-selector-wrapper"> {/* Updated class */}
                 <FaGlobe />
                 <select value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
                     <option value="ar">العربية</option>
                     <option value="en">English</option>
                 </select>
             </div>
-            <button type="submit" className="aurora-send-btn" disabled={(!input.trim() && !attachedFile) || isTyping}> {/* Updated class */}
+            <button type="submit" className="clarity-chat-send-btn" disabled={(!input.trim() && !attachedFile) || isTyping}> {/* Updated class */}
               <FaPaperPlane />
             </button>
         </div>
@@ -485,5 +511,5 @@ ${JSON.stringify(items, null, 2)}
   );
 }
 
-export default AuroraFlowChat; // Exporting the component
+export default ClarityChat; // Exporting the updated component
 
