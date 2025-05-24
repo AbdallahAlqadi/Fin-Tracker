@@ -297,7 +297,7 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5004/api/createCardUser',
+        'http://127.0.0.1:5004/api/cardusers',
         formData,
         {
           headers: {
