@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Dialog,
@@ -16,454 +16,215 @@ import {
   IconButton,
   useMediaQuery,
   Container,
-  Fab, // Restored FAB
-  Select, // Restored Select
-  MenuItem, // Restored MenuItem
-  FormControl, // Restored FormControl
-  InputLabel, // Restored InputLabel
-  Snackbar,
-  Alert,
+  Fab,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
-import { styled, keyframes, alpha } from '@mui/system';
+import { styled, keyframes, alpha } from '@mui/system'; // Added alpha for transparency
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add'; // Restored AddIcon
+import AddIcon from '@mui/icons-material/Add';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
-// --- THEME COLORS ---
+// --- ORIGINAL THEME COLORS (Reverted) ---
 const originalThemeColors = {
   backgroundGradientStart: '#F0F8FF',
   backgroundGradientEnd: '#E6F2FF',
-  primaryAccent: '#4A90E2',
-  textPrimary: '#333333',
-  textSecondary: '#666666',
-  expense: '#FF5252',
-  income: '#4CAF50', // Still used for styling based on type
-  surface: '#FFFFFF',
-  dialogSurface: '#FAFAFA',
+  primaryAccent: '#4A90E2', // Original Blue
+  textPrimary: '#333333', // Darker text for light background
+  textSecondary: '#666666', // Original secondary text
+  expense: '#FF5252', // Original Red for expenses
+  income: '#4CAF50', // Original Green for income
+  surface: '#FFFFFF', // White for cards, dialogs
+  dialogSurface: '#FAFAFA', // Light gray for dialog content areas
   inputBackground: '#FFFFFF',
-  borderColor: '#DDDDDD',
+  borderColor: '#DDDDDD', // Lighter border for light theme
   white: '#FFFFFF',
-  buttonTextLight: '#FFFFFF',
-  buttonTextDark: '#4A90E2',
+  buttonTextLight: '#FFFFFF', // For contained buttons
+  buttonTextDark: '#4A90E2', // For outlined buttons
 };
 
-// Animations
+// Smooth animation for cards (remains the same)
 const floatAnimation = keyframes`
   0% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
   100% { transform: translateY(0); }
 `;
+
+// Fade-in animation for cards (remains the same)
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
-// Category card design
+// Modern design for category card with dynamic border color based on type
 const CategoryCard = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'type' && prop !== 'isInUserCard' && prop !== 'isUserSpecific',
-})(({ theme, type, isInUserCard, isUserSpecific }) => ({
-  border: `2px solid ${isUserSpecific ? '#9C27B0' : (isInUserCard ? originalThemeColors.primaryAccent : (type && type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income))}`,
+  shouldForwardProp: (prop) => prop !== 'type',
+})(({ theme, type }) => ({
+  border: `2px solid ${type && type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income}`,
   backgroundColor: originalThemeColors.surface,
   borderRadius: '20px',
   padding: theme.spacing(3),
-  width: '190px',
+  width: '190px', // Card width remains 190px, ensure 5 fit with gaps
   height: '190px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   textAlign: 'center',
-  boxShadow: `0 8px 24px ${alpha(isUserSpecific ? '#9C27B0' : originalThemeColors.primaryAccent, 0.15)}`,
+  boxShadow: `0 8px 24px ${alpha(originalThemeColors.primaryAccent, 0.15)}`,
   cursor: 'pointer',
   transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.3s ease',
   animation: `${fadeIn} 0.6s ease-out forwards`,
-  position: 'relative',
   '&:hover': {
     transform: 'scale(1.08)',
-    boxShadow: `0 12px 32px ${alpha(isUserSpecific ? '#9C27B0' : originalThemeColors.primaryAccent, 0.25)}`,
-    borderColor: isUserSpecific ? '#9C27B0' : originalThemeColors.primaryAccent,
+    boxShadow: `0 12px 32px ${alpha(originalThemeColors.primaryAccent, 0.25)}`,
+    borderColor: originalThemeColors.primaryAccent,
   },
   [theme.breakpoints.down('sm')]: {
     width: '150px',
     height: '150px',
     padding: theme.spacing(2.5),
   },
+  // Adjust card width slightly if needed to fit 5 in a row more comfortably on medium screens
   [theme.breakpoints.between('md', 'lg')]: {
-    width: '170px',
+    width: '170px', // Example: slightly smaller for 5 cards on medium screens
     height: '170px',
   },
 }));
 
-// Add/Remove icon button style (Only for Global Categories)
-const AddRemoveButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  top: theme.spacing(1.5),
-  right: theme.spacing(1.5),
-  backgroundColor: alpha(originalThemeColors.surface, 0.8),
-  color: originalThemeColors.primaryAccent,
-  '&:hover': {
-    backgroundColor: alpha(originalThemeColors.primaryAccent, 0.1),
-    color: originalThemeColors.primaryAccent,
-  },
-  [theme.breakpoints.down('sm')]: {
-    top: theme.spacing(1),
-    right: theme.spacing(1),
-    padding: theme.spacing(0.5),
-  },
-}));
-
 const DashboardUser = () => {
-  const [globalCategories, setGlobalCategories] = useState([]); // Admin categories
-  const [userCategories, setUserCategories] = useState([]); // User-added categories
-  const [userCardCategoryIds, setUserCardCategoryIds] = useState(new Set()); // IDs of *global* categories added to user's list
-  const [loadingGlobal, setLoadingGlobal] = useState(true);
-  const [loadingUserSpecific, setLoadingUserSpecific] = useState(true);
-  const [loadingUserCard, setLoadingUserCard] = useState(true);
-  const [openBudgetDialog, setOpenBudgetDialog] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [visibleGlobalItems, setVisibleGlobalItems] = useState({});
-  const [visibleUserItems, setVisibleUserItems] = useState({});
-  const [budgetErrorMessage, setBudgetErrorMessage] = useState('');
-  const [scale, setScale] = useState(1);
+  const [visibleItems, setVisibleItems] = useState({});
+  const [errorMessage, setErrorMessage] = useState('');
+  const [scale, setScale] = useState(1); // Title scale effect
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSubmittingBudget, setIsSubmittingBudget] = useState(false);
+  const [addedItems, setAddedItems] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState('all');
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-
-  // State for the 'Add New User Category' dialog
-  const [newUserCategoryDialogOpen, setNewUserCategoryDialogOpen] = useState(false);
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryType, setNewCategoryType] = useState(''); // 'revenues' or 'expenses'
-  const [newCategoryImageBase64, setNewCategoryImageBase64] = useState(null); // Store Base64 string
-  const [newUserCategoryErrorMessage, setNewUserCategoryErrorMessage] = useState('');
-  const [isSubmittingNewUserCategory, setIsSubmittingNewUserCategory] = useState(false);
+  const [newCategoryType, setNewCategoryType] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState(null);
+  const [newErrorMessage, setNewErrorMessage] = useState('');
+  const [isNewSubmitting, setIsNewSubmitting] = useState(false);
 
-  const isSmallDevice = useMediaQuery('(max-width:600px)');
-  const isMediumDevice = useMediaQuery('(max-width:900px)');
+  const isSmallDevice = useMediaQuery('(max-width:600px)'); // Adjusted breakpoint for small device grid
+  const isMediumDevice = useMediaQuery('(max-width:900px)'); // Breakpoint for potentially 3-4 cards
 
-  const getToken = useCallback(() => sessionStorage.getItem('jwt'), []);
-
-  // Fetch General (Global/Admin) Categories
   useEffect(() => {
-    const fetchGlobalCategories = async () => {
-      setLoadingGlobal(true);
+    const fetchCategories = async () => {
       try {
         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
-        const fetchedCategories = response.data.data || [];
-        setGlobalCategories(fetchedCategories);
-        const initialVisibleItems = fetchedCategories.reduce((acc, category) => {
-          const typeKey = category.categoryType || 'Uncategorized';
-          if (!acc[typeKey]) {
-            acc[typeKey] = 12;
+        setCategories(response.data.data);
+        const initialVisibleItems = response.data.data.reduce((acc, category) => {
+          if (!acc[category.categoryType]) {
+            acc[category.categoryType] = 12; // Or 10 if we want to show 2 full rows of 5
           }
           return acc;
         }, {});
-        setVisibleGlobalItems(initialVisibleItems);
+        setVisibleItems(initialVisibleItems);
       } catch (error) {
-        console.error('Error fetching global categories:', error);
-        showSnackbar('Failed to load global categories.', 'error');
+        console.error('Error fetching categories:', error);
       } finally {
-        setLoadingGlobal(false);
+        setLoading(false);
       }
     };
-    fetchGlobalCategories();
+
+    fetchCategories();
   }, []);
 
-  // Fetch User-Specific Categories
-  useEffect(() => {
-    const fetchUserCategories = async () => {
-      const token = getToken();
-      if (!token) {
-        setLoadingUserSpecific(false);
-        return;
-      }
-      setLoadingUserSpecific(true);
-      try {
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getUserCategories', {
-          headers: { Auth: `Bearer ${token}` },
-        });
-        const fetchedUserCategories = response.data.data || [];
-        setUserCategories(fetchedUserCategories);
-         const initialVisibleItems = fetchedUserCategories.reduce((acc, category) => {
-          const typeKey = category.type || 'Uncategorized'; // Use 'type' field from UserCategory schema
-          if (!acc[typeKey]) {
-            acc[typeKey] = 12;
-          }
-          return acc;
-        }, {});
-        setVisibleUserItems(initialVisibleItems);
-      } catch (error) {
-        console.error('Error fetching user-specific categories:', error);
-        showSnackbar('Failed to load your personal categories.', 'error');
-      } finally {
-        setLoadingUserSpecific(false);
-      }
-    };
-    fetchUserCategories();
-  }, [getToken]);
-
-  // Fetch User's Card (List of selected GLOBAL categories)
-  useEffect(() => {
-    const fetchUserCard = async () => {
-      const token = getToken();
-      if (!token) {
-        setLoadingUserCard(false);
-        return;
-      }
-      setLoadingUserCard(true);
-      try {
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getUserCard', {
-          headers: { Auth: `Bearer ${token}` },
-        });
-        if (response.data && response.data.carduser) {
-          const ids = new Set(response.data.carduser.map(item => item.categoryId));
-          setUserCardCategoryIds(ids);
-        }
-      } catch (error) {
-        console.error('Error fetching user card:', error);
-      } finally {
-        setLoadingUserCard(false);
-      }
-    };
-    fetchUserCard();
-  }, [getToken]);
-
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
-  };
-
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') return;
-    setSnackbarOpen(false);
-  };
-
-  // Add GLOBAL Category to User's Card
-  const handleAddToCard = async (categoryId, categoryName) => {
-    const token = getToken();
-    if (!token) {
-      showSnackbar('Please log in to add categories.', 'error');
-      return;
-    }
-    try {
-      await axios.post('https://fin-tracker-ncbx.onrender.com/api/addToCard',
-        { CategoriesId: categoryId },
-        { headers: { Auth: `Bearer ${token}` } }
-      );
-      setUserCardCategoryIds(prev => new Set(prev).add(categoryId));
-      showSnackbar(`Global category '${categoryName}' added to your list.`, 'success');
-    } catch (error) {
-      console.error('Error adding to card:', error);
-      const errorMsg = error.response?.data?.error || 'Failed to add category.';
-      showSnackbar(errorMsg, 'error');
-    }
-  };
-
-  // Remove GLOBAL Category from User's Card
-  const handleRemoveFromCard = async (categoryId, categoryName) => {
-    const token = getToken();
-    if (!token) {
-      showSnackbar('Please log in to remove categories.', 'error');
-      return;
-    }
-    try {
-      await axios.delete('https://fin-tracker-ncbx.onrender.com/api/deleteFromCard', {
-        headers: { Auth: `Bearer ${token}` },
-        data: { categoryId: categoryId }
-      });
-      setUserCardCategoryIds(prev => {
-        const next = new Set(prev);
-        next.delete(categoryId);
-        return next;
-      });
-      showSnackbar(`Global category '${categoryName}' removed from your list.`, 'success');
-    } catch (error) {
-      console.error('Error removing from card:', error);
-      const errorMsg = error.response?.data?.error || 'Failed to remove category.';
-      showSnackbar(errorMsg, 'error');
-    }
-  };
-
-  // Open Budget Item Dialog (Works for both global and user-specific)
-  const handleClickOpenBudgetDialog = (category) => {
+  const handleClickOpen = (category) => {
+    if (addedItems.includes(category._id)) return;
     setSelectedCategory(category);
-    setOpenBudgetDialog(true);
-    setBudgetErrorMessage('');
-    setValue('');
+    setOpen(true);
+    setErrorMessage('');
     setSelectedDate('');
   };
 
-  const handleCloseBudgetDialog = () => {
-    setOpenBudgetDialog(false);
+  const handleClose = () => {
+    setOpen(false);
     setSelectedCategory(null);
     setValue('');
     setSelectedDate('');
-    setBudgetErrorMessage('');
+    setErrorMessage('');
   };
 
-  // Submit Budget Item (Works for both global and user-specific)
-  const handleSubmitBudgetItem = async () => {
+  const handleSubmit = async () => {
     if (!selectedCategory || !value || !selectedDate) {
-      setBudgetErrorMessage('Please enter a valid value and select a date.');
+      setErrorMessage('Please enter a valid value and select a date.');
       return;
     }
+
     const parsedValue = parseFloat(value);
     if (isNaN(parsedValue) || parsedValue < 0) {
-      setBudgetErrorMessage('Please enter a non-negative decimal number.');
+      setErrorMessage('Please enter a non-negative decimal number.');
       return;
     }
 
     const currentCategory = selectedCategory;
-    // Backend handles checking if the ID is global or user-specific
-    const submissionData = {
-        CategoriesId: currentCategory._id, // Send the _id of the selected category
-        valueitem: parsedValue,
-        date: selectedDate,
-    };
+    handleClose();
 
-    setIsSubmittingBudget(true);
-    const token = getToken();
+    setIsSubmitting(true);
+    const token = sessionStorage.getItem('jwt');
 
     try {
       const response = await axios.post(
         'https://fin-tracker-ncbx.onrender.com/api/addBudget',
-        submissionData,
-        { headers: { Auth: `Bearer ${token}`, 'Content-Type': 'application/json' } }
-      );
-      console.log('Budget Response:', response.data);
-      showSnackbar(`Budget item for '${currentCategory.name || currentCategory.categoryName}' added successfully!`, 'success'); // Use 'name' for user cats, 'categoryName' for global
-      handleCloseBudgetDialog();
-    } catch (error) {
-      console.error('Error submitting budget value:', error);
-      const errorMsg = error.response?.data?.error || 'Failed to submit budget item.';
-      setBudgetErrorMessage(errorMsg);
-    } finally {
-      setIsSubmittingBudget(false);
-    }
-  };
-
-  // Load More Global Categories
-  const handleLoadMoreGlobal = (type) => {
-    setVisibleGlobalItems((prev) => ({
-      ...prev,
-      [type]: (prev[type] || 0) + 10,
-    }));
-  };
-  // Load More User Categories
-  const handleLoadMoreUser = (type) => {
-    setVisibleUserItems((prev) => ({
-      ...prev,
-      [type]: (prev[type] || 0) + 10,
-    }));
-  };
-
-  // --- Add New USER Category Dialog Logic (Modified for Base64) ---
-  const handleNewUserCategoryDialogOpen = () => {
-    setNewUserCategoryDialogOpen(true);
-    setNewUserCategoryErrorMessage('');
-    setNewCategoryName('');
-    setNewCategoryType('');
-    setNewCategoryImageBase64(null); // Reset Base64 state
-    // Reset file input visually if needed
-    const fileInput = document.getElementById('new-category-image-input');
-    if (fileInput) fileInput.value = '';
-  };
-
-  const handleNewUserCategoryDialogClose = () => {
-    setNewUserCategoryDialogOpen(false);
-    // Clear state on close
-    setNewCategoryName('');
-    setNewCategoryType('');
-    setNewCategoryImageBase64(null);
-    setNewUserCategoryErrorMessage('');
-  };
-
-  // Modified to convert image to Base64
-  const handleImageChange = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewCategoryImageBase64(reader.result); // Store the Base64 string
-      };
-      reader.onerror = (error) => {
-        console.error('Error reading file:', error);
-        setNewUserCategoryErrorMessage('Failed to read image file.');
-        setNewCategoryImageBase64(null);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setNewCategoryImageBase64(null);
-    }
-  };
-
-  // Modified to send JSON with Base64 image
-  const handleNewUserCategorySubmit = async () => {
-    if (!newCategoryName || !newCategoryType) {
-      setNewUserCategoryErrorMessage('Please fill in category name and type.');
-      return;
-    }
-    setIsSubmittingNewUserCategory(true);
-    setNewUserCategoryErrorMessage(''); // Clear previous errors
-    const token = getToken();
-
-    // Prepare JSON payload
-    const payload = {
-      categoryName: newCategoryName,
-      categoryType: newCategoryType, // 'revenues' or 'expenses'
-      image: newCategoryImageBase64, // Send Base64 string or null
-    };
-
-    try {
-      // Call the backend endpoint for adding user-specific categories with JSON
-      const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/addUserCategory',
-        payload, // Send JSON data
+        {
+          CategoriesId: currentCategory._id,
+          valueitem: parsedValue,
+          date: selectedDate,
+        },
         {
           headers: {
             Auth: `Bearer ${token}`,
-            'Content-Type': 'application/json', // Set content type to JSON
+            'Content-Type': 'application/json',
           },
         }
       );
-      console.log('New User Category Response:', response.data);
-      const newCat = response.data.data;
-      // Add the new category to the userCategories state
-      // Ensure the new category object includes the 'image' field (which should be the base64 string if provided)
-      setUserCategories((prev) => [...prev, newCat]);
-      showSnackbar(`Your category '${newCat.name}' created successfully.`, 'success');
-      handleNewUserCategoryDialogClose();
+
+      console.log('Response:', response.data);
+      setAddedItems((prev) => [...prev, currentCategory._id]);
     } catch (error) {
-      console.error('Error adding user category:', error);
-      const errorMsg = error.response?.data?.error || 'Failed to create your category.';
-      setNewUserCategoryErrorMessage(errorMsg); // Show error in the dialog
+      if (error.response && error.response.status === 400) {
+        console.error(error.response.data.error || 'You have already added this item on this date.');
+        setAddedItems((prev) => [...prev, currentCategory._id]);
+      } else {
+        console.error('Error submitting value:', error);
+      }
     } finally {
-      setIsSubmittingNewUserCategory(false);
+      setIsSubmitting(false);
     }
   };
 
-  // --- End Add New USER Category Dialog Logic ---
+  const handleLoadMore = (type) => {
+    setVisibleItems((prev) => ({
+      ...prev,
+      [type]: prev[type] + 10, // Load 10 more (2 rows of 5)
+    }));
+  };
 
-  const globalCategoryOptions = globalCategories.map((cat) => cat.categoryName);
-  const userCategoryOptions = userCategories.map((cat) => cat.name);
-  const allCategoryNames = [...new Set([...globalCategoryOptions, ...userCategoryOptions])]; // Unique names for search
+  const categoryOptions = categories.map((cat) => cat.categoryName);
 
-  // Combined loading state
-  const isLoading = loadingGlobal || loadingUserSpecific || loadingUserCard;
-  if (isLoading) {
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: `linear-gradient(135deg, ${originalThemeColors.backgroundGradientStart} 0%, ${originalThemeColors.backgroundGradientEnd} 100%)` }}>
         <CircularProgress sx={{ color: originalThemeColors.primaryAccent }} size={60} />
@@ -474,217 +235,86 @@ const DashboardUser = () => {
     );
   }
 
-  // Filtering logic - Applied to both global and user categories separately
-  const filterCategories = (categoriesList, query, typeFilter) => {
-      let filtered = categoriesList.filter((category) =>
-        (category.name || category.categoryName).toLowerCase().includes(query.toLowerCase())
-      );
+  let filteredCategories = categories.filter((category) =>
+    category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-      const backendTypeFilter = typeFilter === 'revenues' ? 'revenues' : (typeFilter === 'expenses' ? 'expenses' : 'all');
-
-      if (backendTypeFilter === 'revenues') {
-          filtered = filtered.filter(
-            (category) => (category.type || category.categoryType)?.toLowerCase() === 'revenues'
-          );
-      } else if (backendTypeFilter === 'expenses') {
-          filtered = filtered.filter((category) =>
-            (category.type || category.categoryType)?.toLowerCase() === 'expenses'
-          );
-      }
-      return filtered;
-  };
-
-  const filteredGlobalCategories = filterCategories(globalCategories, searchQuery, filterType);
-  const filteredUserCategories = filterCategories(userCategories, searchQuery, filterType);
-
-  const groupCategories = (categoriesList) => {
-      return categoriesList.reduce((acc, category) => {
-        const typeKey = (category.type || category.categoryType) || 'Uncategorized'; // Use 'type' for user, 'categoryType' for global
-        if (!acc[typeKey]) {
-          acc[typeKey] = [];
-        }
-        acc[typeKey].push(category);
-        return acc;
-      }, {});
-  };
-
-  const groupedGlobalCategories = groupCategories(filteredGlobalCategories);
-  const groupedUserCategories = groupCategories(filteredUserCategories);
-
-  // Helper to display category type consistently as Revenues/Expenses
-  const getDisplayCategoryType = (type) => {
-      if (!type) return 'Uncategorized';
-      // Check if type is 'revenues' or 'expenses' (user) or starts with 'expens' (global)
-      const lowerType = type.toLowerCase();
-      return lowerType === 'expenses' || lowerType.startsWith('expens') ? 'Expenses' : 'Revenues';
-  };
-
-  const getCategoryIcon = (type) => {
-      if (!type) return '❓';
-      const lowerType = type.toLowerCase();
-      return lowerType === 'expenses' || lowerType.startsWith('expens') ? '💸' : '💰';
-  };
-
-  // Helper function to render a category section (either global or user-specific)
-  const renderCategorySection = (title, categoriesMap, visibleItemsMap, loadMoreHandler, isUserSpecificSection = false) => {
-    const hasContent = Object.keys(categoriesMap).length > 0 && Object.values(categoriesMap).some(arr => arr.length > 0);
-
-    if (!hasContent && searchQuery) return null; // Don't show section title if search yields no results for it
-    if (!hasContent && !searchQuery && filterType !== 'all') return null; // Don't show section if filter yields no results
-    if (!hasContent && !searchQuery && filterType === 'all' && !isUserSpecificSection && globalCategories.length === 0) return null; // Hide global if empty
-    if (!hasContent && !searchQuery && filterType === 'all' && isUserSpecificSection && userCategories.length === 0) return null; // Hide user if empty
-
-    return (
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent, mb: 4, borderBottom: `3px solid ${isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent}`, pb: 1 }}>
-          {title}
-        </Typography>
-        {Object.keys(categoriesMap).length === 0 ? (
-           <Typography variant="h6" align="center" sx={{ color: originalThemeColors.textSecondary, mt: 4, fontStyle: 'italic' }}>
-             No {isUserSpecificSection ? 'personal' : 'global'} categories found matching your criteria.
-           </Typography>
-        ) : (
-          Object.keys(categoriesMap).map((type) => (
-            categoriesMap[type].length > 0 && (
-              <Box key={`${title}-${type}`} sx={{ mb: { xs: 5, sm: 8 } }}>
-                <Typography
-                  variant="h5" // Slightly smaller than section title
-                  sx={{
-                    backgroundColor: alpha(isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent, 0.15),
-                    color: isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent,
-                    p: { xs: 1.5, sm: 2 },
-                    borderRadius: '8px',
-                    mb: { xs: 3, sm: 4 },
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {getCategoryIcon(type)} {getDisplayCategoryType(type)}
-                </Typography>
-
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                      xs: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      sm: 'repeat(auto-fit, minmax(170px, 1fr))',
-                      md: 'repeat(5, 1fr)',
-                    },
-                    gap: { xs: 2, sm: 2.5, md: 3 },
-                    justifyContent: 'center',
-                  }}
-                >
-                  {categoriesMap[type]
-                    .slice(0, visibleItemsMap[type] || 12)
-                    .map((category) => {
-                      const categoryId = category._id;
-                      const categoryName = category.name || category.categoryName; // Use 'name' for user, 'categoryName' for global
-                      const categoryType = category.type || category.categoryType;
-                      const categoryImage = category.image; // Both schemas use 'image'
-                      const isInUserCard = !isUserSpecificSection && userCardCategoryIds.has(categoryId); // Only applicable to global categories
-
-                      return (
-                        <Tooltip key={categoryId} title={`Click to add budget item for ${categoryName}`}>
-                          <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
-                            <CategoryCard
-                              type={categoryType}
-                              isInUserCard={isInUserCard} // Used for border if global & selected
-                              isUserSpecific={isUserSpecificSection} // Used for border if user-specific
-                              component="div"
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => handleClickOpenBudgetDialog(category)} // Pass the whole category object
-                              onKeyPress={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    handleClickOpenBudgetDialog(category);
-                                  }
-                                }}
-                              sx={{ minWidth: 0 }}
-                            >
-                              {/* Add/Remove button only for Global categories */}
-                              {!isUserSpecificSection && (
-                                <Tooltip title={isInUserCard ? `Remove '${categoryName}' from My List` : `Add '${categoryName}' to My List`}>
-                                  <AddRemoveButton
-                                    size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (isInUserCard) {
-                                        handleRemoveFromCard(categoryId, categoryName);
-                                      } else {
-                                        handleAddToCard(categoryId, categoryName);
-                                      }
-                                    }}
-                                    aria-label={isInUserCard ? 'Remove from my list' : 'Add to my list'}
-                                  >
-                                    {isInUserCard ? <RemoveCircleOutlineIcon fontSize="inherit" sx={{ color: originalThemeColors.expense }} /> : <AddCircleOutlineIcon fontSize="inherit" sx={{ color: originalThemeColors.income }} />}
-                                  </AddRemoveButton>
-                                </Tooltip>
-                              )}
-                              {/* Optional: Add a delete button for user-specific categories here */}
-
-                              {categoryImage && (
-                                <Box
-                                  component="img"
-                                  src={
-                                    // Handle both relative paths (from backend uploads) and potential absolute URLs/base64
-                                    categoryImage.startsWith('data:') || categoryImage.startsWith('http')
-                                      ? categoryImage
-                                      : `https://fin-tracker-ncbx.onrender.com/${categoryImage}` // Assuming backend serves uploads from root
-                                  }
-                                  alt={categoryName}
-                                  sx={{
-                                    width: { xs: 60, sm: 70, md: 80 },
-                                    height: { xs: 60, sm: 70, md: 80 },
-                                    borderRadius: '50%',
-                                    mb: 1.5,
-                                    objectFit: 'cover',
-                                    border: `2px solid ${alpha(isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent, 0.3)}`,
-                                  }}
-                                  onError={(e) => { e.target.style.display = 'none'; }}
-                                />
-                              )}
-                              <Typography variant="h6" sx={{ color: isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent, fontWeight: 600, fontSize: {xs: '0.9rem', sm: '1rem', md: '1.1rem'} }}>
-                                {categoryName}
-                              </Typography>
-                            </CategoryCard>
-                          </Box>
-                        </Tooltip>
-                      );
-                    })}
-                </Box>
-
-                {categoriesMap[type].length > (visibleItemsMap[type] || 12) && (
-                  <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
-                    <Button
-                      onClick={() => loadMoreHandler(type)}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent,
-                        color: originalThemeColors.buttonTextLight,
-                        px: 4,
-                        py: 1.5,
-                        borderRadius: '8px',
-                        fontSize: { xs: '0.9rem', sm: '1rem' },
-                        fontWeight: 600,
-                        transition: 'background-color 0.3s ease, transform 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: alpha(isUserSpecificSection ? '#9C27B0' : originalThemeColors.primaryAccent, 0.85),
-                          transform: 'scale(1.03)',
-                        },
-                      }}
-                    >
-                      Load More
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-            )
-          ))
-        )}
-      </Box>
+  if (filterType === 'income') {
+    filteredCategories = filteredCategories.filter(
+      (category) => !category.categoryType.toLowerCase().startsWith('expens')
     );
+  } else if (filterType === 'expenses') {
+    filteredCategories = filteredCategories.filter((category) =>
+      category.categoryType.toLowerCase().startsWith('expens')
+    );
+  }
+
+  const groupedCategories = filteredCategories.reduce((acc, category) => {
+    if (!acc[category.categoryType]) {
+      acc[category.categoryType] = [];
+    }
+    acc[category.categoryType].push(category);
+    return acc;
+  }, {});
+
+  const getCategoryIcon = (type) =>
+    type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
+
+  const handleNewDialogOpen = () => {
+    setNewDialogOpen(true);
+    setNewErrorMessage('');
+  };
+
+  const handleNewDialogClose = () => {
+    setNewDialogOpen(false);
+    setNewCategoryName('');
+    setNewCategoryType('');
+    setNewCategoryImage(null);
+    setNewErrorMessage('');
+  };
+
+  const handleImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setNewCategoryImage(event.target.files[0]);
+    }
+  };
+
+  const handleNewCategorySubmit = async () => {
+    if (!newCategoryName || !newCategoryType) {
+      setNewErrorMessage('Please fill in all required fields.');
+      return;
+    }
+
+    setIsNewSubmitting(true);
+    const token = sessionStorage.getItem('jwt');
+
+    const formData = new FormData();
+    formData.append('categoryName', newCategoryName);
+    formData.append('categoryType', newCategoryType);
+    if (newCategoryImage) {
+      formData.append('image', newCategoryImage);
+    }
+
+    try {
+      const response = await axios.post(
+        'https://fin-tracker-ncbx.onrender.com/api/addCategory',
+        formData,
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log('New Category Response:', response.data);
+      setCategories((prev) => [...prev, response.data.data]);
+      handleNewDialogClose();
+    } catch (error) {
+      console.error('Error adding new category:', error);
+      setNewErrorMessage('An error occurred while adding the category.');
+    } finally {
+      setIsNewSubmitting(false);
+    }
   };
 
   return (
@@ -699,13 +329,6 @@ const DashboardUser = () => {
         color: originalThemeColors.textPrimary,
       }}
     >
-      <Snackbar open={snackbarOpen} autoHideDuration={4000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-
-      {/* Header */}
       <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
         <Typography
           variant="h2"
@@ -731,41 +354,41 @@ const DashboardUser = () => {
         </Typography>
       </Box>
 
-      {/* Search Bar */}
       <Autocomplete
         freeSolo
-        options={allCategoryNames} // Search across all names
-        inputValue={searchQuery}
-        onInputChange={(event, newInputValue) => {
-          setSearchQuery(newInputValue);
-        }}
+        options={categoryOptions}
+        onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Search Categories"
+            placeholder="Search for a category..."
             variant="outlined"
-            fullWidth
             sx={{
-              mb: { xs: 3, sm: 4 },
+              mb: { xs: 3, sm: 5 },
+              backgroundColor: originalThemeColors.inputBackground,
+              borderRadius: '30px',
+              boxShadow: `0 4px 15px ${alpha(originalThemeColors.primaryAccent, 0.1)}`,
               '& .MuiOutlinedInput-root': {
-                borderRadius: '12px',
-                backgroundColor: originalThemeColors.inputBackground,
+                borderRadius: '30px',
+                color: originalThemeColors.textPrimary,
                 '& fieldset': {
-                  borderColor: originalThemeColors.borderColor,
+                  borderColor: alpha(originalThemeColors.primaryAccent, 0.5),
+                  borderWidth: '1px',
                 },
                 '&:hover fieldset': {
                   borderColor: originalThemeColors.primaryAccent,
                 },
                 '&.Mui-focused fieldset': {
                   borderColor: originalThemeColors.primaryAccent,
-                  borderWidth: '2px',
+                  boxShadow: `0 0 0 3px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
                 },
               },
-              '& .MuiInputLabel-root': {
-                color: originalThemeColors.textSecondary,
-              },
-              '& .MuiInputLabel-root.Mui-focused': {
-                color: originalThemeColors.primaryAccent,
+              '& .MuiInputBase-input': {
+                color: originalThemeColors.textPrimary,
+                '&::placeholder': {
+                  color: originalThemeColors.textSecondary,
+                  opacity: 1,
+                },
               },
             }}
             InputProps={{
@@ -776,274 +399,569 @@ const DashboardUser = () => {
                 </InputAdornment>
               ),
               endAdornment: (
-                <InputAdornment position="end">
+                <>
+                  {params.InputProps.endAdornment}
                   {searchQuery && (
-                    <IconButton
-                      aria-label="clear search"
-                      onClick={() => setSearchQuery('')}
-                      edge="end"
-                      size="small"
-                    >
-                      <ClearIcon sx={{ color: originalThemeColors.textSecondary }} />
-                    </IconButton>
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setSearchQuery('')} edge="end" sx={{ color: originalThemeColors.textSecondary, '&:hover': { color: originalThemeColors.primaryAccent } }}>
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
                   )}
-                </InputAdornment>
+                </>
               ),
             }}
           />
         )}
       />
 
-      {/* Filter Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 }, flexWrap: 'wrap', gap: 1.5 }}>
-        <ButtonGroup variant="outlined" aria-label="filter category type">
-          <Button
-            onClick={() => setFilterType('all')}
-            variant={filterType === 'all' ? 'contained' : 'outlined'}
-            sx={{ borderRadius: '8px 0 0 8px', borderColor: originalThemeColors.primaryAccent, ...(filterType === 'all' && { backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.white }) }}
-          >
-            All
-          </Button>
-          <Button
-            onClick={() => setFilterType('revenues')}
-            variant={filterType === 'revenues' ? 'contained' : 'outlined'}
-            sx={{ borderColor: originalThemeColors.primaryAccent, ...(filterType === 'revenues' && { backgroundColor: originalThemeColors.income, color: originalThemeColors.white }) }}
-          >
-            Revenues
-          </Button>
-          <Button
-            onClick={() => setFilterType('expenses')}
-            variant={filterType === 'expenses' ? 'contained' : 'outlined'}
-            sx={{ borderRadius: '0 8px 8px 0', borderColor: originalThemeColors.primaryAccent, ...(filterType === 'expenses' && { backgroundColor: originalThemeColors.expense, color: originalThemeColors.white }) }}
-          >
-            Expenses
-          </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 } }}>
+        <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden', boxShadow: `0 2px 8px ${alpha(originalThemeColors.primaryAccent, 0.15)}` }}>
+          {[
+            { label: 'All', value: 'all', icon: <AccountBalanceWalletIcon /> },
+            { label: 'Revenues', value: 'income', icon: <AddCircleIcon /> },
+            { label: 'Expenses', value: 'expenses', icon: <RemoveCircleIcon /> },
+          ].map((typeOption, index) => (
+            <Button
+              key={typeOption.value}
+              onClick={() => setFilterType(typeOption.value)}
+              variant={filterType === typeOption.value ? 'contained' : 'outlined'}
+              startIcon={typeOption.icon}
+              sx={{
+                textTransform: 'none',
+                fontWeight: filterType === typeOption.value ? 'bold' : 'normal',
+                borderColor: originalThemeColors.primaryAccent,
+                color: filterType === typeOption.value ? originalThemeColors.buttonTextLight : originalThemeColors.buttonTextDark,
+                backgroundColor: filterType === typeOption.value ? originalThemeColors.primaryAccent : 'transparent',
+                '&:hover': {
+                  backgroundColor: filterType === typeOption.value ? alpha(originalThemeColors.primaryAccent, 0.85) : alpha(originalThemeColors.primaryAccent, 0.08),
+                  borderColor: originalThemeColors.primaryAccent,
+                },
+                px: { xs: 2, sm: 3 },
+                py: 1.5,
+                fontSize: { xs: '0.8rem', sm: '1rem' },
+                ...(index === 0 && { borderRadius: '20px 0 0 20px' }),
+                ...(index === 2 && { borderRadius: '0 20px 20px 0' }),
+              }}
+            >
+              {typeOption.label}
+            </Button>
+          ))}
         </ButtonGroup>
       </Box>
 
-      {/* Render User-Specific Categories Section */}
-      {renderCategorySection(
-        'Your Personal Categories',
-        groupedUserCategories,
-        visibleUserItems,
-        handleLoadMoreUser,
-        true // Mark as user-specific section
+      {Object.keys(groupedCategories).length === 0 ? (
+        <Typography variant="h6" align="center" sx={{ color: originalThemeColors.textSecondary, mt: 4, fontStyle: 'italic' }}>
+          No items found.
+        </Typography>
+      ) : (
+        Object.keys(groupedCategories).map((type) => (
+          <Box key={type} sx={{ mb: { xs: 5, sm: 8 } }}>
+            <Typography
+              variant="h4"
+              sx={{
+                backgroundColor: originalThemeColors.primaryAccent,
+                color: originalThemeColors.buttonTextLight,
+                p: { xs: 1.5, sm: 2 },
+                borderRadius: '8px',
+                boxShadow: `0 4px 12px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
+                mb: { xs: 3, sm: 4 },
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                fontWeight: 'bold',
+              }}
+            >
+              {getCategoryIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                // Updated gridTemplateColumns for 5 cards per row on larger screens
+                gridTemplateColumns: {
+                  xs: 'repeat(auto-fit, minmax(150px, 1fr))', // Keep responsive for very small screens (1-2 cards)
+                  sm: 'repeat(auto-fit, minmax(170px, 1fr))', // Responsive for small screens (2-3 cards)
+                  md: 'repeat(5, 1fr)', // 5 cards for medium screens and up
+                },
+                gap: { xs: 2, sm: 2.5, md: 3 }, // Adjusted gaps for 5 columns
+                justifyContent: 'center',
+              }}
+            >
+              {groupedCategories[type]
+                .slice(0, visibleItems[type])
+                .map((category) => {
+                  const isAdded = addedItems.includes(category._id);
+                  return (
+                    <Tooltip key={category._id} title={isAdded ? 'Added' : `Add to ${category.categoryName}`}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <CategoryCard
+                          type={category.categoryType}
+                          component="div"
+                          role="button"
+                          tabIndex={isAdded ? -1 : 0}
+                          onClick={isAdded ? undefined : () => handleClickOpen(category)}
+                          onKeyPress={
+                            isAdded
+                              ? undefined
+                              : (e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    handleClickOpen(category);
+                                  }
+                                }
+                          }
+                          sx={{
+                            opacity: isAdded ? 0.6 : 1,
+                            filter: isAdded ? 'grayscale(50%)' : 'none',
+                            pointerEvents: isAdded ? 'none' : 'auto',
+                            // Ensure cards can shrink if needed to fit 5 across, or adjust CategoryCard width
+                            minWidth: 0, 
+                          }}
+                          aria-disabled={isAdded}
+                        >
+                          {category.image && (
+                            <Box
+                              component="img"
+                              src={
+                                category.image.startsWith('data:')
+                                  ? category.image
+                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                              }
+                              alt={category.categoryName}
+                              sx={{
+                                width: { xs: 60, sm: 70, md: 80 }, // Adjusted image size for card changes
+                                height: { xs: 60, sm: 70, md: 80 },
+                                borderRadius: '50%',
+                                mb: 1.5,
+                                objectFit: 'cover',
+                                border: `2px solid ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+                              }}
+                            />
+                          )}
+                          <Typography variant="h6" sx={{ color: originalThemeColors.primaryAccent, fontWeight: 600, fontSize: {xs: '0.9rem', sm: '1rem', md: '1.1rem'} }}>
+                            {category.categoryName}
+                          </Typography>
+                          {isAdded && (
+                            <Typography variant="caption" sx={{ color: originalThemeColors.expense, fontWeight: 'bold', mt: 1, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Added
+                            </Typography>
+                          )}
+                        </CategoryCard>
+                      </Box>
+                    </Tooltip>
+                  );
+                })}
+            </Box>
+            {groupedCategories[type].length > visibleItems[type] && (
+              <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
+                <Button
+                  onClick={() => handleLoadMore(type)}
+                  variant="contained"
+                  sx={{
+                    backgroundColor: originalThemeColors.primaryAccent,
+                    color: originalThemeColors.buttonTextLight,
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: '8px',
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                    fontWeight: 600,
+                    transition: 'background-color 0.3s ease, transform 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                      transform: 'scale(1.03)',
+                    },
+                  }}
+                >
+                  Load More
+                </Button>
+              </Box>
+            )}
+          </Box>
+        ))
       )}
 
-      {/* Render Global Categories Section */}
-      {renderCategorySection(
-        'Global Categories',
-        groupedGlobalCategories,
-        visibleGlobalItems,
-        handleLoadMoreGlobal,
-        false // Mark as not user-specific
-      )}
-
-      {/* Floating Action Button to Add User Category */}
-      <Tooltip title="Add Your Own Category">
-        <Fab
-          color="secondary" // Use secondary color for FAB
-          aria-label="add user category"
-          onClick={handleNewUserCategoryDialogOpen}
-          sx={{
-            position: 'fixed',
-            bottom: { xs: 20, sm: 30 },
-            right: { xs: 20, sm: 30 },
-            backgroundColor: '#9C27B0', // Match user-specific color
-            color: originalThemeColors.white,
-            animation: `${floatAnimation} 3s ease-in-out infinite`,
-            '&:hover': {
-              backgroundColor: alpha('#9C27B0', 0.85),
-            }
-          }}
-        >
-          <AddIcon />
-        </Fab>
-      </Tooltip>
-
-      {/* Budget Item Dialog */}
+      {/* Dialog for Adding Budget Item */}
       <Dialog
-        open={openBudgetDialog}
-        onClose={handleCloseBudgetDialog}
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="xs"
         PaperProps={{
           sx: {
             borderRadius: '16px',
-            backgroundColor: originalThemeColors.dialogSurface,
-            boxShadow: `0 8px 32px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-            width: { xs: '90%', sm: '450px' },
-            maxWidth: 'none',
-          }
+            boxShadow: `0 10px 30px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
+            background: originalThemeColors.surface,
+            color: originalThemeColors.textPrimary,
+          },
         }}
       >
-        <DialogTitle sx={{ backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.white, borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-            Add Budget for {selectedCategory?.name || selectedCategory?.categoryName}
-          </Typography>
-          <IconButton onClick={handleCloseBudgetDialog} size="small" sx={{ color: originalThemeColors.white }}>
+        <DialogTitle
+          sx={{
+            background: `linear-gradient(135deg, ${originalThemeColors.primaryAccent}, ${alpha(originalThemeColors.primaryAccent, 0.8)})`,
+            color: originalThemeColors.buttonTextLight,
+            p: { xs: 2, sm: 2.5 },
+            textAlign: 'center',
+            fontSize: { xs: '1.5rem', sm: '1.75rem' },
+            fontWeight: 'bold',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {selectedCategory && getCategoryIcon(selectedCategory.categoryType)} {selectedCategory?.categoryName}
+          </Box>
+          <IconButton onClick={handleClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ pt: 3, pb: 2, px: { xs: 2, sm: 3 } }}>
-          {budgetErrorMessage && (
-            <Alert severity="error" sx={{ mb: 2 }}>{budgetErrorMessage}</Alert>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: originalThemeColors.dialogSurface }}>
+          {selectedCategory?.image && (
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Box
+              component="img"
+              src={
+                selectedCategory.image.startsWith('data:')
+                  ? selectedCategory.image
+                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+              }
+              alt={selectedCategory.categoryName}
+              sx={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                mb: 2,
+                objectFit: 'cover',
+                border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}`,
+                boxShadow: `0 0 10px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+              }}
+            />
+            </Box>
           )}
+          <Typography variant="subtitle1" sx={{ fontSize: {xs: '1rem', sm: '1.1rem'}, color: originalThemeColors.primaryAccent, mb: 2, fontWeight: 500, textAlign: 'center' }}>
+            Type: {selectedCategory?.categoryType}
+          </Typography>
           <TextField
             autoFocus
             margin="dense"
-            id="value"
             label="Value"
             type="number"
+            inputProps={{ step: '0.01', min: '0' }}
             fullWidth
             variant="outlined"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            InputProps={{
-              startAdornment: <InputAdornment position="start"><AccountBalanceWalletIcon /></InputAdornment>,
+            sx={{
+              mb: 2.5,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: originalThemeColors.inputBackground,
+                borderRadius: '8px',
+                color: originalThemeColors.textPrimary,
+                '& fieldset': { borderColor: originalThemeColors.borderColor },
+                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
+                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+              },
+              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
             }}
-            sx={{ mb: 2.5 }}
           />
           <TextField
             margin="dense"
-            id="date"
             label="Date"
             type="date"
             fullWidth
             variant="outlined"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            sx={{ mb: 1 }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: { xs: 2, sm: 3 }, borderTop: `1px solid ${originalThemeColors.borderColor}` }}>
-          <Button onClick={handleCloseBudgetDialog} sx={{ color: originalThemeColors.textSecondary, borderRadius: '8px' }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmitBudgetItem}
-            variant="contained"
-            disabled={isSubmittingBudget}
-            startIcon={isSubmittingBudget ? <CircularProgress size={20} color="inherit" /> : <CheckCircleOutlineIcon />}
+            InputLabelProps={{ shrink: true }}
             sx={{
-              backgroundColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.white,
+              mb: 2.5,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: originalThemeColors.inputBackground,
+                borderRadius: '8px',
+                color: originalThemeColors.textPrimary,
+                '& fieldset': { borderColor: originalThemeColors.borderColor },
+                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
+                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+                '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(0.3) sepia(1) saturate(5) hue-rotate(190deg)',
+                }
+              },
+              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+            }}
+          />
+          {errorMessage && (
+            <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
+              {errorMessage}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            p: { xs: 2, sm: 2.5 },
+            justifyContent: 'center',
+            gap: 2,
+            backgroundColor: originalThemeColors.dialogSurface,
+            borderBottomLeftRadius: '16px',
+            borderBottomRightRadius: '16px',
+          }}
+        >
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            sx={{
+              borderColor: originalThemeColors.primaryAccent,
+              color: originalThemeColors.primaryAccent,
+              px: { xs: 3, sm: 4 },
+              py: 1.2,
               borderRadius: '8px',
-              px: 3,
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontWeight: 500,
               '&:hover': {
-                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                borderColor: originalThemeColors.primaryAccent,
+                background: alpha(originalThemeColors.primaryAccent, 0.08),
               }
             }}
           >
-            {isSubmittingBudget ? 'Adding...' : 'Add Budget Item'}
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={isSubmitting}
+            sx={{
+              backgroundColor: originalThemeColors.primaryAccent,
+              color: originalThemeColors.buttonTextLight,
+              px: { xs: 3, sm: 4 },
+              py: 1.2,
+              borderRadius: '8px',
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontWeight: 600,
+              transition: 'background-color 0.3s ease, transform 0.2s ease',
+              '&:hover': {
+                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                transform: 'scale(1.02)',
+              },
+              '&.Mui-disabled': {
+                background: alpha(originalThemeColors.textSecondary, 0.5),
+                color: alpha(originalThemeColors.white, 0.7)
+              }
+            }}
+          >
+            {isSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Add New User Category Dialog (Modified) */}
+      {/* Dialog for Adding New Category */}
       <Dialog
-        open={newUserCategoryDialogOpen}
-        onClose={handleNewUserCategoryDialogClose}
+        open={newDialogOpen}
+        onClose={handleNewDialogClose}
+        fullWidth
+        maxWidth="xs"
         PaperProps={{
           sx: {
-            borderRadius: '16px',
-            backgroundColor: originalThemeColors.dialogSurface,
-            boxShadow: `0 8px 32px ${alpha('#9C27B0', 0.2)}`,
-            width: { xs: '90%', sm: '500px' },
-            maxWidth: 'none',
-          }
+            borderRadius: '20px',
+            boxShadow: `0 12px 40px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
+            background: originalThemeColors.surface,
+            color: originalThemeColors.textPrimary,
+          },
         }}
       >
-        <DialogTitle sx={{ backgroundColor: '#9C27B0', color: originalThemeColors.white, borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-            Add Your Personal Category
-          </Typography>
-          <IconButton onClick={handleNewUserCategoryDialogClose} size="small" sx={{ color: originalThemeColors.white }}>
+        <DialogTitle
+          sx={{
+            background: `linear-gradient(135deg, ${originalThemeColors.primaryAccent}, ${alpha(originalThemeColors.primaryAccent, 0.8)})`,
+            color: originalThemeColors.buttonTextLight,
+            p: { xs: 2, sm: 3 },
+            textAlign: 'center',
+            fontSize: { xs: '1.5rem', sm: '1.75rem' },
+            fontWeight: 'bold',
+            borderTopLeftRadius: '20px',
+            borderTopRightRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          Add New Category
+          <IconButton onClick={handleNewDialogClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ pt: 3, pb: 2, px: { xs: 2, sm: 3 } }}>
-          {newUserCategoryErrorMessage && (
-            <Alert severity="error" sx={{ mb: 2 }}>{newUserCategoryErrorMessage}</Alert>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: originalThemeColors.dialogSurface }}>
+          {newCategoryImage && (
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+              <img
+                src={URL.createObjectURL(newCategoryImage)}
+                alt="Preview"
+                style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}` }}
+              />
+            </Box>
           )}
           <TextField
             autoFocus
             margin="dense"
-            id="new-category-name"
             label="Category Name"
-            type="text"
             fullWidth
             variant="outlined"
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            sx={{ mb: 2.5 }}
+            sx={{
+              mb: 2.5,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: originalThemeColors.inputBackground,
+                borderRadius: '8px',
+                color: originalThemeColors.textPrimary,
+                '& fieldset': { borderColor: originalThemeColors.borderColor },
+                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
+                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+              },
+              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+            }}
           />
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2.5 }}>
-            <InputLabel id="new-category-type-label">Category Type</InputLabel>
+          <FormControl fullWidth sx={{
+              mb: 2.5,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: originalThemeColors.inputBackground,
+                borderRadius: '8px',
+                color: originalThemeColors.textPrimary,
+                '& fieldset': { borderColor: originalThemeColors.borderColor },
+                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
+                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+              },
+              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+              '& .MuiSelect-icon': { color: originalThemeColors.textSecondary },
+            }}>
+            <InputLabel id="category-type-label">Category Type</InputLabel>
             <Select
-              labelId="new-category-type-label"
-              id="new-category-type"
+              labelId="category-type-label"
               value={newCategoryType}
-              onChange={(e) => setNewCategoryType(e.target.value)}
               label="Category Type"
+              onChange={(e) => setNewCategoryType(e.target.value)}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    backgroundColor: originalThemeColors.surface,
+                    color: originalThemeColors.textPrimary,
+                    '& .MuiMenuItem-root:hover': {
+                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.08),
+                    },
+                    '& .MuiMenuItem-root.Mui-selected': {
+                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.15),
+                      color: originalThemeColors.primaryAccent,
+                    }
+                  }
+                }
+              }}
             >
-              <MenuItem value=""><em>Select Type</em></MenuItem>
-              <MenuItem value="revenues">Revenues (Income)</MenuItem>
               <MenuItem value="expenses">Expenses</MenuItem>
+              <MenuItem value="income">Income</MenuItem>
             </Select>
           </FormControl>
-          <Button
-            variant="outlined"
-            component="label"
-            fullWidth
-            sx={{ mb: 1, borderColor: originalThemeColors.borderColor, color: originalThemeColors.textSecondary }}
-          >
-            Upload Image (Optional)
-            <input
-              id="new-category-image-input"
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={handleImageChange} // Uses the modified handler
-            />
+          <Button variant="outlined" component="label" fullWidth sx={{
+            mb: 2.5,
+            borderColor: originalThemeColors.primaryAccent,
+            color: originalThemeColors.primaryAccent,
+            py: 1.2,
+            borderRadius: '8px',
+            fontWeight: 500,
+            '&:hover': {
+              background: alpha(originalThemeColors.primaryAccent, 0.08),
+              borderColor: originalThemeColors.primaryAccent,
+            }
+          }}>
+            {newCategoryImage ? 'Change Image' : 'Choose Image'}
+            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
-          {newCategoryImageBase64 && (
-            <Box sx={{ mt: 1, textAlign: 'center' }}>
-              <Typography variant="caption" sx={{ color: originalThemeColors.textSecondary }}>Image Preview:</Typography>
-              <Box
-                component="img"
-                src={newCategoryImageBase64} // Display the Base64 preview
-                alt="Preview"
-                sx={{ display: 'block', maxWidth: '100px', maxHeight: '100px', margin: '8px auto 0', borderRadius: '4px', border: `1px solid ${originalThemeColors.borderColor}` }}
-              />
-            </Box>
+          {newErrorMessage && (
+            <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
+              {newErrorMessage}
+            </Typography>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: { xs: 2, sm: 3 }, borderTop: `1px solid ${originalThemeColors.borderColor}` }}>
-          <Button onClick={handleNewUserCategoryDialogClose} sx={{ color: originalThemeColors.textSecondary, borderRadius: '8px' }}>
-            Cancel
-          </Button>
+        <DialogActions
+          sx={{
+            p: { xs: 2, sm: 3 },
+            justifyContent: 'center',
+            gap: 2,
+            backgroundColor: originalThemeColors.dialogSurface,
+            borderBottomLeftRadius: '20px',
+            borderBottomRightRadius: '20px',
+          }}
+        >
           <Button
-            onClick={handleNewUserCategorySubmit} // Uses the modified handler
-            variant="contained"
-            disabled={isSubmittingNewUserCategory}
-            startIcon={isSubmittingNewUserCategory ? <CircularProgress size={20} color="inherit" /> : <AddCircleIcon />}
+            onClick={handleNewDialogClose}
+            variant="outlined"
             sx={{
-              backgroundColor: '#9C27B0',
-              color: originalThemeColors.white,
+              borderColor: originalThemeColors.primaryAccent,
+              color: originalThemeColors.primaryAccent,
+              px: { xs: 3, sm: 4 },
+              py: 1.2,
               borderRadius: '8px',
-              px: 3,
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontWeight: 500,
               '&:hover': {
-                backgroundColor: alpha('#9C27B0', 0.85),
+                borderColor: originalThemeColors.primaryAccent,
+                background: alpha(originalThemeColors.primaryAccent, 0.08),
               }
             }}
           >
-            {isSubmittingNewUserCategory ? 'Adding...' : 'Add Category'}
+            Cancel
+          </Button>
+          <Button
+            onClick={handleNewCategorySubmit}
+            variant="contained"
+            disabled={isNewSubmitting}
+            sx={{
+              backgroundColor: originalThemeColors.primaryAccent,
+              color: originalThemeColors.buttonTextLight,
+              px: { xs: 3, sm: 4 },
+              py: 1.2,
+              borderRadius: '8px',
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontWeight: 600,
+              transition: 'background-color 0.3s ease, transform 0.2s ease',
+              '&:hover': {
+                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                transform: 'scale(1.02)',
+              },
+              '&.Mui-disabled': {
+                background: alpha(originalThemeColors.textSecondary, 0.5),
+                color: alpha(originalThemeColors.white, 0.7)
+              }
+            }}
+          >
+            {isNewSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>
 
+      <Fab
+        aria-label="add new category"
+        onClick={handleNewDialogOpen}
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 20, sm: 32 },
+          right: { xs: 20, sm: 32 },
+          backgroundColor: originalThemeColors.primaryAccent,
+          color: originalThemeColors.buttonTextLight,
+          width: { xs: 56, sm: 64 },
+          height: { xs: 56, sm: 64 },
+          boxShadow: `0 8px 25px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
+          '&:hover': {
+            backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+            transform: 'scale(1.1)',
+            boxShadow: `0 12px 35px ${alpha(originalThemeColors.primaryAccent, 0.4)}`,
+          },
+        }}
+      >
+        <AddIcon sx={{ fontSize: { xs: 28, sm: 32} }} />
+      </Fab>
     </Container>
   );
 };
