@@ -176,7 +176,7 @@ const modernTheme = createTheme({
 
 const getImageUrl = (image) => {
   if (!image || image === "fallback-image.png") return "https://via.placeholder.com/150/F4F7F6/333745?text=No+Image";
-  return image.startsWith("data:") ? image : `https://fin-tracker-ncbx.onrender.com/${image}`;
+  return image.startsWith("data:") ? image : `http://127.0.0.1:5004/${image}`;
 };
 
 const RectangularCard = styled(Card)(({ theme }) => ({
@@ -278,7 +278,7 @@ const GraphComponent = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://fin-tracker-ncbx.onrender.com/api/getUserBudget",
+        "http://127.0.0.1:5004/api/getUserBudget",
         {
           headers: {
             Auth: `Bearer ${token}`,

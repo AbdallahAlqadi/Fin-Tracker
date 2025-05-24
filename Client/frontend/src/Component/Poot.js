@@ -50,7 +50,7 @@ function ClarityChat() {
   const [reportModalTitle, setReportModalTitle] = useState('');
 
   const token = sessionStorage.getItem('jwt');
-  const BUDGET_API = 'https://fin-tracker-ncbx.onrender.com/api/getUserBudget';
+  const BUDGET_API = 'http://127.0.0.1:5004/api/getUserBudget';
   const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 

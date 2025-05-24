@@ -155,7 +155,7 @@ function DashboardLayoutBasic(props) {
 
     const invaliedToken = async () => {
       try {
-        const res = await axios.get('https://fin-tracker-ncbx.onrender.com/api/home', {
+        const res = await axios.get('http://127.0.0.1:5004/api/home', {
           headers: {
             Auth: 'Bearer ' + token,
           },

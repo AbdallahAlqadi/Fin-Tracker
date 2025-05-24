@@ -73,7 +73,7 @@ const UsersTable = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data } = await axios.get('https://fin-tracker-ncbx.onrender.com/api/alluser', {
+        const { data } = await axios.get('http://127.0.0.1:5004/api/alluser', {
           headers: { Auth: `Bearer ${token}` },
         });
         setUsers(data.users);

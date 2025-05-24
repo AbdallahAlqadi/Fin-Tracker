@@ -139,7 +139,7 @@ const DashboardUser = () => {
       setLoading(true);
       try {
         // Assuming this endpoint fetches categories added by admin
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
+        const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         // TODO: Consider fetching user-specific cards here as well via /api/getCardUser
         // and merging/displaying them appropriately.
         // For now, just displaying admin categories.
@@ -201,7 +201,7 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/addBudget',
+        'http://127.0.0.1:5004/api/addBudget',
         {
           CategoriesId: currentCategory._id,
           valueitem: parsedValue,
@@ -294,7 +294,7 @@ const DashboardUser = () => {
 
       // Make API call to the correct endpoint for adding user cards
       const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/addCardUser', // Use the user card endpoint
+        'http://127.0.0.1:5004/api/addCardUser', // Use the user card endpoint
         payload,
         {
           headers: {
@@ -589,7 +589,7 @@ const DashboardUser = () => {
                               src={
                                 category.image.startsWith('data:') || category.image.startsWith('http')
                                   ? category.image
-                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}` // Assuming relative paths need prefix
+                                  : `http://127.0.0.1:5004/${category.image}` // Assuming relative paths need prefix
                               }
                               alt={category.categoryName}
                               sx={{
@@ -689,7 +689,7 @@ const DashboardUser = () => {
               src={
                 selectedCategory.image.startsWith('data:') || selectedCategory.image.startsWith('http')
                   ? selectedCategory.image
-                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
+                  : `http://127.0.0.1:5004/${selectedCategory.image}`
               }
               alt={selectedCategory.categoryName}
               sx={{
