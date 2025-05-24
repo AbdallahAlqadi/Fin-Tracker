@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import axios from 'axios';
 import {
   Dialog,
@@ -21,9 +21,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Snackbar, // Added Snackbar for feedback
+  Alert,    // Added Alert for Snackbar content
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
-import { styled, keyframes, alpha } from '@mui/system'; // Added alpha for transparency
+import { styled, keyframes, alpha } from '@mui/system';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
@@ -31,6 +33,9 @@ import AddIcon from '@mui/icons-material/Add';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'; // Icon for added items
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'; // Icon to add items
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline'; // Icon to remove items
 
 // --- ORIGINAL THEME COLORS (Reverted) ---
 const originalThemeColors = {
@@ -71,9 +76,9 @@ const fadeIn = keyframes`
 
 // Modern design for category card with dynamic border color based on type
 const CategoryCard = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'type',
-})(({ theme, type }) => ({
-  border: `2px solid ${type && type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income}`,
+  shouldForwardProp: (prop) => prop !== 'type' && prop !== 'isInUserCard', // Prevent custom props from reaching DOM
+})(({ theme, type, isInUserCard }) => ({
+  border: `2px solid ${isInUserCard ? originalThemeColors.primaryAccent : (type && type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income)}`,
   backgroundColor: originalThemeColors.surface,
   borderRadius: '20px',
   padding: theme.spacing(3),
@@ -88,26 +93,48 @@ const CategoryCard = styled(Box, {
   cursor: 'pointer',
   transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.3s ease',
   animation: `${fadeIn} 0.6s ease-out forwards`,
+  position: 'relative', // Needed for positioning the add/remove icons
   '&:hover': {
     transform: 'scale(1.08)',
     boxShadow: `0 12px 32px ${alpha(originalThemeColors.primaryAccent, 0.25)}`,
-    borderColor: originalThemeColors.primaryAccent,
+    // Keep border color consistent on hover, or change based on isInUserCard
+    borderColor: originalThemeColors.primaryAccent, // Always highlight with primary on hover
   },
   [theme.breakpoints.down('sm')]: {
     width: '150px',
     height: '150px',
     padding: theme.spacing(2.5),
   },
-  // Adjust card width slightly if needed to fit 5 in a row more comfortably on medium screens
   [theme.breakpoints.between('md', 'lg')]: {
-    width: '170px', // Example: slightly smaller for 5 cards on medium screens
+    width: '170px',
     height: '170px',
+  },
+}));
+
+// Style for the Add/Remove icon button
+const AddRemoveButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(1.5),
+  right: theme.spacing(1.5),
+  backgroundColor: alpha(originalThemeColors.surface, 0.8),
+  color: originalThemeColors.primaryAccent,
+  '&:hover': {
+    backgroundColor: alpha(originalThemeColors.primaryAccent, 0.1),
+    color: originalThemeColors.primaryAccent,
+  },
+  // Make it slightly smaller on smaller cards
+  [theme.breakpoints.down('sm')]: {
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+    padding: theme.spacing(0.5),
   },
 }));
 
 const DashboardUser = () => {
   const [categories, setCategories] = useState([]);
+  const [userCardCategoryIds, setUserCardCategoryIds] = useState(new Set()); // State for user's card category IDs
   const [loading, setLoading] = useState(true);
+  const [loadingUserCard, setLoadingUserCard] = useState(true); // Separate loading state for user card
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
@@ -116,8 +143,8 @@ const DashboardUser = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1); // Title scale effect
   const [searchQuery, setSearchQuery] = useState('');
-  const [addedItems, setAddedItems] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addedBudgetItems, setAddedBudgetItems] = useState(new Set()); // Track budget items added in this session
+  const [isSubmittingBudget, setIsSubmittingBudget] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -125,41 +152,153 @@ const DashboardUser = () => {
   const [newCategoryImage, setNewCategoryImage] = useState(null);
   const [newErrorMessage, setNewErrorMessage] = useState('');
   const [isNewSubmitting, setIsNewSubmitting] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false); // Snackbar state
+  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // Snackbar severity ('success', 'error', 'info', 'warning')
 
-  const isSmallDevice = useMediaQuery('(max-width:600px)'); // Adjusted breakpoint for small device grid
-  const isMediumDevice = useMediaQuery('(max-width:900px)'); // Breakpoint for potentially 3-4 cards
+  const isSmallDevice = useMediaQuery('(max-width:600px)');
+  const isMediumDevice = useMediaQuery('(max-width:900px)');
 
+  const getToken = useCallback(() => sessionStorage.getItem('jwt'), []);
+
+  // Fetch General Categories
   useEffect(() => {
     const fetchCategories = async () => {
+      setLoading(true);
       try {
+        // Use Render backend URL or replace with your actual API endpoint
         const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
-        setCategories(response.data.data);
-        const initialVisibleItems = response.data.data.reduce((acc, category) => {
+        setCategories(response.data.data || []); // Ensure it's an array
+        const initialVisibleItems = (response.data.data || []).reduce((acc, category) => {
           if (!acc[category.categoryType]) {
-            acc[category.categoryType] = 12; // Or 10 if we want to show 2 full rows of 5
+            acc[category.categoryType] = 12;
           }
           return acc;
         }, {});
         setVisibleItems(initialVisibleItems);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        showSnackbar('Failed to load categories.', 'error');
       } finally {
         setLoading(false);
       }
     };
-
     fetchCategories();
-  }, []);
+  }, []); // Removed dependency on getToken as it's stable
 
-  const handleClickOpen = (category) => {
-    if (addedItems.includes(category._id)) return;
+  // Fetch User's Card Categories
+  useEffect(() => {
+    const fetchUserCard = async () => {
+      const token = getToken();
+      if (!token) {
+        setLoadingUserCard(false);
+        // Optionally redirect to login or show message
+        console.log('No token found for fetching user card.');
+        return;
+      }
+      setLoadingUserCard(true);
+      try {
+        // Use Render backend URL or replace with your actual API endpoint
+        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getUserCard', {
+          headers: { Auth: `Bearer ${token}` },
+        });
+        if (response.data && response.data.carduser) {
+          const ids = new Set(response.data.carduser.map(item => item.categoryId));
+          setUserCardCategoryIds(ids);
+        }
+      } catch (error) {
+        console.error('Error fetching user card:', error);
+        // Don't show snackbar here, might be expected if user has no card yet
+      } finally {
+        setLoadingUserCard(false);
+      }
+    };
+    fetchUserCard();
+  }, [getToken]); // Depend on getToken
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  // Handler to Add Category to User's Card
+  const handleAddToCard = async (categoryId, categoryName) => {
+    const token = getToken();
+    if (!token) {
+      showSnackbar('Please log in to add categories.', 'error');
+      return;
+    }
+    try {
+      // Use Render backend URL or replace with your actual API endpoint
+      await axios.post('https://fin-tracker-ncbx.onrender.com/api/addToCard',
+        { CategoriesId: categoryId },
+        { headers: { Auth: `Bearer ${token}` } }
+      );
+      setUserCardCategoryIds(prev => new Set(prev).add(categoryId));
+      showSnackbar(`'${categoryName}' added to your list.`, 'success');
+    } catch (error) {
+      console.error('Error adding to card:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to add category.';
+      showSnackbar(errorMsg, 'error');
+    }
+  };
+
+  // Handler to Remove Category from User's Card
+  const handleRemoveFromCard = async (categoryId, categoryName) => {
+    const token = getToken();
+    if (!token) {
+      showSnackbar('Please log in to remove categories.', 'error');
+      return;
+    }
+    try {
+      // Use Render backend URL or replace with your actual API endpoint
+      await axios.delete('https://fin-tracker-ncbx.onrender.com/api/deleteFromCard', {
+        headers: { Auth: `Bearer ${token}` },
+        data: { categoryId: categoryId } // Send categoryId in data for DELETE
+      });
+      setUserCardCategoryIds(prev => {
+        const next = new Set(prev);
+        next.delete(categoryId);
+        return next;
+      });
+      showSnackbar(`'${categoryName}' removed from your list.`, 'success');
+    } catch (error) {
+      console.error('Error removing from card:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to remove category.';
+      showSnackbar(errorMsg, 'error');
+    }
+  };
+
+  // Opens the dialog to add a budget item (expense/income)
+  const handleClickOpenBudgetDialog = (category) => {
+    // Reset potential previous state from budget item adding
+    setAddedBudgetItems(prev => {
+        const next = new Set(prev);
+        // Maybe clear based on date or keep it simple for now
+        // next.delete(category._id + selectedDate); // Example if tracking by date
+        return next;
+    });
+
+    // Check if this specific category was already added *as a budget item* on the selected date
+    // This logic seems to be handled by the `addedItems` state in the original code, let's rename it
+    // if (addedBudgetItems.has(category._id)) return; // This check might be redundant if backend handles it
+
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
-    setSelectedDate('');
+    setValue(''); // Clear previous value
+    setSelectedDate(''); // Clear previous date
   };
 
-  const handleClose = () => {
+  const handleCloseBudgetDialog = () => {
     setOpen(false);
     setSelectedCategory(null);
     setValue('');
@@ -167,7 +306,8 @@ const DashboardUser = () => {
     setErrorMessage('');
   };
 
-  const handleSubmit = async () => {
+  // Submits the budget item (expense/income)
+  const handleSubmitBudgetItem = async () => {
     if (!selectedCategory || !value || !selectedDate) {
       setErrorMessage('Please enter a valid value and select a date.');
       return;
@@ -180,19 +320,20 @@ const DashboardUser = () => {
     }
 
     const currentCategory = selectedCategory;
-    handleClose();
+    const submissionData = {
+        CategoriesId: currentCategory._id,
+        valueitem: parsedValue,
+        date: selectedDate,
+    };
 
-    setIsSubmitting(true);
-    const token = sessionStorage.getItem('jwt');
+    setIsSubmittingBudget(true);
+    const token = getToken();
 
     try {
+      // Use Render backend URL or replace with your actual API endpoint
       const response = await axios.post(
         'https://fin-tracker-ncbx.onrender.com/api/addBudget',
-        {
-          CategoriesId: currentCategory._id,
-          valueitem: parsedValue,
-          date: selectedDate,
-        },
+        submissionData,
         {
           headers: {
             Auth: `Bearer ${token}`,
@@ -201,30 +342,98 @@ const DashboardUser = () => {
         }
       );
 
-      console.log('Response:', response.data);
-      setAddedItems((prev) => [...prev, currentCategory._id]);
+      console.log('Budget Response:', response.data);
+      // Mark this category+date combination as added for UI feedback (optional)
+      // setAddedBudgetItems((prev) => new Set(prev).add(currentCategory._id + selectedDate));
+      showSnackbar(`Budget item for '${currentCategory.categoryName}' added successfully!`, 'success');
+      handleCloseBudgetDialog(); // Close dialog on success
+
     } catch (error) {
+      console.error('Error submitting budget value:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to submit budget item.';
       if (error.response && error.response.status === 400) {
-        console.error(error.response.data.error || 'You have already added this item on this date.');
-        setAddedItems((prev) => [...prev, currentCategory._id]);
+        // Handle specific backend error for duplicate entry on the same date
+        setErrorMessage(errorMsg); // Show error in the dialog
+        // Optionally mark as added anyway for UI consistency if backend prevents duplicates
+        // setAddedBudgetItems((prev) => new Set(prev).add(currentCategory._id + selectedDate));
       } else {
-        console.error('Error submitting value:', error);
+        setErrorMessage(errorMsg); // Show general error in the dialog
       }
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingBudget(false);
     }
   };
 
   const handleLoadMore = (type) => {
     setVisibleItems((prev) => ({
       ...prev,
-      [type]: prev[type] + 10, // Load 10 more (2 rows of 5)
+      [type]: (prev[type] || 0) + 10, // Load 10 more
     }));
   };
 
+  // --- Add New Category Dialog Logic (Mostly unchanged) ---
+  const handleNewDialogOpen = () => {
+    setNewDialogOpen(true);
+    setNewErrorMessage('');
+  };
+  const handleNewDialogClose = () => {
+    setNewDialogOpen(false);
+    setNewCategoryName('');
+    setNewCategoryType('');
+    setNewCategoryImage(null);
+    setNewErrorMessage('');
+  };
+  const handleImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setNewCategoryImage(event.target.files[0]);
+    }
+  };
+  const handleNewCategorySubmit = async () => {
+    if (!newCategoryName || !newCategoryType) {
+      setNewErrorMessage('Please fill in all required fields.');
+      return;
+    }
+    setIsNewSubmitting(true);
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('categoryName', newCategoryName);
+    formData.append('categoryType', newCategoryType);
+    if (newCategoryImage) {
+      formData.append('image', newCategoryImage);
+    }
+    try {
+      // Use Render backend URL or replace with your actual API endpoint
+      const response = await axios.post(
+        'https://fin-tracker-ncbx.onrender.com/api/addCategory',
+        formData,
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log('New Category Response:', response.data);
+      // Add the new category to the main list and potentially the user's card if desired
+      const newCat = response.data.data;
+      setCategories((prev) => [...prev, newCat]);
+      // Decide if a newly created category should automatically be added to the user's card
+      // handleAddToCard(newCat._id, newCat.categoryName); // Optional: Add to user's list automatically
+      showSnackbar(`Category '${newCat.categoryName}' created successfully.`, 'success');
+      handleNewDialogClose();
+    } catch (error) {
+      console.error('Error adding new category:', error);
+      setNewErrorMessage(error.response?.data?.error || 'An error occurred while adding the category.');
+    } finally {
+      setIsNewSubmitting(false);
+    }
+  };
+  // --- End Add New Category Dialog Logic ---
+
   const categoryOptions = categories.map((cat) => cat.categoryName);
 
-  if (loading) {
+  // Combined loading state
+  if (loading || loadingUserCard) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: `linear-gradient(135deg, ${originalThemeColors.backgroundGradientStart} 0%, ${originalThemeColors.backgroundGradientEnd} 100%)` }}>
         <CircularProgress sx={{ color: originalThemeColors.primaryAccent }} size={60} />
@@ -235,6 +444,7 @@ const DashboardUser = () => {
     );
   }
 
+  // Filtering logic remains largely the same
   let filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -250,72 +460,16 @@ const DashboardUser = () => {
   }
 
   const groupedCategories = filteredCategories.reduce((acc, category) => {
-    if (!acc[category.categoryType]) {
-      acc[category.categoryType] = [];
+    const typeKey = category.categoryType || 'Uncategorized'; // Handle potential missing type
+    if (!acc[typeKey]) {
+      acc[typeKey] = [];
     }
-    acc[category.categoryType].push(category);
+    acc[typeKey].push(category);
     return acc;
   }, {});
 
   const getCategoryIcon = (type) =>
     type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
-
-  const handleNewDialogOpen = () => {
-    setNewDialogOpen(true);
-    setNewErrorMessage('');
-  };
-
-  const handleNewDialogClose = () => {
-    setNewDialogOpen(false);
-    setNewCategoryName('');
-    setNewCategoryType('');
-    setNewCategoryImage(null);
-    setNewErrorMessage('');
-  };
-
-  const handleImageChange = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      setNewCategoryImage(event.target.files[0]);
-    }
-  };
-
-  const handleNewCategorySubmit = async () => {
-    if (!newCategoryName || !newCategoryType) {
-      setNewErrorMessage('Please fill in all required fields.');
-      return;
-    }
-
-    setIsNewSubmitting(true);
-    const token = sessionStorage.getItem('jwt');
-
-    const formData = new FormData();
-    formData.append('categoryName', newCategoryName);
-    formData.append('categoryType', newCategoryType);
-    if (newCategoryImage) {
-      formData.append('image', newCategoryImage);
-    }
-
-    try {
-      const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/addCategory',
-        formData,
-        {
-          headers: {
-            Auth: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-      console.log('New Category Response:', response.data);
-      setCategories((prev) => [...prev, response.data.data]);
-      handleNewDialogClose();
-    } catch (error) {
-      console.error('Error adding new category:', error);
-      setNewErrorMessage('An error occurred while adding the category.');
-    } finally {
-      setIsNewSubmitting(false);
-    }
-  };
 
   return (
     <Container
@@ -329,6 +483,14 @@ const DashboardUser = () => {
         color: originalThemeColors.textPrimary,
       }}
     >
+      {/* Snackbar for feedback */}
+      <Snackbar open={snackbarOpen} autoHideDuration={4000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+      {/* Header */}
       <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
         <Typography
           variant="h2"
@@ -354,9 +516,11 @@ const DashboardUser = () => {
         </Typography>
       </Box>
 
+      {/* Search Bar */}
       <Autocomplete
         freeSolo
         options={categoryOptions}
+        inputValue={searchQuery} // Control the input value
         onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
         renderInput={(params) => (
           <TextField
@@ -415,13 +579,14 @@ const DashboardUser = () => {
         )}
       />
 
+      {/* Filter Buttons */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 } }}>
         <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden', boxShadow: `0 2px 8px ${alpha(originalThemeColors.primaryAccent, 0.15)}` }}>
           {[
             { label: 'All', value: 'all', icon: <AccountBalanceWalletIcon /> },
             { label: 'Revenues', value: 'income', icon: <AddCircleIcon /> },
             { label: 'Expenses', value: 'expenses', icon: <RemoveCircleIcon /> },
-          ].map((typeOption, index) => (
+          ].map((typeOption) => (
             <Button
               key={typeOption.value}
               onClick={() => setFilterType(typeOption.value)}
@@ -439,9 +604,11 @@ const DashboardUser = () => {
                 },
                 px: { xs: 2, sm: 3 },
                 py: 1.5,
-                fontSize: { xs: '0.8rem', sm: '1rem' },
-                ...(index === 0 && { borderRadius: '20px 0 0 20px' }),
-                ...(index === 2 && { borderRadius: '0 20px 20px 0' }),
+                fontSize: { xs: '0.85rem', sm: '1rem' }, // Slightly adjusted font size
+                borderRight: '1px solid ' + alpha(originalThemeColors.primaryAccent, 0.3), // Add subtle separator
+                '&:last-child': {
+                  borderRight: 'none',
+                },
               }}
             >
               {typeOption.label}
@@ -450,13 +617,15 @@ const DashboardUser = () => {
         </ButtonGroup>
       </Box>
 
+      {/* Category Grid */}
       {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: originalThemeColors.textSecondary, mt: 4, fontStyle: 'italic' }}>
-          No items found.
+          No categories found matching your criteria.
         </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
           <Box key={type} sx={{ mb: { xs: 5, sm: 8 } }}>
+            {/* Type Header */}
             <Typography
               variant="h4"
               sx={{
@@ -474,84 +643,110 @@ const DashboardUser = () => {
             >
               {getCategoryIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
             </Typography>
+
+            {/* Grid of Cards */}
             <Box
               sx={{
                 display: 'grid',
-                // Updated gridTemplateColumns for 5 cards per row on larger screens
                 gridTemplateColumns: {
-                  xs: 'repeat(auto-fit, minmax(150px, 1fr))', // Keep responsive for very small screens (1-2 cards)
-                  sm: 'repeat(auto-fit, minmax(170px, 1fr))', // Responsive for small screens (2-3 cards)
-                  md: 'repeat(5, 1fr)', // 5 cards for medium screens and up
+                  xs: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  sm: 'repeat(auto-fit, minmax(170px, 1fr))',
+                  md: 'repeat(5, 1fr)',
                 },
-                gap: { xs: 2, sm: 2.5, md: 3 }, // Adjusted gaps for 5 columns
+                gap: { xs: 2, sm: 2.5, md: 3 },
                 justifyContent: 'center',
               }}
             >
               {groupedCategories[type]
-                .slice(0, visibleItems[type])
+                .slice(0, visibleItems[type] || 12) // Use default if visibleItems[type] is undefined
                 .map((category) => {
-                  const isAdded = addedItems.includes(category._id);
+                  const isInUserCard = userCardCategoryIds.has(category._id);
+                  // const isBudgetItemAdded = addedBudgetItems.has(category._id + selectedDate); // Check if budget item was added
+
                   return (
-                    <Tooltip key={category._id} title={isAdded ? 'Added' : `Add to ${category.categoryName}`}>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Tooltip key={category._id} title={`Click to add budget item for ${category.categoryName}`}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
                         <CategoryCard
                           type={category.categoryType}
+                          isInUserCard={isInUserCard} // Pass prop for styling
                           component="div"
                           role="button"
-                          tabIndex={isAdded ? -1 : 0}
-                          onClick={isAdded ? undefined : () => handleClickOpen(category)}
-                          onKeyPress={
-                            isAdded
-                              ? undefined
-                              : (e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    handleClickOpen(category);
-                                  }
-                                }
-                          }
+                          tabIndex={0} // Always focusable
+                          onClick={() => handleClickOpenBudgetDialog(category)} // Always open budget dialog on main click
+                          onKeyPress={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                handleClickOpenBudgetDialog(category);
+                              }
+                            }}
                           sx={{
-                            opacity: isAdded ? 0.6 : 1,
-                            filter: isAdded ? 'grayscale(50%)' : 'none',
-                            pointerEvents: isAdded ? 'none' : 'auto',
-                            // Ensure cards can shrink if needed to fit 5 across, or adjust CategoryCard width
-                            minWidth: 0, 
+                            // Adjust opacity/filter based on whether it's added to user card or budget item added?
+                            // opacity: isBudgetItemAdded ? 0.6 : 1,
+                            // filter: isBudgetItemAdded ? 'grayscale(50%)' : 'none',
+                            // pointerEvents: isBudgetItemAdded ? 'none' : 'auto', // Prevent adding budget item again?
+                            minWidth: 0,
                           }}
-                          aria-disabled={isAdded}
+                          // aria-disabled={isBudgetItemAdded}
                         >
+                          {/* Add/Remove Button */}
+                          <Tooltip title={isInUserCard ? `Remove '${category.categoryName}' from My List` : `Add '${category.categoryName}' to My List`}>
+                            <AddRemoveButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent card click
+                                if (isInUserCard) {
+                                  handleRemoveFromCard(category._id, category.categoryName);
+                                } else {
+                                  handleAddToCard(category._id, category.categoryName);
+                                }
+                              }}
+                              aria-label={isInUserCard ? 'Remove from my list' : 'Add to my list'}
+                            >
+                              {isInUserCard ? <RemoveCircleOutlineIcon fontSize="inherit" sx={{ color: originalThemeColors.expense }} /> : <AddCircleOutlineIcon fontSize="inherit" sx={{ color: originalThemeColors.income }} />}
+                            </AddRemoveButton>
+                          </Tooltip>
+
+                          {/* Category Image */}
                           {category.image && (
                             <Box
                               component="img"
                               src={
-                                category.image.startsWith('data:')
+                                category.image.startsWith('data:') || category.image.startsWith('http') // Handle base64 or external URLs
                                   ? category.image
-                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}`
+                                  : `https://fin-tracker-ncbx.onrender.com/${category.image}` // Assume relative path needs prefix
                               }
                               alt={category.categoryName}
                               sx={{
-                                width: { xs: 60, sm: 70, md: 80 }, // Adjusted image size for card changes
+                                width: { xs: 60, sm: 70, md: 80 },
                                 height: { xs: 60, sm: 70, md: 80 },
                                 borderRadius: '50%',
                                 mb: 1.5,
                                 objectFit: 'cover',
                                 border: `2px solid ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
                               }}
+                              // Handle image loading errors gracefully
+                              onError={(e) => { e.target.style.display = 'none'; /* Hide broken image */ }}
                             />
                           )}
+                          {/* Category Name */}
                           <Typography variant="h6" sx={{ color: originalThemeColors.primaryAccent, fontWeight: 600, fontSize: {xs: '0.9rem', sm: '1rem', md: '1.1rem'} }}>
                             {category.categoryName}
                           </Typography>
-                          {isAdded && (
-                            <Typography variant="caption" sx={{ color: originalThemeColors.expense, fontWeight: 'bold', mt: 1, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Added
-                            </Typography>
-                          )}
+
+                          {/* Optional: Indicator if added to user's list */} 
+                          {/* {isInUserCard && (
+                            <CheckCircleOutlineIcon sx={{ color: originalThemeColors.income, position: 'absolute', bottom: 8, right: 8, fontSize: '1.2rem' }} />
+                          )} */} 
+
+                          {/* Removed 'Added' text related to budget items, handled by dialog/snackbar now */}
                         </CategoryCard>
                       </Box>
                     </Tooltip>
                   );
                 })}
             </Box>
-            {groupedCategories[type].length > visibleItems[type] && (
+
+            {/* Load More Button */}
+            {groupedCategories[type].length > (visibleItems[type] || 12) && (
               <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
                 <Button
                   onClick={() => handleLoadMore(type)}
@@ -582,7 +777,7 @@ const DashboardUser = () => {
       {/* Dialog for Adding Budget Item */}
       <Dialog
         open={open}
-        onClose={handleClose}
+        onClose={handleCloseBudgetDialog}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -610,9 +805,9 @@ const DashboardUser = () => {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {selectedCategory && getCategoryIcon(selectedCategory.categoryType)} {selectedCategory?.categoryName}
+            {selectedCategory && getCategoryIcon(selectedCategory.categoryType)} Add Budget for {selectedCategory?.categoryName}
           </Box>
-          <IconButton onClick={handleClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
+          <IconButton onClick={handleCloseBudgetDialog} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -622,7 +817,7 @@ const DashboardUser = () => {
             <Box
               component="img"
               src={
-                selectedCategory.image.startsWith('data:')
+                selectedCategory.image.startsWith('data:') || selectedCategory.image.startsWith('http')
                   ? selectedCategory.image
                   : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
               }
@@ -636,6 +831,7 @@ const DashboardUser = () => {
                 border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}`,
                 boxShadow: `0 0 10px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
               }}
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
             </Box>
           )}
@@ -652,6 +848,7 @@ const DashboardUser = () => {
             variant="outlined"
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            error={!!errorMessage} // Highlight field if error exists
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
@@ -675,6 +872,7 @@ const DashboardUser = () => {
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            error={!!errorMessage} // Highlight field if error exists
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
@@ -686,6 +884,7 @@ const DashboardUser = () => {
                 '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
                 '& input[type="date"]::-webkit-calendar-picker-indicator': {
                     filter: 'invert(0.3) sepia(1) saturate(5) hue-rotate(190deg)',
+                    cursor: 'pointer',
                 }
               },
               '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
@@ -709,7 +908,7 @@ const DashboardUser = () => {
           }}
         >
           <Button
-            onClick={handleClose}
+            onClick={handleCloseBudgetDialog}
             variant="outlined"
             sx={{
               borderColor: originalThemeColors.primaryAccent,
@@ -728,9 +927,9 @@ const DashboardUser = () => {
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={handleSubmitBudgetItem}
             variant="contained"
-            disabled={isSubmitting}
+            disabled={isSubmittingBudget}
             sx={{
               backgroundColor: originalThemeColors.primaryAccent,
               color: originalThemeColors.buttonTextLight,
@@ -750,12 +949,12 @@ const DashboardUser = () => {
               }
             }}
           >
-            {isSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
+            {isSubmittingBudget ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit Budget Item'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog for Adding New Category */}
+      {/* Dialog for Adding New Category (Unchanged Structure) */}
       <Dialog
         open={newDialogOpen}
         onClose={handleNewDialogClose}
@@ -785,7 +984,7 @@ const DashboardUser = () => {
             justifyContent: 'space-between',
           }}
         >
-          Add New Category
+          Add New General Category
           <IconButton onClick={handleNewDialogClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
             <CloseIcon />
           </IconButton>
@@ -808,6 +1007,7 @@ const DashboardUser = () => {
             variant="outlined"
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
+            error={!!newErrorMessage}
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
@@ -822,59 +1022,41 @@ const DashboardUser = () => {
               '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
             }}
           />
-          <FormControl fullWidth sx={{
-              mb: 2.5,
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: originalThemeColors.inputBackground,
-                borderRadius: '8px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': { borderColor: originalThemeColors.borderColor },
-                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
-              },
-              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
-              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
-              '& .MuiSelect-icon': { color: originalThemeColors.textSecondary },
-            }}>
+          <FormControl fullWidth variant="outlined" sx={{ mb: 2.5 }} error={!!newErrorMessage}>
             <InputLabel id="category-type-label">Category Type</InputLabel>
             <Select
               labelId="category-type-label"
               value={newCategoryType}
-              label="Category Type"
               onChange={(e) => setNewCategoryType(e.target.value)}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    backgroundColor: originalThemeColors.surface,
-                    color: originalThemeColors.textPrimary,
-                    '& .MuiMenuItem-root:hover': {
-                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.08),
-                    },
-                    '& .MuiMenuItem-root.Mui-selected': {
-                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.15),
-                      color: originalThemeColors.primaryAccent,
-                    }
-                  }
-                }
+              label="Category Type"
+              sx={{
+                backgroundColor: originalThemeColors.inputBackground,
+                borderRadius: '8px',
+                color: originalThemeColors.textPrimary,
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: originalThemeColors.borderColor },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: originalThemeColors.primaryAccent },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
               }}
             >
-              <MenuItem value="expenses">Expenses</MenuItem>
               <MenuItem value="income">Income</MenuItem>
+              <MenuItem value="expenses">Expenses</MenuItem>
+              {/* Add other types if necessary */}
             </Select>
           </FormControl>
-          <Button variant="outlined" component="label" fullWidth sx={{
-            mb: 2.5,
-            borderColor: originalThemeColors.primaryAccent,
-            color: originalThemeColors.primaryAccent,
-            py: 1.2,
-            borderRadius: '8px',
-            fontWeight: 500,
-            '&:hover': {
-              background: alpha(originalThemeColors.primaryAccent, 0.08),
+          <Button
+            variant="outlined"
+            component="label"
+            fullWidth
+            sx={{
+              mb: 2.5,
               borderColor: originalThemeColors.primaryAccent,
-            }
-          }}>
-            {newCategoryImage ? 'Change Image' : 'Choose Image'}
+              color: originalThemeColors.primaryAccent,
+              '&:hover': {
+                background: alpha(originalThemeColors.primaryAccent, 0.08),
+              }
+            }}
+          >
+            Upload Image
             <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
           {newErrorMessage && (
@@ -885,7 +1067,7 @@ const DashboardUser = () => {
         </DialogContent>
         <DialogActions
           sx={{
-            p: { xs: 2, sm: 3 },
+            p: { xs: 2, sm: 2.5 },
             justifyContent: 'center',
             gap: 2,
             backgroundColor: originalThemeColors.dialogSurface,
@@ -893,75 +1075,33 @@ const DashboardUser = () => {
             borderBottomRightRadius: '20px',
           }}
         >
-          <Button
-            onClick={handleNewDialogClose}
-            variant="outlined"
-            sx={{
-              borderColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.primaryAccent,
-              px: { xs: 3, sm: 4 },
-              py: 1.2,
-              borderRadius: '8px',
-              fontSize: { xs: '0.9rem', sm: '1rem' },
-              fontWeight: 500,
-              '&:hover': {
-                borderColor: originalThemeColors.primaryAccent,
-                background: alpha(originalThemeColors.primaryAccent, 0.08),
-              }
-            }}
-          >
+          <Button onClick={handleNewDialogClose} variant="outlined" sx={{ borderColor: originalThemeColors.primaryAccent, color: originalThemeColors.primaryAccent, px: 3, py: 1.2, borderRadius: '8px', '&:hover': { background: alpha(originalThemeColors.primaryAccent, 0.08) } }}>
             Cancel
           </Button>
-          <Button
-            onClick={handleNewCategorySubmit}
-            variant="contained"
-            disabled={isNewSubmitting}
-            sx={{
-              backgroundColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.buttonTextLight,
-              px: { xs: 3, sm: 4 },
-              py: 1.2,
-              borderRadius: '8px',
-              fontSize: { xs: '0.9rem', sm: '1rem' },
-              fontWeight: 600,
-              transition: 'background-color 0.3s ease, transform 0.2s ease',
-              '&:hover': {
-                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
-                transform: 'scale(1.02)',
-              },
-              '&.Mui-disabled': {
-                background: alpha(originalThemeColors.textSecondary, 0.5),
-                color: alpha(originalThemeColors.white, 0.7)
-              }
-            }}
-          >
-            {isNewSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
+          <Button onClick={handleNewCategorySubmit} variant="contained" disabled={isNewSubmitting} sx={{ backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.buttonTextLight, px: 3, py: 1.2, borderRadius: '8px', '&:hover': { backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85) }, '&.Mui-disabled': { background: alpha(originalThemeColors.textSecondary, 0.5), color: alpha(originalThemeColors.white, 0.7) } }}>
+            {isNewSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Add Category'}
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Floating Action Button to Add New General Category */}
       <Fab
+        color="primary"
         aria-label="add new category"
         onClick={handleNewDialogOpen}
         sx={{
           position: 'fixed',
-          bottom: { xs: 20, sm: 32 },
-          right: { xs: 20, sm: 32 },
+          bottom: { xs: 16, sm: 32 },
+          right: { xs: 16, sm: 32 },
           backgroundColor: originalThemeColors.primaryAccent,
-          color: originalThemeColors.buttonTextLight,
-          width: { xs: 56, sm: 64 },
-          height: { xs: 56, sm: 64 },
-          boxShadow: `0 8px 25px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
           '&:hover': {
             backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
-            transform: 'scale(1.1)',
-            boxShadow: `0 12px 35px ${alpha(originalThemeColors.primaryAccent, 0.4)}`,
-          },
+          }
         }}
       >
-        <AddIcon sx={{ fontSize: { xs: 28, sm: 32} }} />
+        <AddIcon />
       </Fab>
+
     </Container>
   );
 };

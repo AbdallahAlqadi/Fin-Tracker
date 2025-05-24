@@ -7,6 +7,8 @@ const userRoutes = require('./Routes/userRoutes');
 const categoryRoutes = require('./Routes/categoryRoutes');
 const PersonalBudgetRoutes= require('./Routes/PersonalBudgetRoutes');
 const fedbackRoutes= require('./Routes/fedbackRoutes');
+
+const carduserRoutes= require('./Routes/carduserRoutes');
 const path = require('path');
 
 
@@ -22,6 +24,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', categoryRoutes);
 app.use('/api', PersonalBudgetRoutes);
 app.use('/api', fedbackRoutes);
+app.use('/api', carduserRoutes);
+
 
 
 module.exports = app;
