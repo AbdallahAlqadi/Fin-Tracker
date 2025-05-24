@@ -1,4 +1,4 @@
-const CardUser = require('../models');
+const CardUser = require('../models/carduser');
 const Category = require('../models/categoryData');
 const mongoose = require('mongoose');
 
