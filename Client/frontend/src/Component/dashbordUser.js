@@ -271,17 +271,27 @@ const DashboardUser = () => {
     );
   }
 
-  let filteredCategories = categories.filter((category) =>
+  // Ensure categories is an array before filtering
+  const validCategories = Array.isArray(categories) ? categories : [];
+
+  let filteredCategories = validCategories.filter((category) =>
+    // Check if category and categoryName exist and are strings before filtering
+    category && typeof category.categoryName === 'string' &&
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (filterType === 'income') {
     filteredCategories = filteredCategories.filter(
-      (category) => !category.categoryType.toLowerCase().startsWith('expens')
+      (category) =>
+        // Check if category and categoryType exist and are strings
+        category && typeof category.categoryType === 'string' &&
+        !category.categoryType.toLowerCase().startsWith('expens')
     );
   } else if (filterType === 'expenses') {
     filteredCategories = filteredCategories.filter((category) =>
-      category.categoryType.toLowerCase().startsWith('expens')
+        // Check if category and categoryType exist and are strings
+        category && typeof category.categoryType === 'string' &&
+        category.categoryType.toLowerCase().startsWith('expens')
     );
   }
 
