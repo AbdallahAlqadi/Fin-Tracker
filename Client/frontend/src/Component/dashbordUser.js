@@ -108,43 +108,33 @@ const CategoryCard = styled(Box, {
 const DashboardUser = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false); // Dialog for adding budget item
+  const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
-  const [errorMessage, setErrorMessage] = useState(''); // Error for budget item dialog
+  const [errorMessage, setErrorMessage] = useState('');
   const [scale, setScale] = useState(1); // Title scale effect
   const [searchQuery, setSearchQuery] = useState('');
   const [addedItems, setAddedItems] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Submitting budget item
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState('all');
-
-  // --- State for Add User Card Dialog (Renamed from New Category) ---
-  const [userCardDialogOpen, setUserCardDialogOpen] = useState(false);
-  const [userCardName, setUserCardName] = useState('');
-  const [userCardType, setUserCardType] = useState('');
-  const [userCardImageFile, setUserCardImageFile] = useState(null); // Store the file object
-  const [userCardImagePreview, setUserCardImagePreview] = useState(null); // Store the preview URL
-  const [userCardErrorMessage, setUserCardErrorMessage] = useState('');
-  const [isUserCardSubmitting, setIsUserCardSubmitting] = useState(false);
-  // --- End State for Add User Card Dialog ---
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryType, setNewCategoryType] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState(null);
+  const [newErrorMessage, setNewErrorMessage] = useState('');
+  const [isNewSubmitting, setIsNewSubmitting] = useState(false);
 
   const isSmallDevice = useMediaQuery('(max-width:600px)'); // Adjusted breakpoint for small device grid
   const isMediumDevice = useMediaQuery('(max-width:900px)'); // Breakpoint for potentially 3-4 cards
 
-  // --- Fetch Admin Categories (Remains the same) ---
   useEffect(() => {
-    const fetchAdminCategories = async () => {
-      setLoading(true);
+    const fetchCategories = async () => {
       try {
-        // Assuming this endpoint fetches categories added by admin
         const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
-        // TODO: Consider fetching user-specific cards here as well via /api/getCardUser
-        // and merging/displaying them appropriately.
-        // For now, just displaying admin categories.
-        setCategories(response.data.data || []); // Ensure it's an array
-        const initialVisibleItems = (response.data.data || []).reduce((acc, category) => {
+        setCategories(response.data.data);
+        const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
             acc[category.categoryType] = 12; // Or 10 if we want to show 2 full rows of 5
           }
@@ -152,25 +142,21 @@ const DashboardUser = () => {
         }, {});
         setVisibleItems(initialVisibleItems);
       } catch (error) {
-        console.error('Error fetching admin categories:', error);
-        setCategories([]); // Set to empty array on error
+        console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAdminCategories();
+    fetchCategories();
   }, []);
-  // --- End Fetch Admin Categories ---
 
-  // --- Handlers for Budget Item Dialog (Remain the same) ---
   const handleClickOpen = (category) => {
     if (addedItems.includes(category._id)) return;
     setSelectedCategory(category);
     setOpen(true);
     setErrorMessage('');
     setSelectedDate('');
-    setValue(''); // Reset value on open
   };
 
   const handleClose = () => {
@@ -194,7 +180,7 @@ const DashboardUser = () => {
     }
 
     const currentCategory = selectedCategory;
-    handleClose(); // Close dialog immediately
+    handleClose();
 
     setIsSubmitting(true);
     const token = sessionStorage.getItem('jwt');
@@ -215,128 +201,27 @@ const DashboardUser = () => {
         }
       );
 
-      console.log('Budget Item Response:', response.data);
-      setAddedItems((prev) => [...prev, currentCategory._id]); // Mark as added
-      // Optionally show a success message
+      console.log('Response:', response.data);
+      setAddedItems((prev) => [...prev, currentCategory._id]);
     } catch (error) {
-      // Handle specific error for already added item
-      if (error.response && error.response.status === 400 && error.response.data?.error?.includes('already added')) {
-         console.error(error.response.data.error || 'You have already added this item on this date.');
-         setAddedItems((prev) => [...prev, currentCategory._id]); // Still mark as added if server says so
-         // Optionally show a specific message to the user
+      if (error.response && error.response.status === 400) {
+        console.error(error.response.data.error || 'You have already added this item on this date.');
+        setAddedItems((prev) => [...prev, currentCategory._id]);
       } else {
-        console.error('Error submitting budget item:', error);
-        // Optionally show a generic error message to the user
+        console.error('Error submitting value:', error);
       }
     } finally {
       setIsSubmitting(false);
     }
   };
-  // --- End Handlers for Budget Item Dialog ---
-
-  // --- Handlers for Add User Card Dialog (Modified/New) ---
-  const handleUserCardDialogOpen = () => {
-    setUserCardDialogOpen(true);
-    setUserCardErrorMessage(''); // Clear previous errors
-  };
-
-  const handleUserCardDialogClose = () => {
-    setUserCardDialogOpen(false);
-    setUserCardName('');
-    setUserCardType('');
-    setUserCardImageFile(null);
-    setUserCardImagePreview(null);
-    setUserCardErrorMessage('');
-  };
-
-  const handleUserCardImageChange = (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (file) {
-      setUserCardImageFile(file);
-      // Create a preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserCardImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Helper function to convert file to Base64
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
-
-  const handleUserCardSubmit = async () => {
-    // Validation
-    if (!userCardName || !userCardType || !userCardImageFile) {
-      setUserCardErrorMessage('Please fill in name, type, and select an image.');
-      return;
-    }
-
-    setIsUserCardSubmitting(true);
-    setUserCardErrorMessage(''); // Clear previous errors
-    const token = sessionStorage.getItem('jwt');
-
-    try {
-      // Convert image to Base64
-      const imageBase64 = await toBase64(userCardImageFile);
-
-      // Prepare JSON payload
-      const payload = {
-        categoryName: userCardName,
-        categoryType: userCardType,
-        categoryImage: imageBase64, // Send Base64 string
-      };
-
-      // Make API call to the correct endpoint for adding user cards
-      const response = await axios.post(
-        'http://127.0.0.1:5004/api/addCardUser', // Use the user card endpoint
-        payload,
-        {
-          headers: {
-            Auth: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      console.log('Add User Card Response:', response.data);
-      // TODO: Decide how to update the UI. Options:
-      // 1. Re-fetch all categories/cards.
-      // 2. Add the response.data.addedCard to the local state (if structure matches).
-      // 3. Simply close the dialog (current implementation).
-      handleUserCardDialogClose();
-      // Optionally show a success message
-
-    } catch (error) {
-      console.error('Error adding user card:', error);
-      // Handle specific error for duplicate category name for this user
-      if (error.response && error.response.status === 400 && error.response.data?.error?.includes('موجودة بالفعل')) {
-          setUserCardErrorMessage('هذه الفئة موجودة بالفعل لهذا المستخدم.');
-      } else if (error.response && error.response.data?.error) {
-          setUserCardErrorMessage(`Error: ${error.response.data.error}`);
-      } else {
-          setUserCardErrorMessage('An error occurred while adding the card. Please try again.');
-      }
-    } finally {
-      setIsUserCardSubmitting(false);
-    }
-  };
-  // --- End Handlers for Add User Card Dialog ---
-
 
   const handleLoadMore = (type) => {
     setVisibleItems((prev) => ({
       ...prev,
-      [type]: (prev[type] || 0) + 10, // Load 10 more (2 rows of 5)
+      [type]: prev[type] + 10, // Load 10 more (2 rows of 5)
     }));
   };
 
-  // Assuming categoryOptions are only for admin categories for now
   const categoryOptions = categories.map((cat) => cat.categoryName);
 
   if (loading) {
@@ -350,7 +235,6 @@ const DashboardUser = () => {
     );
   }
 
-  // Filtering logic remains the same (operates on fetched 'categories' state)
   let filteredCategories = categories.filter((category) =>
     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -366,16 +250,72 @@ const DashboardUser = () => {
   }
 
   const groupedCategories = filteredCategories.reduce((acc, category) => {
-    const typeKey = category.categoryType || 'Uncategorized'; // Handle potential missing type
-    if (!acc[typeKey]) {
-      acc[typeKey] = [];
+    if (!acc[category.categoryType]) {
+      acc[category.categoryType] = [];
     }
-    acc[typeKey].push(category);
+    acc[category.categoryType].push(category);
     return acc;
   }, {});
 
   const getCategoryIcon = (type) =>
     type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
+
+  const handleNewDialogOpen = () => {
+    setNewDialogOpen(true);
+    setNewErrorMessage('');
+  };
+
+  const handleNewDialogClose = () => {
+    setNewDialogOpen(false);
+    setNewCategoryName('');
+    setNewCategoryType('');
+    setNewCategoryImage(null);
+    setNewErrorMessage('');
+  };
+
+  const handleImageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setNewCategoryImage(event.target.files[0]);
+    }
+  };
+
+  const handleNewCategorySubmit = async () => {
+    if (!newCategoryName || !newCategoryType) {
+      setNewErrorMessage('Please fill in all required fields.');
+      return;
+    }
+
+    setIsNewSubmitting(true);
+    const token = sessionStorage.getItem('jwt');
+
+    const formData = new FormData();
+    formData.append('categoryName', newCategoryName);
+    formData.append('categoryType', newCategoryType);
+    if (newCategoryImage) {
+      formData.append('image', newCategoryImage);
+    }
+
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:5004/api/addCategory',
+        formData,
+        {
+          headers: {
+            Auth: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log('New Category Response:', response.data);
+      setCategories((prev) => [...prev, response.data.data]);
+      handleNewDialogClose();
+    } catch (error) {
+      console.error('Error adding new category:', error);
+      setNewErrorMessage('An error occurred while adding the category.');
+    } finally {
+      setIsNewSubmitting(false);
+    }
+  };
 
   return (
     <Container
@@ -389,7 +329,6 @@ const DashboardUser = () => {
         color: originalThemeColors.textPrimary,
       }}
     >
-      {/* Header and Search (Remain the same) */}
       <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
         <Typography
           variant="h2"
@@ -417,7 +356,7 @@ const DashboardUser = () => {
 
       <Autocomplete
         freeSolo
-        options={categoryOptions} // Still using admin categories for search suggestions
+        options={categoryOptions}
         onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
         renderInput={(params) => (
           <TextField
@@ -476,7 +415,6 @@ const DashboardUser = () => {
         )}
       />
 
-      {/* Filter Buttons (Remain the same) */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 } }}>
         <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden', boxShadow: `0 2px 8px ${alpha(originalThemeColors.primaryAccent, 0.15)}` }}>
           {[
@@ -501,12 +439,9 @@ const DashboardUser = () => {
                 },
                 px: { xs: 2, sm: 3 },
                 py: 1.5,
-                fontSize: { xs: '0.85rem', sm: '1rem' }, // Adjusted font size slightly
-                // Ensure consistent button height
-                borderTopWidth: 1,
-                borderBottomWidth: 1,
-                borderLeftWidth: index === 0 ? 1 : 0, // Only first button has left border
-                borderRightWidth: 1,
+                fontSize: { xs: '0.8rem', sm: '1rem' },
+                ...(index === 0 && { borderRadius: '20px 0 0 20px' }),
+                ...(index === 2 && { borderRadius: '0 20px 20px 0' }),
               }}
             >
               {typeOption.label}
@@ -515,10 +450,9 @@ const DashboardUser = () => {
         </ButtonGroup>
       </Box>
 
-      {/* Display Categories (Logic remains the same, displays 'categories' state) */}
-      {Object.keys(groupedCategories).length === 0 && !loading ? (
+      {Object.keys(groupedCategories).length === 0 ? (
         <Typography variant="h6" align="center" sx={{ color: originalThemeColors.textSecondary, mt: 4, fontStyle: 'italic' }}>
-          No items found matching your criteria.
+          No items found.
         </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
@@ -543,21 +477,22 @@ const DashboardUser = () => {
             <Box
               sx={{
                 display: 'grid',
+                // Updated gridTemplateColumns for 5 cards per row on larger screens
                 gridTemplateColumns: {
-                  xs: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  sm: 'repeat(auto-fit, minmax(170px, 1fr))',
-                  md: 'repeat(5, 1fr)',
+                  xs: 'repeat(auto-fit, minmax(150px, 1fr))', // Keep responsive for very small screens (1-2 cards)
+                  sm: 'repeat(auto-fit, minmax(170px, 1fr))', // Responsive for small screens (2-3 cards)
+                  md: 'repeat(5, 1fr)', // 5 cards for medium screens and up
                 },
-                gap: { xs: 2, sm: 2.5, md: 3 },
+                gap: { xs: 2, sm: 2.5, md: 3 }, // Adjusted gaps for 5 columns
                 justifyContent: 'center',
               }}
             >
               {groupedCategories[type]
-                .slice(0, visibleItems[type] || 12) // Use default if not set
+                .slice(0, visibleItems[type])
                 .map((category) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <Tooltip key={category._id} title={isAdded ? 'Budget Added' : `Add Budget for ${category.categoryName}`}>
+                    <Tooltip key={category._id} title={isAdded ? 'Added' : `Add to ${category.categoryName}`}>
                       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <CategoryCard
                           type={category.categoryType}
@@ -578,22 +513,22 @@ const DashboardUser = () => {
                             opacity: isAdded ? 0.6 : 1,
                             filter: isAdded ? 'grayscale(50%)' : 'none',
                             pointerEvents: isAdded ? 'none' : 'auto',
-                            minWidth: 0,
+                            // Ensure cards can shrink if needed to fit 5 across, or adjust CategoryCard width
+                            minWidth: 0, 
                           }}
                           aria-disabled={isAdded}
                         >
                           {category.image && (
                             <Box
                               component="img"
-                              // Handle both Base64 and relative URLs from backend
                               src={
-                                category.image.startsWith('data:') || category.image.startsWith('http')
+                                category.image.startsWith('data:')
                                   ? category.image
-                                  : `http://127.0.0.1:5004/${category.image}` // Assuming relative paths need prefix
+                                  : `http://127.0.0.1:5004/${category.image}`
                               }
                               alt={category.categoryName}
                               sx={{
-                                width: { xs: 60, sm: 70, md: 80 },
+                                width: { xs: 60, sm: 70, md: 80 }, // Adjusted image size for card changes
                                 height: { xs: 60, sm: 70, md: 80 },
                                 borderRadius: '50%',
                                 mb: 1.5,
@@ -616,7 +551,7 @@ const DashboardUser = () => {
                   );
                 })}
             </Box>
-            {groupedCategories[type].length > (visibleItems[type] || 12) && (
+            {groupedCategories[type].length > visibleItems[type] && (
               <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
                 <Button
                   onClick={() => handleLoadMore(type)}
@@ -644,7 +579,7 @@ const DashboardUser = () => {
         ))
       )}
 
-      {/* Dialog for Adding Budget Item (Remains the same) */}
+      {/* Dialog for Adding Budget Item */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -687,7 +622,7 @@ const DashboardUser = () => {
             <Box
               component="img"
               src={
-                selectedCategory.image.startsWith('data:') || selectedCategory.image.startsWith('http')
+                selectedCategory.image.startsWith('data:')
                   ? selectedCategory.image
                   : `http://127.0.0.1:5004/${selectedCategory.image}`
               }
@@ -815,15 +750,15 @@ const DashboardUser = () => {
               }
             }}
           >
-            {isSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit Budget'}
+            {isSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* --- Dialog for Adding User Card (Modified from New Category) --- */}
+      {/* Dialog for Adding New Category */}
       <Dialog
-        open={userCardDialogOpen} // Use renamed state
-        onClose={handleUserCardDialogClose} // Use renamed handler
+        open={newDialogOpen}
+        onClose={handleNewDialogClose}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -850,16 +785,16 @@ const DashboardUser = () => {
             justifyContent: 'space-between',
           }}
         >
-          Add Your Custom Card
-          <IconButton onClick={handleUserCardDialogClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
+          Add New Category
+          <IconButton onClick={handleNewDialogClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: originalThemeColors.dialogSurface }}>
-          {userCardImagePreview && ( // Use preview state
+          {newCategoryImage && (
             <Box sx={{ textAlign: 'center', mb: 2 }}>
               <img
-                src={userCardImagePreview} // Show preview
+                src={URL.createObjectURL(newCategoryImage)}
                 alt="Preview"
                 style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}` }}
               />
@@ -868,11 +803,11 @@ const DashboardUser = () => {
           <TextField
             autoFocus
             margin="dense"
-            label="Card Name"
+            label="Category Name"
             fullWidth
             variant="outlined"
-            value={userCardName} // Use renamed state
-            onChange={(e) => setUserCardName(e.target.value)} // Use renamed handler
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
@@ -887,65 +822,70 @@ const DashboardUser = () => {
               '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
             }}
           />
-          {/* Replace TextField with Select for Card Type */}
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2.5 }}>
-            <InputLabel id="user-card-type-label" sx={{ color: originalThemeColors.textSecondary, '&.Mui-focused': { color: originalThemeColors.primaryAccent } }}>Card Type</InputLabel>
-            <Select
-              labelId="user-card-type-label"
-              value={userCardType} // Use renamed state
-              onChange={(e) => setUserCardType(e.target.value)} // Use renamed handler
-              label="Card Type"
-              sx={{
+          <FormControl fullWidth sx={{
+              mb: 2.5,
+              '& .MuiOutlinedInput-root': {
                 backgroundColor: originalThemeColors.inputBackground,
                 borderRadius: '8px',
                 color: originalThemeColors.textPrimary,
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: originalThemeColors.borderColor },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
-                '& .MuiSelect-icon': { color: originalThemeColors.textSecondary },
+                '& fieldset': { borderColor: originalThemeColors.borderColor },
+                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
+                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+              },
+              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+              '& .MuiSelect-icon': { color: originalThemeColors.textSecondary },
+            }}>
+            <InputLabel id="category-type-label">Category Type</InputLabel>
+            <Select
+              labelId="category-type-label"
+              value={newCategoryType}
+              label="Category Type"
+              onChange={(e) => setNewCategoryType(e.target.value)}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    backgroundColor: originalThemeColors.surface,
+                    color: originalThemeColors.textPrimary,
+                    '& .MuiMenuItem-root:hover': {
+                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.08),
+                    },
+                    '& .MuiMenuItem-root.Mui-selected': {
+                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.15),
+                      color: originalThemeColors.primaryAccent,
+                    }
+                  }
+                }
               }}
             >
-              {/* Provide relevant type options - adjust as needed */}
-              <MenuItem value="Income">Income</MenuItem>
-              <MenuItem value="Expense">Expense</MenuItem>
-              {/* Add other types if necessary */}
+              <MenuItem value="expenses">Expenses</MenuItem>
+              <MenuItem value="income">Income</MenuItem>
             </Select>
           </FormControl>
-
-          <Button
-            variant="outlined"
-            component="label"
-            fullWidth
-            sx={{
-              mb: 2.5,
+          <Button variant="outlined" component="label" fullWidth sx={{
+            mb: 2.5,
+            borderColor: originalThemeColors.primaryAccent,
+            color: originalThemeColors.primaryAccent,
+            py: 1.2,
+            borderRadius: '8px',
+            fontWeight: 500,
+            '&:hover': {
+              background: alpha(originalThemeColors.primaryAccent, 0.08),
               borderColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.primaryAccent,
-              py: 1.2,
-              borderRadius: '8px',
-              '&:hover': {
-                borderColor: originalThemeColors.primaryAccent,
-                background: alpha(originalThemeColors.primaryAccent, 0.08),
-              }
-            }}
-          >
-            {userCardImageFile ? 'Change Image' : 'Upload Image'}
-            <input
-              type="file"
-              hidden
-              accept="image/*" // Accept only image files
-              onChange={handleUserCardImageChange} // Use renamed handler
-            />
+            }
+          }}>
+            {newCategoryImage ? 'Change Image' : 'Choose Image'}
+            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
-
-          {userCardErrorMessage && (
+          {newErrorMessage && (
             <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
-              {userCardErrorMessage} // Use renamed state
+              {newErrorMessage}
             </Typography>
           )}
         </DialogContent>
         <DialogActions
           sx={{
-            p: { xs: 2, sm: 2.5 },
+            p: { xs: 2, sm: 3 },
             justifyContent: 'center',
             gap: 2,
             backgroundColor: originalThemeColors.dialogSurface,
@@ -954,7 +894,7 @@ const DashboardUser = () => {
           }}
         >
           <Button
-            onClick={handleUserCardDialogClose} // Use renamed handler
+            onClick={handleNewDialogClose}
             variant="outlined"
             sx={{
               borderColor: originalThemeColors.primaryAccent,
@@ -973,9 +913,9 @@ const DashboardUser = () => {
             Cancel
           </Button>
           <Button
-            onClick={handleUserCardSubmit} // Use renamed handler
+            onClick={handleNewCategorySubmit}
             variant="contained"
-            disabled={isUserCardSubmitting} // Use renamed state
+            disabled={isNewSubmitting}
             sx={{
               backgroundColor: originalThemeColors.primaryAccent,
               color: originalThemeColors.buttonTextLight,
@@ -995,34 +935,33 @@ const DashboardUser = () => {
               }
             }}
           >
-            {isUserCardSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Add Card'} // Use renamed state
+            {isNewSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>
-      {/* --- End Dialog for Adding User Card --- */}
 
-      {/* Floating Action Button to open the Add User Card dialog */}
       <Fab
-        color="primary"
-        aria-label="add user card"
-        onClick={handleUserCardDialogOpen} // Use renamed handler
+        aria-label="add new category"
+        onClick={handleNewDialogOpen}
         sx={{
           position: 'fixed',
-          bottom: { xs: 16, sm: 32 },
-          right: { xs: 16, sm: 32 },
+          bottom: { xs: 20, sm: 32 },
+          right: { xs: 20, sm: 32 },
           backgroundColor: originalThemeColors.primaryAccent,
           color: originalThemeColors.buttonTextLight,
-          boxShadow: `0 6px 20px ${alpha(originalThemeColors.primaryAccent, 0.4)}`,
+          width: { xs: 56, sm: 64 },
+          height: { xs: 56, sm: 64 },
+          boxShadow: `0 8px 25px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
           '&:hover': {
-            backgroundColor: alpha(originalThemeColors.primaryAccent, 0.9),
-            transform: 'scale(1.05)',
+            backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+            transform: 'scale(1.1)',
+            boxShadow: `0 12px 35px ${alpha(originalThemeColors.primaryAccent, 0.4)}`,
           },
-          transition: 'transform 0.2s ease-in-out, background-color 0.3s ease',
         }}
       >
-        <AddIcon />
+        <AddIcon sx={{ fontSize: { xs: 28, sm: 32} }} />
       </Fab>
-
     </Container>
   );
 };

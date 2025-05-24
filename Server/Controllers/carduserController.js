@@ -1,90 +1,74 @@
-const CardUser = require('../models/carduser');
+const CardUserModel = require("../models/carduser");
+const path = require("path");
 
-/**
- * @desc    Get all cards added by the logged-in user
- * @route   GET /api/carduser/getCardUser (assuming a base route like /api/carduser)
- * @access  Private (requires JWT verification)
- */
-exports.getCardUser = async (req, res) => {
+// Controller function to create a new Card/Category
+exports.createCardUser = async (req, res) => {
     try {
-        // Find the document for the logged-in user (req.user should contain the userId)
-        // No need to populate 'carduser' as it's an array of subdocuments, not references.
-        const userCardsDocument = await CardUser.findOne({ userId: req.user });
+        const { categoryName, categoryType } = req.body;
 
-        if (!userCardsDocument) {
-            // If the user hasn't added any cards yet, return an empty array or appropriate message
-            return res.status(200).json({ carduser: [] }); 
+        // Basic validation
+        if (!categoryName || !categoryType) {
+            return res.status(400).json({ success: false, message: "Category name and type are required." });
         }
 
-        // Return the array of cards directly from the document
-        res.status(200).json({ carduser: userCardsDocument.carduser });
-
-    } catch (error) {
-        console.error('Error in getCardUser:', error);
-        res.status(500).json({ error: 'Failed to retrieve user cards.', details: error.message });
-    }
-};
-
-/**
- * @desc    Add a new card for the logged-in user
- * @route   POST /api/carduser/addCardUser (assuming a base route like /api/carduser)
- * @access  Private (requires JWT verification)
- */
-exports.addCardUser = async (req, res) => {
-    const { categoryName, categoryImage, categoryType } = req.body;
-    const userId = req.user; // Assuming req.user holds the ObjectId of the logged-in user
-
-    // Basic validation
-    if (!categoryName || !categoryImage || !categoryType) {
-        return res.status(400).json({ error: 'Missing required fields: categoryName, categoryImage, categoryType.' });
-    }
-
-    try {
-        // Find the user's card document
-        let userCardsDocument = await CardUser.findOne({ userId });
-
-        // If the document exists, check if the categoryName already exists in the carduser array
-        if (userCardsDocument) {
-            const existingCategory = userCardsDocument.carduser.find(
-                card => card.categoryName === categoryName
-            );
-            if (existingCategory) {
-                // Keep the original Arabic error message as requested
-                return res.status(400).json({ error: 'هذه الفئة موجودة بالفعل لهذا المستخدم.' });
-            }
+        // Check if category already exists (optional, based on unique constraint in model)
+        const existingCategory = await CardUserModel.findOne({ categoryName });
+        if (existingCategory) {
+            return res.status(400).json({ success: false, message: "Category with this name already exists." });
         }
 
-        // Prepare the new card object based on the sub-schema
-        const newCard = {
+        let imagePath = null;
+        // Handle potential image upload (assuming middleware like multer has processed the file)
+        if (req.file) {
+            // Construct the image path or URL to be saved
+            // Example: store relative path accessible by the server/frontend
+            // Adjust this based on your file storage strategy (e.g., uploads folder, cloud storage)
+            imagePath = `/uploads/${req.file.filename}`; // Example path
+        }
+
+        // Create a new card document
+        const newCard = new CardUserModel({
             categoryName,
-            categoryImage, // Expecting Base64 string or URL
-            categoryType
-        };
+            categoryType,
+            image: imagePath, // Save the path to the image
+        });
 
-        // Find the user's document and push the new card.
-        // Use upsert: true to create the document if it doesn't exist.
-        const updatedCardUserDoc = await CardUser.findOneAndUpdate(
-            { userId },
-            { $push: { carduser: newCard } },
-            { new: true, upsert: true, setDefaultsOnInsert: true } // setDefaultsOnInsert might be useful if sub-schema had defaults
-        );
+        // Save the document to the database
+        await newCard.save();
 
-        // Return success message and the newly added card (or the whole updated doc)
-        // Returning just the added card might be more efficient for the frontend
-        const addedCard = updatedCardUserDoc.carduser.find(card => card.categoryName === categoryName); // Find the specific card added
-
-        return res.status(201).json({ // 201 Created is more appropriate for successful addition
-            message: 'تمت الإضافة بنجاح.', // Keep original Arabic message
-            addedCard: addedCard // Send back the card that was just added
-            // data: updatedCardUserDoc // Alternatively send the whole updated document
+        // Send success response
+        res.status(201).json({
+            success: true,
+            message: "Card/Category created successfully.",
+            data: newCard,
         });
 
     } catch (error) {
-        console.error('Error in addCardUser:', error);
-        // Check for potential validation errors from Mongoose schema
-        if (error.name === 'ValidationError') {
-             return res.status(400).json({ error: 'Validation failed.', details: error.message });
+        console.error("Error creating card:", error);
+        // Handle potential errors (e.g., validation errors from Mongoose)
+        if (error.name === "ValidationError") {
+            return res.status(400).json({ success: false, message: error.message });
         }
-        return res.status(500).json({ error: 'Failed to add card.', details: error.message });
+        res.status(500).json({ success: false, message: "Server error while creating card." });
     }
 };
+
+// Add other controller functions as needed (e.g., getCards, updateCard, deleteCard)
+
+// Example: Get all cards
+exports.getAllCardUsers = async (req, res) => {
+    try {
+        const cards = await CardUserModel.find();
+        res.status(200).json({
+            success: true,
+            count: cards.length,
+            data: cards,
+        });
+    } catch (error) {
+        console.error("Error fetching cards:", error);
+        res.status(500).json({ success: false, message: "Server error while fetching cards." });
+    }
+};
+
+// Add more functions like getCardById, updateCardUser, deleteCardUser following a similar pattern
+

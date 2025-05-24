@@ -1,36 +1,42 @@
 const mongoose = require('mongoose');
 
-// Define the schema for an individual card added by a user
-const CardSchema = new mongoose.Schema({
+// Define the schema for the Card/Category
+const cardUserSchema = new mongoose.Schema({
     categoryName: {
         type: String,
         required: [true, 'Category name is required.'],
-        trim: true
-    },
-    categoryImage: {
-        type: String, // Assuming Base64 string or a URL
-        required: [true, 'Category image is required.']
+        trim: true,
+        unique: true // Assuming category names should be unique
     },
     categoryType: {
         type: String,
         required: [true, 'Category type is required.'],
+        enum: ['income', 'expenses'], // Restrict to specific types if needed, based on frontend logic
         trim: true
-    }
-}, { _id: false }); // Don't create a separate _id for subdocuments unless needed
-
-// Define the main schema for user-specific cards
-const CardUserSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'users', // Reference to the User model (ensure you have a 'users' model)
-        required: true,
-        unique: true // Each user should have only one CardUser document
     },
-    carduser: [CardSchema] // Array of cards added by this user
-}, {
-    timestamps: true // Automatically add createdAt and updatedAt fields
+    image: {
+        type: String, // Store the path or URL of the image
+        required: false // Image might be optional
+    },
+    // Add timestamps for tracking creation and updates
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-const CardUser = mongoose.model('carduser', CardUserSchema);
+// Middleware to update the 'updatedAt' field on save
+cardUserSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
+});
 
-module.exports = CardUser;
+// Create the model from the schema
+const CardUserModel = mongoose.model('CardUser', cardUserSchema);
+
+module.exports = CardUserModel;
+
