@@ -121,8 +121,8 @@ const AddRemoveButton = styled(IconButton)(({ theme }) => ({
 }));
 
 const DashboardUser = () => {
-  const [globalCategories, setGlobalCategories] = useState([]); // Renamed for clarity
-  const [userCategories, setUserCategories] = useState([]); // State for user-specific categories
+  const [globalCategories, setGlobalCategories] = useState([]); // Admin categories
+  const [userCategories, setUserCategories] = useState([]); // User-added categories
   const [userCardCategoryIds, setUserCardCategoryIds] = useState(new Set()); // IDs of *global* categories added to user's list
   const [loadingGlobal, setLoadingGlobal] = useState(true);
   const [loadingUserSpecific, setLoadingUserSpecific] = useState(true);
@@ -131,8 +131,8 @@ const DashboardUser = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [value, setValue] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [visibleGlobalItems, setVisibleGlobalItems] = useState({}); // Renamed
-  const [visibleUserItems, setVisibleUserItems] = useState({}); // Visibility for user items
+  const [visibleGlobalItems, setVisibleGlobalItems] = useState({});
+  const [visibleUserItems, setVisibleUserItems] = useState({});
   const [budgetErrorMessage, setBudgetErrorMessage] = useState('');
   const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,11 +142,11 @@ const DashboardUser = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  // State for the 'Add New User Category' dialog (Restored and repurposed)
+  // State for the 'Add New User Category' dialog
   const [newUserCategoryDialogOpen, setNewUserCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryType, setNewCategoryType] = useState(''); // Default to empty
-  const [newCategoryImage, setNewCategoryImage] = useState(null);
+  const [newCategoryType, setNewCategoryType] = useState(''); // 'revenues' or 'expenses'
+  const [newCategoryImageBase64, setNewCategoryImageBase64] = useState(null); // Store Base64 string
   const [newUserCategoryErrorMessage, setNewUserCategoryErrorMessage] = useState('');
   const [isSubmittingNewUserCategory, setIsSubmittingNewUserCategory] = useState(false);
 
@@ -155,7 +155,7 @@ const DashboardUser = () => {
 
   const getToken = useCallback(() => sessionStorage.getItem('jwt'), []);
 
-  // Fetch General (Global) Categories
+  // Fetch General (Global/Admin) Categories
   useEffect(() => {
     const fetchGlobalCategories = async () => {
       setLoadingGlobal(true);
@@ -327,7 +327,7 @@ const DashboardUser = () => {
     }
 
     const currentCategory = selectedCategory;
-    // The backend now handles checking if the ID is global or user-specific
+    // Backend handles checking if the ID is global or user-specific
     const submissionData = {
         CategoriesId: currentCategory._id, // Send the _id of the selected category
         valueitem: parsedValue,
@@ -370,13 +370,13 @@ const DashboardUser = () => {
     }));
   };
 
-  // --- Add New USER Category Dialog Logic (Restored and repurposed) ---
+  // --- Add New USER Category Dialog Logic (Modified for Base64) ---
   const handleNewUserCategoryDialogOpen = () => {
     setNewUserCategoryDialogOpen(true);
     setNewUserCategoryErrorMessage('');
     setNewCategoryName('');
     setNewCategoryType('');
-    setNewCategoryImage(null);
+    setNewCategoryImageBase64(null); // Reset Base64 state
     // Reset file input visually if needed
     const fileInput = document.getElementById('new-category-image-input');
     if (fileInput) fileInput.value = '';
@@ -387,16 +387,30 @@ const DashboardUser = () => {
     // Clear state on close
     setNewCategoryName('');
     setNewCategoryType('');
-    setNewCategoryImage(null);
+    setNewCategoryImageBase64(null);
     setNewUserCategoryErrorMessage('');
   };
 
+  // Modified to convert image to Base64
   const handleImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
-      setNewCategoryImage(event.target.files[0]);
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewCategoryImageBase64(reader.result); // Store the Base64 string
+      };
+      reader.onerror = (error) => {
+        console.error('Error reading file:', error);
+        setNewUserCategoryErrorMessage('Failed to read image file.');
+        setNewCategoryImageBase64(null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setNewCategoryImageBase64(null);
     }
   };
 
+  // Modified to send JSON with Base64 image
   const handleNewUserCategorySubmit = async () => {
     if (!newCategoryName || !newCategoryType) {
       setNewUserCategoryErrorMessage('Please fill in category name and type.');
@@ -405,28 +419,30 @@ const DashboardUser = () => {
     setIsSubmittingNewUserCategory(true);
     setNewUserCategoryErrorMessage(''); // Clear previous errors
     const token = getToken();
-    const formData = new FormData();
-    formData.append('categoryName', newCategoryName);
-    formData.append('categoryType', newCategoryType); // Send 'revenues' or 'expenses'
-    if (newCategoryImage) {
-      formData.append('image', newCategoryImage);
-    }
+
+    // Prepare JSON payload
+    const payload = {
+      categoryName: newCategoryName,
+      categoryType: newCategoryType, // 'revenues' or 'expenses'
+      image: newCategoryImageBase64, // Send Base64 string or null
+    };
 
     try {
-      // Call the NEW backend endpoint for adding user-specific categories
+      // Call the backend endpoint for adding user-specific categories with JSON
       const response = await axios.post(
         'https://fin-tracker-ncbx.onrender.com/api/addUserCategory',
-        formData,
+        payload, // Send JSON data
         {
           headers: {
             Auth: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json', // Set content type to JSON
           },
         }
       );
       console.log('New User Category Response:', response.data);
       const newCat = response.data.data;
       // Add the new category to the userCategories state
+      // Ensure the new category object includes the 'image' field (which should be the base64 string if provided)
       setUserCategories((prev) => [...prev, newCat]);
       showSnackbar(`Your category '${newCat.name}' created successfully.`, 'success');
       handleNewUserCategoryDialogClose();
@@ -720,27 +736,36 @@ const DashboardUser = () => {
         freeSolo
         options={allCategoryNames} // Search across all names
         inputValue={searchQuery}
-        onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
+        onInputChange={(event, newInputValue) => {
+          setSearchQuery(newInputValue);
+        }}
         renderInput={(params) => (
           <TextField
             {...params}
-            placeholder="Search categories..."
+            label="Search Categories"
             variant="outlined"
+            fullWidth
             sx={{
-              mb: { xs: 3, sm: 5 },
-              backgroundColor: originalThemeColors.inputBackground,
-              borderRadius: '30px',
-              boxShadow: `0 4px 15px ${alpha(originalThemeColors.primaryAccent, 0.1)}`,
+              mb: { xs: 3, sm: 4 },
               '& .MuiOutlinedInput-root': {
-                borderRadius: '30px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': { borderColor: alpha(originalThemeColors.primaryAccent, 0.5), borderWidth: '1px' },
-                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 3px ${alpha(originalThemeColors.primaryAccent, 0.3)}` },
+                borderRadius: '12px',
+                backgroundColor: originalThemeColors.inputBackground,
+                '& fieldset': {
+                  borderColor: originalThemeColors.borderColor,
+                },
+                '&:hover fieldset': {
+                  borderColor: originalThemeColors.primaryAccent,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: originalThemeColors.primaryAccent,
+                  borderWidth: '2px',
+                },
               },
-              '& .MuiInputBase-input': {
-                color: originalThemeColors.textPrimary,
-                '&::placeholder': { color: originalThemeColors.textSecondary, opacity: 1 },
+              '& .MuiInputLabel-root': {
+                color: originalThemeColors.textSecondary,
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: originalThemeColors.primaryAccent,
               },
             }}
             InputProps={{
@@ -751,16 +776,18 @@ const DashboardUser = () => {
                 </InputAdornment>
               ),
               endAdornment: (
-                <>
-                  {params.InputProps.endAdornment}
+                <InputAdornment position="end">
                   {searchQuery && (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setSearchQuery('')} edge="end" sx={{ color: originalThemeColors.textSecondary, '&:hover': { color: originalThemeColors.primaryAccent } }}>
-                        <ClearIcon />
-                      </IconButton>
-                    </InputAdornment>
+                    <IconButton
+                      aria-label="clear search"
+                      onClick={() => setSearchQuery('')}
+                      edge="end"
+                      size="small"
+                    >
+                      <ClearIcon sx={{ color: originalThemeColors.textSecondary }} />
+                    </IconButton>
                   )}
-                </>
+                </InputAdornment>
               ),
             }}
           />
@@ -768,208 +795,209 @@ const DashboardUser = () => {
       />
 
       {/* Filter Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 } }}>
-        <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden', boxShadow: `0 2px 8px ${alpha(originalThemeColors.primaryAccent, 0.15)}` }}>
-          {[
-            { label: 'All', value: 'all', icon: <AccountBalanceWalletIcon /> },
-            { label: 'Revenues', value: 'revenues', icon: <AddCircleIcon /> },
-            { label: 'Expenses', value: 'expenses', icon: <RemoveCircleIcon /> },
-          ].map((typeOption) => (
-            <Button
-              key={typeOption.value}
-              onClick={() => setFilterType(typeOption.value)}
-              variant={filterType === typeOption.value ? 'contained' : 'outlined'}
-              startIcon={typeOption.icon}
-              sx={{
-                textTransform: 'none',
-                fontWeight: filterType === typeOption.value ? 'bold' : 'normal',
-                borderColor: originalThemeColors.primaryAccent,
-                color: filterType === typeOption.value ? originalThemeColors.buttonTextLight : originalThemeColors.buttonTextDark,
-                backgroundColor: filterType === typeOption.value ? originalThemeColors.primaryAccent : 'transparent',
-                '&:hover': {
-                  backgroundColor: filterType === typeOption.value ? alpha(originalThemeColors.primaryAccent, 0.85) : alpha(originalThemeColors.primaryAccent, 0.08),
-                  borderColor: originalThemeColors.primaryAccent,
-                },
-                px: { xs: 2, sm: 3 },
-                py: 1.5,
-                fontSize: { xs: '0.85rem', sm: '1rem' },
-                borderRight: '1px solid ' + alpha(originalThemeColors.primaryAccent, 0.3),
-                '&:last-child': { borderRight: 'none' },
-              }}
-            >
-              {typeOption.label}
-            </Button>
-          ))}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 }, flexWrap: 'wrap', gap: 1.5 }}>
+        <ButtonGroup variant="outlined" aria-label="filter category type">
+          <Button
+            onClick={() => setFilterType('all')}
+            variant={filterType === 'all' ? 'contained' : 'outlined'}
+            sx={{ borderRadius: '8px 0 0 8px', borderColor: originalThemeColors.primaryAccent, ...(filterType === 'all' && { backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.white }) }}
+          >
+            All
+          </Button>
+          <Button
+            onClick={() => setFilterType('revenues')}
+            variant={filterType === 'revenues' ? 'contained' : 'outlined'}
+            sx={{ borderColor: originalThemeColors.primaryAccent, ...(filterType === 'revenues' && { backgroundColor: originalThemeColors.income, color: originalThemeColors.white }) }}
+          >
+            Revenues
+          </Button>
+          <Button
+            onClick={() => setFilterType('expenses')}
+            variant={filterType === 'expenses' ? 'contained' : 'outlined'}
+            sx={{ borderRadius: '0 8px 8px 0', borderColor: originalThemeColors.primaryAccent, ...(filterType === 'expenses' && { backgroundColor: originalThemeColors.expense, color: originalThemeColors.white }) }}
+          >
+            Expenses
+          </Button>
         </ButtonGroup>
       </Box>
 
       {/* Render User-Specific Categories Section */}
       {renderCategorySection(
-          "My Personal Categories",
-          groupedUserCategories,
-          visibleUserItems,
-          handleLoadMoreUser,
-          true // Mark as user-specific section
+        'Your Personal Categories',
+        groupedUserCategories,
+        visibleUserItems,
+        handleLoadMoreUser,
+        true // Mark as user-specific section
       )}
 
       {/* Render Global Categories Section */}
       {renderCategorySection(
-          "Global Categories",
-          groupedGlobalCategories,
-          visibleGlobalItems,
-          handleLoadMoreGlobal,
-          false // Mark as global section
+        'Global Categories',
+        groupedGlobalCategories,
+        visibleGlobalItems,
+        handleLoadMoreGlobal,
+        false // Mark as not user-specific
       )}
 
-      {/* Budget Dialog (remains mostly the same) */}
+      {/* Floating Action Button to Add User Category */}
+      <Tooltip title="Add Your Own Category">
+        <Fab
+          color="secondary" // Use secondary color for FAB
+          aria-label="add user category"
+          onClick={handleNewUserCategoryDialogOpen}
+          sx={{
+            position: 'fixed',
+            bottom: { xs: 20, sm: 30 },
+            right: { xs: 20, sm: 30 },
+            backgroundColor: '#9C27B0', // Match user-specific color
+            color: originalThemeColors.white,
+            animation: `${floatAnimation} 3s ease-in-out infinite`,
+            '&:hover': {
+              backgroundColor: alpha('#9C27B0', 0.85),
+            }
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
+
+      {/* Budget Item Dialog */}
       <Dialog
         open={openBudgetDialog}
         onClose={handleCloseBudgetDialog}
-        fullWidth
-        maxWidth="xs"
-        PaperProps={{ sx: { borderRadius: '16px', boxShadow: `0 10px 30px ${alpha(originalThemeColors.primaryAccent, 0.2)}`, background: originalThemeColors.surface, color: originalThemeColors.textPrimary } }}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            backgroundColor: originalThemeColors.dialogSurface,
+            boxShadow: `0 8px 32px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
+            width: { xs: '90%', sm: '450px' },
+            maxWidth: 'none',
+          }
+        }}
       >
-        <DialogTitle
-          sx={{
-            background: `linear-gradient(135deg, ${originalThemeColors.primaryAccent}, ${alpha(originalThemeColors.primaryAccent, 0.8)})`,
-            color: originalThemeColors.buttonTextLight,
-            p: { xs: 2, sm: 2.5 },
-            textAlign: 'center',
-            fontSize: { xs: '1.5rem', sm: '1.75rem' },
-            fontWeight: 'bold',
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {selectedCategory && getCategoryIcon(selectedCategory.type || selectedCategory.categoryType)} Add Budget for {selectedCategory?.name || selectedCategory?.categoryName}
-          </Box>
-          <IconButton onClick={handleCloseBudgetDialog} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
+        <DialogTitle sx={{ backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.white, borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+            Add Budget for {selectedCategory?.name || selectedCategory?.categoryName}
+          </Typography>
+          <IconButton onClick={handleCloseBudgetDialog} size="small" sx={{ color: originalThemeColors.white }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: originalThemeColors.dialogSurface }}>
-          {selectedCategory?.image && (
-            <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Box
-              component="img"
-              src={
-                selectedCategory.image.startsWith('data:') || selectedCategory.image.startsWith('http')
-                  ? selectedCategory.image
-                  : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
-              }
-              alt={selectedCategory.name || selectedCategory.categoryName}
-              sx={{ width: 100, height: 100, borderRadius: '50%', mb: 2, objectFit: 'cover', border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}`, boxShadow: `0 0 10px ${alpha(originalThemeColors.primaryAccent, 0.3)}` }}
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-            </Box>
+        <DialogContent sx={{ pt: 3, pb: 2, px: { xs: 2, sm: 3 } }}>
+          {budgetErrorMessage && (
+            <Alert severity="error" sx={{ mb: 2 }}>{budgetErrorMessage}</Alert>
           )}
-          <Typography variant="subtitle1" sx={{ fontSize: {xs: '1rem', sm: '1.1rem'}, color: originalThemeColors.primaryAccent, mb: 2, fontWeight: 500, textAlign: 'center' }}>
-            Type: {getDisplayCategoryType(selectedCategory?.type || selectedCategory?.categoryType)}
-          </Typography>
           <TextField
             autoFocus
             margin="dense"
+            id="value"
             label="Value"
             type="number"
-            inputProps={{ step: '0.01', min: '0' }}
             fullWidth
             variant="outlined"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            error={!!budgetErrorMessage}
-            sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { backgroundColor: originalThemeColors.inputBackground, borderRadius: '8px', color: originalThemeColors.textPrimary, '& fieldset': { borderColor: originalThemeColors.borderColor }, '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent }, '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` } }, '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary }, '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent } }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><AccountBalanceWalletIcon /></InputAdornment>,
+            }}
+            sx={{ mb: 2.5 }}
           />
           <TextField
             margin="dense"
+            id="date"
             label="Date"
             type="date"
             fullWidth
             variant="outlined"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            error={!!budgetErrorMessage}
-            sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { backgroundColor: originalThemeColors.inputBackground, borderRadius: '8px', color: originalThemeColors.textPrimary, '& fieldset': { borderColor: originalThemeColors.borderColor }, '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent }, '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` }, '& input[type="date"]::-webkit-calendar-picker-indicator': { filter: 'invert(0.3) sepia(1) saturate(5) hue-rotate(190deg)', cursor: 'pointer' } }, '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary }, '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent } }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{ mb: 1 }}
           />
-          {budgetErrorMessage && (
-            <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
-              {budgetErrorMessage}
-            </Typography>
-          )}
         </DialogContent>
-        <DialogActions sx={{ p: { xs: 2, sm: 2.5 }, justifyContent: 'center', gap: 2, backgroundColor: originalThemeColors.dialogSurface, borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
-          <Button onClick={handleCloseBudgetDialog} variant="outlined" sx={{ borderColor: originalThemeColors.primaryAccent, color: originalThemeColors.primaryAccent, px: { xs: 3, sm: 4 }, py: 1.2, borderRadius: '8px', fontSize: { xs: '0.9rem', sm: '1rem' }, fontWeight: 500, '&:hover': { borderColor: originalThemeColors.primaryAccent, background: alpha(originalThemeColors.primaryAccent, 0.08) } }}>
+        <DialogActions sx={{ p: { xs: 2, sm: 3 }, borderTop: `1px solid ${originalThemeColors.borderColor}` }}>
+          <Button onClick={handleCloseBudgetDialog} sx={{ color: originalThemeColors.textSecondary, borderRadius: '8px' }}>
             Cancel
           </Button>
-          <Button onClick={handleSubmitBudgetItem} variant="contained" disabled={isSubmittingBudget} sx={{ backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.buttonTextLight, px: { xs: 3, sm: 4 }, py: 1.2, borderRadius: '8px', fontSize: { xs: '0.9rem', sm: '1rem' }, fontWeight: 600, transition: 'background-color 0.3s ease, transform 0.2s ease', '&:hover': { backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85), transform: 'scale(1.02)' }, '&.Mui-disabled': { background: alpha(originalThemeColors.textSecondary, 0.5), color: alpha(originalThemeColors.white, 0.7) } }}>
-            {isSubmittingBudget ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit Budget Item'}
+          <Button
+            onClick={handleSubmitBudgetItem}
+            variant="contained"
+            disabled={isSubmittingBudget}
+            startIcon={isSubmittingBudget ? <CircularProgress size={20} color="inherit" /> : <CheckCircleOutlineIcon />}
+            sx={{
+              backgroundColor: originalThemeColors.primaryAccent,
+              color: originalThemeColors.white,
+              borderRadius: '8px',
+              px: 3,
+              '&:hover': {
+                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+              }
+            }}
+          >
+            {isSubmittingBudget ? 'Adding...' : 'Add Budget Item'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Add New USER Category Dialog (Restored and repurposed) */}
+      {/* Add New User Category Dialog (Modified) */}
       <Dialog
         open={newUserCategoryDialogOpen}
         onClose={handleNewUserCategoryDialogClose}
-        fullWidth
-        maxWidth="sm"
-        PaperProps={{ sx: { borderRadius: '16px', boxShadow: `0 10px 30px ${alpha(originalThemeColors.primaryAccent, 0.2)}`, background: originalThemeColors.surface, color: originalThemeColors.textPrimary } }}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            backgroundColor: originalThemeColors.dialogSurface,
+            boxShadow: `0 8px 32px ${alpha('#9C27B0', 0.2)}`,
+            width: { xs: '90%', sm: '500px' },
+            maxWidth: 'none',
+          }
+        }}
       >
-        <DialogTitle
-           sx={{
-            background: `linear-gradient(135deg, ${originalThemeColors.primaryAccent}, ${alpha(originalThemeColors.primaryAccent, 0.8)})`,
-            color: originalThemeColors.buttonTextLight,
-            p: { xs: 2, sm: 2.5 },
-            textAlign: 'center',
-            fontSize: { xs: '1.5rem', sm: '1.75rem' },
-            fontWeight: 'bold',
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-           Add Your Personal Category
-           <IconButton onClick={handleNewUserCategoryDialogClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
+        <DialogTitle sx={{ backgroundColor: '#9C27B0', color: originalThemeColors.white, borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+            Add Your Personal Category
+          </Typography>
+          <IconButton onClick={handleNewUserCategoryDialogClose} size="small" sx={{ color: originalThemeColors.white }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 2.5, sm: 4 }, backgroundColor: originalThemeColors.dialogSurface }}>
+        <DialogContent sx={{ pt: 3, pb: 2, px: { xs: 2, sm: 3 } }}>
+          {newUserCategoryErrorMessage && (
+            <Alert severity="error" sx={{ mb: 2 }}>{newUserCategoryErrorMessage}</Alert>
+          )}
           <TextField
             autoFocus
             margin="dense"
+            id="new-category-name"
             label="Category Name"
             type="text"
             fullWidth
             variant="outlined"
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            error={!!newUserCategoryErrorMessage}
-            sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { backgroundColor: originalThemeColors.inputBackground, borderRadius: '8px' }, '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent } }}
+            sx={{ mb: 2.5 }}
           />
-          <FormControl fullWidth margin="dense" error={!!newUserCategoryErrorMessage} sx={{ mb: 2.5 }}>
+          <FormControl fullWidth variant="outlined" sx={{ mb: 2.5 }}>
             <InputLabel id="new-category-type-label">Category Type</InputLabel>
             <Select
               labelId="new-category-type-label"
+              id="new-category-type"
               value={newCategoryType}
-              label="Category Type"
               onChange={(e) => setNewCategoryType(e.target.value)}
-              sx={{ backgroundColor: originalThemeColors.inputBackground, borderRadius: '8px' }}
+              label="Category Type"
             >
-              <MenuItem value="revenues">Revenues</MenuItem>
+              <MenuItem value=""><em>Select Type</em></MenuItem>
+              <MenuItem value="revenues">Revenues (Income)</MenuItem>
               <MenuItem value="expenses">Expenses</MenuItem>
             </Select>
           </FormControl>
           <Button
-            variant="contained"
+            variant="outlined"
             component="label"
             fullWidth
-            sx={{ mb: 2.5, backgroundColor: alpha(originalThemeColors.primaryAccent, 0.1), color: originalThemeColors.primaryAccent, '&:hover': { backgroundColor: alpha(originalThemeColors.primaryAccent, 0.2)} }}
+            sx={{ mb: 1, borderColor: originalThemeColors.borderColor, color: originalThemeColors.textSecondary }}
           >
             Upload Image (Optional)
             <input
@@ -977,47 +1005,44 @@ const DashboardUser = () => {
               type="file"
               hidden
               accept="image/*"
-              onChange={handleImageChange}
+              onChange={handleImageChange} // Uses the modified handler
             />
           </Button>
-          {newCategoryImage && (
-            <Typography variant="body2" sx={{ color: originalThemeColors.textSecondary, textAlign: 'center', mb: 2 }}>
-              Selected: {newCategoryImage.name}
-            </Typography>
-          )}
-          {newUserCategoryErrorMessage && (
-            <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
-              {newUserCategoryErrorMessage}
-            </Typography>
+          {newCategoryImageBase64 && (
+            <Box sx={{ mt: 1, textAlign: 'center' }}>
+              <Typography variant="caption" sx={{ color: originalThemeColors.textSecondary }}>Image Preview:</Typography>
+              <Box
+                component="img"
+                src={newCategoryImageBase64} // Display the Base64 preview
+                alt="Preview"
+                sx={{ display: 'block', maxWidth: '100px', maxHeight: '100px', margin: '8px auto 0', borderRadius: '4px', border: `1px solid ${originalThemeColors.borderColor}` }}
+              />
+            </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: { xs: 2, sm: 2.5 }, justifyContent: 'center', gap: 2, backgroundColor: originalThemeColors.dialogSurface, borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
-          <Button onClick={handleNewUserCategoryDialogClose} variant="outlined" sx={{ borderColor: originalThemeColors.primaryAccent, color: originalThemeColors.primaryAccent, px: { xs: 3, sm: 4 }, py: 1.2, borderRadius: '8px' }}>
+        <DialogActions sx={{ p: { xs: 2, sm: 3 }, borderTop: `1px solid ${originalThemeColors.borderColor}` }}>
+          <Button onClick={handleNewUserCategoryDialogClose} sx={{ color: originalThemeColors.textSecondary, borderRadius: '8px' }}>
             Cancel
           </Button>
-          <Button onClick={handleNewUserCategorySubmit} variant="contained" disabled={isSubmittingNewUserCategory} sx={{ backgroundColor: originalThemeColors.primaryAccent, color: originalThemeColors.buttonTextLight, px: { xs: 3, sm: 4 }, py: 1.2, borderRadius: '8px', '&.Mui-disabled': { background: alpha(originalThemeColors.textSecondary, 0.5) } }}>
-            {isSubmittingNewUserCategory ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Add My Category'}
+          <Button
+            onClick={handleNewUserCategorySubmit} // Uses the modified handler
+            variant="contained"
+            disabled={isSubmittingNewUserCategory}
+            startIcon={isSubmittingNewUserCategory ? <CircularProgress size={20} color="inherit" /> : <AddCircleIcon />}
+            sx={{
+              backgroundColor: '#9C27B0',
+              color: originalThemeColors.white,
+              borderRadius: '8px',
+              px: 3,
+              '&:hover': {
+                backgroundColor: alpha('#9C27B0', 0.85),
+              }
+            }}
+          >
+            {isSubmittingNewUserCategory ? 'Adding...' : 'Add Category'}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Floating Action Button to open the Add New USER Category Dialog */}
-      <Fab
-        color="primary"
-        aria-label="add personal category"
-        onClick={handleNewUserCategoryDialogOpen}
-        sx={{
-          position: 'fixed',
-          bottom: { xs: 16, sm: 32 },
-          right: { xs: 16, sm: 32 },
-          backgroundColor: originalThemeColors.primaryAccent,
-          '&:hover': {
-            backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
-          }
-        }}
-      >
-        <AddIcon />
-      </Fab>
 
     </Container>
   );
