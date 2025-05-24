@@ -299,7 +299,7 @@ const DashboardUser = () => {
         {
           headers: {
             Auth: `Bearer ${token}`,
-            'Content-Type': 'application/json', // Send as JSON
+            'Content-Type': 'application/json',
           },
         }
       );
