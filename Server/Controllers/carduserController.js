@@ -1,78 +1,52 @@
 const CardUser = require('../models/carduser');
 const Category = require('../models/categoryData');
-const mongoose = require('mongoose');
-
-// إرجاع بيانات المستخدم
-exports.getUserCard = async (req, res) => {
+exports.getCardUser = async (req, res) => {
     try {
-        const userCard = await CardUser.findOne({ userId: req.user });
-        res.status(200).json(userCard);
+        const carduser = await CardUser.findOne({ userId: req.user }).populate('carduser');
+        res.status(200).json(carduser);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-// إضافة فئة إلى carduser
-exports.addToCard = async (req, res) => {
-    const { CategoriesId } = req.body;
+
+
+exports.addCardUser = async (req, res) => {
+    const { categoryName, categoryImage, categoryType } = req.body;
     const userId = req.user;
 
     try {
-        // التأكد من أن الفئة موجودة
-        const category = await Category.findById(CategoriesId);
-        if (!category) {
-            return res.status(404).json({ error: 'الفئة غير موجودة.' });
-        }
-
-        // التأكد من عدم تكرار نفس الفئة للمستخدم
-        const existingCard = await CardUser.findOne({
+        // التحقق من وجود نفس الفئة مسبقًا لنفس المستخدم
+        const existing = await CardUser.findOne({
             userId,
-            'carduser.categoryName': category.name
+            carduser: {
+                $elemMatch: {
+                    categoryName,
+                }
+            }
         });
 
-        if (existingCard) {
-            return res.status(400).json({ error: 'الفئة موجودة بالفعل في البطاقة.' });
+        if (existing) {
+            return res.status(400).json({ error: 'هذه الفئة موجودة بالفعل لهذا المستخدم.' });
         }
 
-        // بناء بيانات الفئة لإضافتها
-        const cardItem = {
-            categoryName: category.name,
-            categoryImage: category.image,
-            categoryType: category.type
-        };
-
-        // إدخال الفئة للمستخدم
         const updatedCard = await CardUser.findOneAndUpdate(
             { userId },
-            { $push: { carduser: cardItem } },
+            {
+                $push: {
+                    carduser: {
+                        categoryName,
+                        categoryImage, // Expecting Base64 string here now
+                        categoryType
+                    }
+                }
+            },
             { new: true, upsert: true }
         );
 
-        res.status(200).json({ message: 'تمت إضافة الفئة إلى البطاقة بنجاح.', card: updatedCard });
+        return res.status(200).json({ message: 'تمت الإضافة بنجاح.', data: updatedCard });
     } catch (error) {
-        console.error('Error in addToCard:', error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-// حذف فئة من البطاقة
-exports.deleteFromCard = async (req, res) => {
-    const { categoryName } = req.body;
-    const userId = req.user;
-
-    try {
-        const updatedCard = await CardUser.findOneAndUpdate(
-            { userId },
-            { $pull: { carduser: { categoryName } } },
-            { new: true }
-        );
-
-        if (!updatedCard) {
-            return res.status(404).json({ error: 'لم يتم العثور على بطاقة المستخدم.' });
-        }
-
-        res.status(200).json({ message: 'تم حذف الفئة بنجاح.', card: updatedCard });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error in addCardUser:', error);
+        return res.status(500).json({ error: error.message });
     }
 };
