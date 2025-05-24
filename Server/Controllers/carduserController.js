@@ -1,4 +1,4 @@
-const CardUser = require('../models/cardUser');
+const CardUser = require('../models/carduser');
 
 /**
  * @desc    Get all cards added by the logged-in user
