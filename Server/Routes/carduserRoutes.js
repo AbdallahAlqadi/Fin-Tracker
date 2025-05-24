@@ -1,7 +1,7 @@
 const express = require("express");
 const routes = express.Router();
 const { veryfyjwt } = require("../Controllers/userControllers"); // Assuming this middleware is in the correct path relative to this routes file
-const { addUserCategory, getUserCategories } = require("..");
+const { addUserCategory, getUserCategories } = require("../Controllers/carduserController.js");
 
 // Middleware for handling image uploads (using multer, assuming it's configured elsewhere, e.g., in server.js or a dedicated middleware file)
 // Example using multer (ensure multer is installed: npm install multer)

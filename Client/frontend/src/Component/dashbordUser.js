@@ -131,25 +131,61 @@ const DashboardUser = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      setLoading(true); // Start loading
+      const token = sessionStorage.getItem('jwt'); // Get token
+
       try {
-        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
-        setCategories(response.data.data);
-        const initialVisibleItems = response.data.data.reduce((acc, category) => {
+        // Fetch general categories
+        const generalCategoriesResponse = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
+        const generalCategories = generalCategoriesResponse.data.data || [];
+
+        let userCategories = [];
+        if (token) {
+          try {
+            // Fetch user-specific categories if token exists
+            const userCategoriesResponse = await axios.get(
+              'https://fin-tracker-ncbx.onrender.com/api/getUserCategories',
+              {
+                headers: {
+                  Auth: `Bearer ${token}`,
+                },
+              }
+            );
+            userCategories = userCategoriesResponse.data.data || [];
+          } catch (userError) {
+            console.error('Error fetching user categories:', userError);
+            // Handle potential errors like invalid token, maybe clear session?
+            // For now, just log the error and proceed with general categories
+          }
+        }
+
+        // Merge categories - using Set to avoid duplicates based on _id
+        const allCategoriesMap = new Map();
+        generalCategories.forEach(cat => allCategoriesMap.set(cat._id, cat));
+        userCategories.forEach(cat => allCategoriesMap.set(cat._id, cat)); // Overwrites general if ID matches, or adds if new
+        const mergedCategories = Array.from(allCategoriesMap.values());
+
+        setCategories(mergedCategories);
+
+        // Recalculate initialVisibleItems based on merged categories
+        const initialVisibleItems = mergedCategories.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
-            acc[category.categoryType] = 12; // Or 10 if we want to show 2 full rows of 5
+            acc[category.categoryType] = 12; // Or 10
           }
           return acc;
         }, {});
         setVisibleItems(initialVisibleItems);
+
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Error fetching initial categories:', error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading regardless of success or error
       }
     };
 
     fetchCategories();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
+
 
   const handleClickOpen = (category) => {
     if (addedItems.includes(category._id)) return;
@@ -288,6 +324,13 @@ const DashboardUser = () => {
     setIsNewSubmitting(true);
     const token = sessionStorage.getItem('jwt');
 
+    // Ensure token exists before proceeding
+    if (!token) {
+        setNewErrorMessage('Authentication error. Please log in again.');
+        setIsNewSubmitting(false);
+        return;
+    }
+
     const formData = new FormData();
     formData.append('categoryName', newCategoryName);
     formData.append('categoryType', newCategoryType);
@@ -297,16 +340,17 @@ const DashboardUser = () => {
 
     try {
       const response = await axios.post(
-        'https://fin-tracker-ncbx.onrender.com/api/addCategory',
+        'https://fin-tracker-ncbx.onrender.com/api/addUserCategory', // Correct endpoint for user categories
         formData,
         {
           headers: {
-            Auth: `Bearer ${token}`,
+            Auth: `Bearer ${token}`, // Send JWT token
             'Content-Type': 'multipart/form-data',
           },
         }
       );
       console.log('New Category Response:', response.data);
+      // Add the new category to the existing list immediately
       setCategories((prev) => [...prev, response.data.data]);
       handleNewDialogClose();
     } catch (error) {
@@ -439,9 +483,16 @@ const DashboardUser = () => {
                 },
                 px: { xs: 2, sm: 3 },
                 py: 1.5,
-                fontSize: { xs: '0.8rem', sm: '1rem' },
-                ...(index === 0 && { borderRadius: '20px 0 0 20px' }),
-                ...(index === 2 && { borderRadius: '0 20px 20px 0' }),
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                borderRight: index < 2 ? `1px solid ${alpha(originalThemeColors.primaryAccent, 0.3)}` : 'none',
+                '&:last-child': {
+                  borderTopRightRadius: '20px',
+                  borderBottomRightRadius: '20px',
+                },
+                '&:first-of-type': {
+                  borderTopLeftRadius: '20px',
+                  borderBottomLeftRadius: '20px',
+                },
               }}
             >
               {typeOption.label}
@@ -451,53 +502,53 @@ const DashboardUser = () => {
       </Box>
 
       {Object.keys(groupedCategories).length === 0 ? (
-        <Typography variant="h6" align="center" sx={{ color: originalThemeColors.textSecondary, mt: 4, fontStyle: 'italic' }}>
-          No items found.
+        <Typography variant="h6" sx={{ textAlign: 'center', color: originalThemeColors.textSecondary, mt: 5 }}>
+          No categories found matching your criteria.
         </Typography>
       ) : (
-        Object.keys(groupedCategories).map((type) => (
-          <Box key={type} sx={{ mb: { xs: 5, sm: 8 } }}>
+        Object.entries(groupedCategories).map(([type, items]) => (
+          <Box key={type} sx={{ mb: { xs: 4, sm: 6 } }}>
             <Typography
               variant="h4"
               sx={{
-                backgroundColor: originalThemeColors.primaryAccent,
-                color: originalThemeColors.buttonTextLight,
-                p: { xs: 1.5, sm: 2 },
-                borderRadius: '8px',
-                boxShadow: `0 4px 12px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-                mb: { xs: 3, sm: 4 },
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
                 fontWeight: 'bold',
+                color: originalThemeColors.primaryAccent,
+                mb: { xs: 3, sm: 4 },
+                textAlign: 'center',
+                textTransform: 'capitalize',
+                borderBottom: `2px solid ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+                pb: 1,
+                display: 'inline-block',
               }}
             >
-              {getCategoryIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
+              {type.replace(/([A-Z])/g, ' $1').trim()} {getCategoryIcon(type)}
             </Typography>
             <Box
               sx={{
                 display: 'grid',
-                // Updated gridTemplateColumns for 5 cards per row on larger screens
                 gridTemplateColumns: {
-                  xs: 'repeat(auto-fit, minmax(150px, 1fr))', // Keep responsive for very small screens (1-2 cards)
-                  sm: 'repeat(auto-fit, minmax(170px, 1fr))', // Responsive for small screens (2-3 cards)
-                  md: 'repeat(5, 1fr)', // 5 cards for medium screens and up
+                  xs: 'repeat(auto-fit, minmax(140px, 1fr))', // Fit more on small screens
+                  sm: 'repeat(auto-fit, minmax(160px, 1fr))',
+                  md: 'repeat(5, 1fr)', // Aim for 5 on medium and up
                 },
-                gap: { xs: 2, sm: 2.5, md: 3 }, // Adjusted gaps for 5 columns
+                gap: { xs: 2, sm: 3, md: 4 }, // Responsive gap
                 justifyContent: 'center',
               }}
             >
-              {groupedCategories[type]
-                .slice(0, visibleItems[type])
-                .map((category) => {
+              {items
+                .slice(0, visibleItems[type] || 12)
+                .map((category, index) => {
                   const isAdded = addedItems.includes(category._id);
                   return (
-                    <Tooltip key={category._id} title={isAdded ? 'Added' : `Add to ${category.categoryName}`}>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Tooltip
+                      key={category._id}
+                      title={isAdded ? 'Value already added for today' : `Add value for ${category.categoryName}`}
+                      arrow
+                      placement="top"
+                    >
+                      <Box sx={{ animationDelay: `${index * 0.05}s` }}>
                         <CategoryCard
                           type={category.categoryType}
-                          component="div"
-                          role="button"
                           tabIndex={isAdded ? -1 : 0}
                           onClick={isAdded ? undefined : () => handleClickOpen(category)}
                           onKeyPress={
@@ -514,7 +565,7 @@ const DashboardUser = () => {
                             filter: isAdded ? 'grayscale(50%)' : 'none',
                             pointerEvents: isAdded ? 'none' : 'auto',
                             // Ensure cards can shrink if needed to fit 5 across, or adjust CategoryCard width
-                            minWidth: 0, 
+                            minWidth: 0,
                           }}
                           aria-disabled={isAdded}
                         >
@@ -551,7 +602,7 @@ const DashboardUser = () => {
                   );
                 })}
             </Box>
-            {groupedCategories[type].length > visibleItems[type] && (
+            {items.length > (visibleItems[type] || 12) && (
               <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
                 <Button
                   onClick={() => handleLoadMore(type)}
@@ -858,24 +909,33 @@ const DashboardUser = () => {
                 }
               }}
             >
-              <MenuItem value="expenses">Expenses</MenuItem>
-              <MenuItem value="income">Income</MenuItem>
+              <MenuItem value="Income">Income</MenuItem>
+              <MenuItem value="Expenses">Expenses</MenuItem>
+              {/* Add more types if needed */}
             </Select>
           </FormControl>
-          <Button variant="outlined" component="label" fullWidth sx={{
-            mb: 2.5,
-            borderColor: originalThemeColors.primaryAccent,
-            color: originalThemeColors.primaryAccent,
-            py: 1.2,
-            borderRadius: '8px',
-            fontWeight: 500,
-            '&:hover': {
-              background: alpha(originalThemeColors.primaryAccent, 0.08),
+          <Button
+            variant="outlined"
+            component="label"
+            fullWidth
+            sx={{
+              mb: 2.5,
               borderColor: originalThemeColors.primaryAccent,
-            }
-          }}>
-            {newCategoryImage ? 'Change Image' : 'Choose Image'}
-            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+              color: originalThemeColors.primaryAccent,
+              py: 1.2,
+              borderRadius: '8px',
+              '&:hover': {
+                background: alpha(originalThemeColors.primaryAccent, 0.08),
+              }
+            }}
+          >
+            Upload Image
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleImageChange}
+            />
           </Button>
           {newErrorMessage && (
             <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
@@ -885,7 +945,7 @@ const DashboardUser = () => {
         </DialogContent>
         <DialogActions
           sx={{
-            p: { xs: 2, sm: 3 },
+            p: { xs: 2, sm: 2.5 },
             justifyContent: 'center',
             gap: 2,
             backgroundColor: originalThemeColors.dialogSurface,
