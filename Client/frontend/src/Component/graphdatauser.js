@@ -782,7 +782,7 @@ const GraphComponent = () => {
             sx: {
               borderRadius: fullScreen ? 0 : theme.shape.borderRadius + 4, // e.g. 16px
               m: fullScreen ? 0 : 2,
-              // overflow: 'hidden', // Removed to prevent clipping content
+              overflow: 'hidden', // Changed to hidden to clip title and actions
               bgcolor: theme.palette.background.default,
             }
           }}
