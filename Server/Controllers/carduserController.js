@@ -1,4 +1,4 @@
-const CardUser = require("../models/carduser");
+  const CardUser = require("../models/carduser");
 
 exports.addCardToUser = async (req, res) => {
     const { categoryName, categoryType, image } = req.body;
@@ -35,7 +35,7 @@ exports.addCardToUser = async (req, res) => {
             { userId },
             {
                 $push: {
-                    carduser: { categoryName, categoryType, image: imageDataToSave } // حفظ بيانات Base64 الخام والنوع الصحيح
+                    carduser: { categoryName, categoryType, image: image } // حفظ سلسلة Base64 الكاملة
                 }
             },
             { new: true, upsert: true, setDefaultsOnInsert: true }
@@ -70,4 +70,3 @@ exports.getUserCards = async (req, res) => {
         return res.status(500).json({ error: "خطأ في الخادم الداخلي." });
     }
 };
-
