@@ -15,7 +15,11 @@ import {
   FaComments,
   FaGlobe,
   FaTimes, // For modal close button
-  FaExternalLinkAlt // For a button to open report in modal
+  FaExternalLinkAlt, // For a button to open report in modal
+  FaChevronDown, // For collapsible sections
+  FaChevronUp, // For collapsible sections
+  FaAngleDown, // Alternative icon
+  FaAngleUp // Alternative icon
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
@@ -48,6 +52,9 @@ function ClarityChat() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportModalContent, setReportModalContent] = useState('');
   const [reportModalTitle, setReportModalTitle] = useState('');
+  
+  // State for collapsible sections
+  const [collapsedSections, setCollapsedSections] = useState({});
 
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'http://127.0.0.1:5004/api/getUserBudget';
@@ -262,6 +269,9 @@ ${JSON.stringify(items, null, 2)}
       setReportModalTitle(title);
       setReportModalContent(reportText); // The report text already includes its own H1 from the prompt
       setIsReportModalOpen(true);
+      
+      // Reset collapsed sections state when opening a new report
+      setCollapsedSections({});
 
       // Add a message to chat indicating report is ready and can be viewed
       setMessages(prev => [
@@ -360,8 +370,11 @@ ${JSON.stringify(items, null, 2)}
       const reply = await getBotResponse(msg, attachedFileData, responseLanguage);
       setMessages(prev => [...prev, { sender: 'bot', text: reply, time: getCurrentTime(), formatted: true }]);
     } catch (err) {
-      console.error(err);
-      setMessages(prev => [...prev, { sender: 'bot', text: responseLanguage === 'ar' ? 'حدث خطأ. حاول مرة أخرى.' : 'An error occurred. Please try again.', time: getCurrentTime(), formatted: false }]);
+      console.error('Error getting response:', err);
+      setMessages(prev => [
+        ...prev,
+        { sender: 'bot', text: responseLanguage === 'ar' ? 'عذراً، حدث خطأ. حاول مرة أخرى.' : 'Sorry, an error occurred. Please try again.', time: getCurrentTime(), formatted: false }
+      ]);
     } finally {
       setIsTyping(false);
       setAttachedFile(null);
@@ -369,241 +382,343 @@ ${JSON.stringify(items, null, 2)}
     }
   }
 
-  function clearChatHistory() {
-    setMessages([initialBotMessage]);
-    localStorage.removeItem('chatHistory');
+  function handleCopyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(responseLanguage === 'ar' ? 'تم نسخ النص!' : 'Text copied!');
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+      alert(responseLanguage === 'ar' ? 'فشل نسخ النص.' : 'Failed to copy text.');
+    });
   }
 
-  function CopyableCode({ code, language = '' }) {
-    const [copied, setCopied] = useState(false);
-    const copy = async () => {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    };
-    return (
-      <div className="clarity-chat-copyable-code">
-        <SyntaxHighlighter 
-          language={language} 
-          style={tomorrow} 
-          customStyle={{ 
-            borderRadius: '6px', 
-            padding: '12px', 
-            fontSize: '0.8em',
-            backgroundColor: '#F7FAFC',
-            color: '#2D3748',
-          }}
-          showLineNumbers={false}
-        >
-          {code}
-        </SyntaxHighlighter>
-        <button onClick={copy} className="clarity-chat-copy-code-button">
-          {copied ? <><FaCheck style={{ marginRight: 3 }} />{responseLanguage === 'ar' ? 'تم النسخ' : 'Copied'}</> : <><FaCopy style={{ marginRight: 3 }} />{responseLanguage === 'ar' ? 'نسخ الكود' : 'Copy Code'}</>}
-        </button>
-      </div>
-    );
+  function handleOpenReportModal(title, content) {
+    setReportModalTitle(title);
+    setReportModalContent(content);
+    setIsReportModalOpen(true);
+    // Reset collapsed sections state when opening a report
+    setCollapsedSections({});
   }
 
-  function CopyButton({ text }) {
-    const [copied, setCopied] = useState(false);
-    const copy = async () => {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    };
-    return (
-      <button onClick={copy} className="clarity-chat-copy-text-button">
-        {copied ? <FaCheck /> : <FaCopy />}
-      </button>
-    );
+  function handleCloseReportModal() {
+    setIsReportModalOpen(false);
   }
 
-  // Component for Report Modal
-  const ReportModal = ({ isOpen, onClose, title, content }) => {
-    if (!isOpen) return null;
+  function handleNewChat() {
+    if (window.confirm(responseLanguage === 'ar' ? 'هل أنت متأكد من بدء محادثة جديدة؟ سيتم مسح المحادثة الحالية.' : 'Are you sure you want to start a new chat? Current conversation will be cleared.')) {
+      setMessages([initialBotMessage]);
+      setInput('');
+      setAttachedFile(null);
+      setAttachedFileData(null);
+    }
+  }
 
-    return (
-      <div className={`clarity-chat-report-modal-overlay ${isOpen ? 'visible' : ''}`} onClick={onClose}>
-        <div className="clarity-chat-report-modal" onClick={e => e.stopPropagation()}> {/* Prevent closing when clicking inside modal */}
-          <div className="clarity-chat-report-modal-header">
-            <h2>{title}</h2>
-            <button onClick={onClose} className="clarity-chat-report-modal-close-btn">
-              <FaTimes />
-            </button>
+  // Function to toggle section collapse state
+  function toggleSection(sectionId) {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  }
+
+  // Function to generate a unique ID for each section based on heading text
+  function getSectionId(text) {
+    return `section-${text.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+  }
+
+  function renderMessage(msg, index) {
+    if (msg.sender === 'bot' && msg.isReportNotification) {
+      // Special rendering for report notifications
+      return (
+        <div key={index} className={`clarity-chat-message ${msg.sender}`}>
+          <div className="avatar">
+            <FaRobot />
           </div>
-          <div className="clarity-chat-report-modal-content">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code({ node, inline, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || '');
-                  return !inline && match ? (
-                    <CopyableCode code={String(children).replace(/\n$/, '')} language={match[1]} />
-                  ) : (
-                    <code className={className} {...props}>
-                      {children}
-                    </code>
-                  );
-                },
-              }}
-            >
-              {content}
-            </ReactMarkdown>
+          <div className="clarity-chat-message-content-wrapper">
+            <div className="clarity-chat-message-content">
+              {msg.text}
+              <button 
+                onClick={() => handleOpenReportModal(msg.reportTitleForModal, msg.reportContentForModal)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  marginLeft: '10px',
+                  background: '#4169E1',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontSize: '0.8em',
+                  cursor: 'pointer'
+                }}
+              >
+                <FaExternalLinkAlt style={{ marginRight: '5px' }} /> 
+                {responseLanguage === 'ar' ? 'عرض التقرير' : 'View Report'}
+              </button>
+              <span className="time">{msg.time}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className={`clarity-chat-message ${msg.sender} ${msg.sender === 'bot' && isTyping && index === messages.length - 1 ? 'typing' : ''}`}>
+        <div className="avatar">
+          {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
+        </div>
+        <div className="clarity-chat-message-content-wrapper">
+          <div className="clarity-chat-message-content">
+            {msg.sender === 'bot' && isTyping && index === messages.length - 1 ? (
+              <div className="clarity-chat-typing-indicator">
+                <span></span><span></span><span></span>
+              </div>
+            ) : msg.formatted ? (
+              <ReactMarkdown
+                children={msg.text}
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code({node, inline, className, children, ...props}) {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline ? (
+                      <div className="clarity-chat-copyable-code">
+                        <button 
+                          className="clarity-chat-copy-code-button"
+                          onClick={() => handleCopyText(String(children).replace(/\n$/, ''))}
+                        >
+                          <FaCopy /> {responseLanguage === 'ar' ? 'نسخ' : 'Copy'}
+                        </button>
+                        <SyntaxHighlighter
+                          children={String(children).replace(/\n$/, '')}
+                          style={tomorrow}
+                          language={match ? match[1] : 'text'}
+                          PreTag="pre"
+                          {...props}
+                        />
+                      </div>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                }}
+              />
+            ) : (
+              msg.text
+            )}
+            {!isTyping && (
+              <button 
+                className="clarity-chat-copy-text-button"
+                onClick={() => handleCopyText(msg.text)}
+              >
+                <FaCopy />
+              </button>
+            )}
+            <span className="time">{msg.time}</span>
           </div>
         </div>
       </div>
     );
-  };
+  }
 
-  function renderMessageContent(message) {
-    if (message.isReportNotification) {
-        return (
-            <p>
-                {message.text} 
-                <button 
-                    className="clarity-chat-view-report-btn" 
-                    onClick={() => {
-                        setReportModalTitle(message.reportTitleForModal);
-                        setReportModalContent(message.reportContentForModal);
-                        setIsReportModalOpen(true);
-                    }}
-                >
-                    <FaExternalLinkAlt style={{ marginRight: '5px' }} /> 
-                    {responseLanguage === 'ar' ? 'عرض التقرير' : 'View Report'}
-                </button>
-            </p>
-        );
-    }
-    if (message.formatted) {
+  // Custom components for ReactMarkdown to handle collapsible sections
+  const CollapsibleComponents = {
+    h1: ({node, children, ...props}) => {
+      const sectionId = getSectionId(children[0]);
+      const isCollapsed = collapsedSections[sectionId] || false;
+      
       return (
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            code({ node, inline, className, children, ...props }) {
-              const match = /language-(\w+)/.exec(className || '');
-              return !inline && match ? (
-                <CopyableCode code={String(children).replace(/\n$/, '')} language={match[1]} />
-              ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
-              );
-            },
-          }}
-        >
-          {message.text}
-        </ReactMarkdown>
+        <div className="clarity-report-section">
+          <h1 
+            className="clarity-report-heading" 
+            onClick={() => toggleSection(sectionId)}
+            {...props}
+          >
+            <span className="clarity-report-heading-content">{children}</span>
+            <button className="clarity-report-toggle-btn">
+              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </h1>
+          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
+            {/* Content will be rendered here by ReactMarkdown */}
+          </div>
+        </div>
+      );
+    },
+    h2: ({node, children, ...props}) => {
+      const sectionId = getSectionId(children[0]);
+      const isCollapsed = collapsedSections[sectionId] || false;
+      
+      return (
+        <div className="clarity-report-section">
+          <h2 
+            className="clarity-report-heading" 
+            onClick={() => toggleSection(sectionId)}
+            {...props}
+          >
+            <span className="clarity-report-heading-content">{children}</span>
+            <button className="clarity-report-toggle-btn">
+              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </h2>
+          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
+            {/* Content will be rendered here by ReactMarkdown */}
+          </div>
+        </div>
+      );
+    },
+    h3: ({node, children, ...props}) => {
+      const sectionId = getSectionId(children[0]);
+      const isCollapsed = collapsedSections[sectionId] || false;
+      
+      return (
+        <div className="clarity-report-section">
+          <h3 
+            className="clarity-report-heading" 
+            onClick={() => toggleSection(sectionId)}
+            {...props}
+          >
+            <span className="clarity-report-heading-content">{children}</span>
+            <button className="clarity-report-toggle-btn">
+              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </h3>
+          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
+            {/* Content will be rendered here by ReactMarkdown */}
+          </div>
+        </div>
+      );
+    },
+    h4: ({node, children, ...props}) => {
+      const sectionId = getSectionId(children[0]);
+      const isCollapsed = collapsedSections[sectionId] || false;
+      
+      return (
+        <div className="clarity-report-section">
+          <h4 
+            className="clarity-report-heading" 
+            onClick={() => toggleSection(sectionId)}
+            {...props}
+          >
+            <span className="clarity-report-heading-content">{children}</span>
+            <button className="clarity-report-toggle-btn">
+              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </h4>
+          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
+            {/* Content will be rendered here by ReactMarkdown */}
+          </div>
+        </div>
+      );
+    },
+    // Add other components from the original code
+    code({node, inline, className, children, ...props}) {
+      const match = /language-(\w+)/.exec(className || '');
+      return !inline ? (
+        <div className="clarity-chat-copyable-code">
+          <button 
+            className="clarity-chat-copy-code-button"
+            onClick={() => handleCopyText(String(children).replace(/\n$/, ''))}
+          >
+            <FaCopy /> {responseLanguage === 'ar' ? 'نسخ' : 'Copy'}
+          </button>
+          <SyntaxHighlighter
+            children={String(children).replace(/\n$/, '')}
+            style={tomorrow}
+            language={match ? match[1] : 'text'}
+            PreTag="pre"
+            {...props}
+          />
+        </div>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
       );
     }
-    return <p>{message.text}</p>;
-  }
+  };
 
   return (
     <div className="clarity-chat-container">
-      <header className="clarity-chat-header">
+      <div className="clarity-chat-header">
         <div className="clarity-chat-header-top">
           <h1>
             <span className="app-icon"><FaComments /></span>
-            Clarity Chat
+            {responseLanguage === 'ar' ? 'مساعد التقارير المالية' : 'Financial Reports Assistant'}
           </h1>
-          <div>
-            <button onClick={clearChatHistory} className="clarity-chat-new-chat-btn">
-              {responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}
-            </button>
-          </div>
+          <button className="clarity-chat-new-chat-btn" onClick={handleNewChat}>
+            {responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}
+          </button>
         </div>
-      </header>
+      </div>
 
-      <section className="clarity-chat-filter-panel">
-        <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
-        <select value={dateType} onChange={e => setDateType(e.target.value)}>
-          <option value="full">{responseLanguage === 'ar' ? 'تاريخ كامل' : 'Full Date'}</option>
-          <option value="month">{responseLanguage === 'ar' ? 'شهر' : 'Month'}</option>
-          <option value="year">{responseLanguage === 'ar' ? 'سنة' : 'Year'}</option>
-        </select>
-
-        {dateType === 'full' && (
-          <input 
-            type="date" 
-            value={filterDate.toISOString().split('T')[0]} 
-            onChange={e => setFilterDate(new Date(e.target.value))} 
-          />
-        )}
-        {dateType === 'month' && (
-          <input 
-            type="month" 
-            value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`}
-            onChange={e => {
-              const [year, month] = e.target.value.split('-');
-              setFilterDate(new Date(year, month - 1, 1));
-            }} 
-          />
-        )}
-        {dateType === 'year' && (
-          <input 
-            type="number" 
-            min="2000" 
-            max="2100" 
-            value={filterDate.getFullYear()} 
-            onChange={e => setFilterDate(new Date(e.target.value, 0, 1))} 
-            placeholder="YYYY" 
-          />
-        )}
-
-        <label>{responseLanguage === 'ar' ? 'النوع:' : 'Type:'}</label>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="All">{responseLanguage === 'ar' ? 'الكل' : 'All'}</option>
-          <option value="Revenues">{responseLanguage === 'ar' ? 'الإيرادات' : 'Revenues'}</option>
-          <option value="Expenses">{responseLanguage === 'ar' ? 'المصروفات' : 'Expenses'}</option>
-        </select>
-
-        <button onClick={handleGenerateReport} disabled={loadingBudget || filteredItems.length === 0}>
-          {loadingBudget ? (responseLanguage === 'ar' ? 'تحميل...' : 'Loading...') : (responseLanguage === 'ar' ? 'توليد التقرير' : 'Generate Report')}
-        </button>
-      </section>
-
-      <main className="clarity-chat-main-container" ref={chatMessagesRef}>
-        <div className="clarity-chat-messages-wrapper">
-          {messages.map((msg, i) => (
-            <div key={i} className={`clarity-chat-message ${msg.sender}${msg.isReportNotification ? ' report-notification' : ''}`}>
-              <div className="avatar">
-                {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
-              </div>
-              <div className="clarity-chat-message-content-wrapper">
-                <div className="clarity-chat-message-content">
-                  {renderMessageContent(msg)}
-                  <span className="time">{msg.time}</span>
-                  {msg.text && !msg.isReportNotification && <CopyButton text={msg.text} />}
-                </div>
-              </div>
-            </div>
-          ))}
-          {isTyping && (
-            <div className="clarity-chat-message bot typing">
-              <div className="avatar"><FaRobot /></div>
-              <div className="clarity-chat-message-content-wrapper">
-                <div className="clarity-chat-message-content"> 
-                  <div className="clarity-chat-typing-indicator">
-                    <span></span><span></span><span></span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="clarity-chat-filter-panel">
+        <div>
+          <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
+          <select value={dateType} onChange={e => setDateType(e.target.value)}>
+            <option value="full">{responseLanguage === 'ar' ? 'يوم' : 'Day'}</option>
+            <option value="month">{responseLanguage === 'ar' ? 'شهر' : 'Month'}</option>
+            <option value="year">{responseLanguage === 'ar' ? 'سنة' : 'Year'}</option>
+          </select>
+        </div>
+        
+        <div>
+          <label>{responseLanguage === 'ar' ? 'التاريخ:' : 'Date:'}</label>
+          {dateType === 'full' && (
+            <input 
+              type="date" 
+              value={filterDate.toISOString().split('T')[0]} 
+              onChange={e => setFilterDate(new Date(e.target.value))}
+            />
+          )}
+          {dateType === 'month' && (
+            <input 
+              type="month" 
+              value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`}
+              onChange={e => {
+                const [year, month] = e.target.value.split('-');
+                setFilterDate(new Date(parseInt(year), parseInt(month) - 1, 1));
+              }}
+            />
+          )}
+          {dateType === 'year' && (
+            <input 
+              type="number" 
+              value={filterDate.getFullYear()} 
+              onChange={e => setFilterDate(new Date(parseInt(e.target.value), 0, 1))}
+              min="2000" 
+              max="2100"
+            />
           )}
         </div>
-      </main>
+        
+        <div>
+          <label>{responseLanguage === 'ar' ? 'النوع:' : 'Type:'}</label>
+          <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+            <option value="All">{responseLanguage === 'ar' ? 'الكل' : 'All'}</option>
+            <option value="Income">{responseLanguage === 'ar' ? 'دخل' : 'Income'}</option>
+            <option value="Expense">{responseLanguage === 'ar' ? 'مصروف' : 'Expense'}</option>
+          </select>
+        </div>
+        
+        <button onClick={handleGenerateReport} disabled={loadingBudget}>
+          {responseLanguage === 'ar' ? 'إنشاء تقرير' : 'Generate Report'}
+        </button>
+      </div>
+
+      <div className="clarity-chat-main-container" ref={chatMessagesRef}>
+        <div className="clarity-chat-messages-wrapper">
+          {messages.map((msg, index) => renderMessage(msg, index))}
+        </div>
+      </div>
 
       <form className="clarity-chat-form" onSubmit={handleSubmit}>
-        <label htmlFor="file-upload" className="clarity-chat-file-attach-label">
-          <FaPaperclip />
-        </label>
-        <input id="file-upload" type="file" onChange={handleFileUpload} ref={fileInputRef} />
-        
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder={responseLanguage === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message here...'}
-          onKeyPress={e => {
+          rows={1}
+          onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleSubmit(e);
@@ -611,28 +726,59 @@ ${JSON.stringify(items, null, 2)}
           }}
         />
         <div className="clarity-chat-form-controls">
-            <div className="clarity-chat-language-selector-wrapper">
-                <FaGlobe />
-                <select value={responseLanguage} onChange={e => setResponseLanguage(e.target.value)}>
-                    <option value="ar">العربية</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
-            <button type="submit" className="clarity-chat-send-btn" disabled={(!input.trim() && !attachedFile) || isTyping}>
-              <FaPaperPlane />
-            </button>
+          <div className="clarity-chat-language-selector-wrapper">
+            <FaGlobe />
+            <select 
+              value={responseLanguage} 
+              onChange={e => setResponseLanguage(e.target.value)}
+              aria-label={responseLanguage === 'ar' ? 'اختر لغة الرد' : 'Select response language'}
+            >
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          
+          <label className="clarity-chat-file-attach-label" htmlFor="file-upload">
+            <FaPaperclip />
+          </label>
+          <input 
+            id="file-upload" 
+            type="file" 
+            ref={fileInputRef}
+            onChange={handleFileUpload} 
+            accept=".xlsx,.xls,.csv"
+          />
+          
+          <button 
+            type="submit" 
+            className="clarity-chat-send-btn"
+            disabled={(!input.trim() && !attachedFileData) || isTyping}
+          >
+            <FaPaperPlane />
+          </button>
         </div>
       </form>
 
-      <ReportModal 
-        isOpen={isReportModalOpen} 
-        onClose={() => setIsReportModalOpen(false)} 
-        title={reportModalTitle}
-        content={reportModalContent} 
-      />
+      {/* Report Modal with Collapsible Sections */}
+      <div className={`clarity-chat-report-modal-overlay ${isReportModalOpen ? 'visible' : ''}`}>
+        <div className="clarity-chat-report-modal">
+          <div className="clarity-chat-report-modal-header">
+            <h2>{reportModalTitle}</h2>
+            <button className="clarity-chat-report-modal-close-btn" onClick={handleCloseReportModal}>
+              <FaTimes />
+            </button>
+          </div>
+          <div className="clarity-chat-report-modal-content">
+            <ReactMarkdown
+              children={reportModalContent}
+              remarkPlugins={[remarkGfm]}
+              components={CollapsibleComponents}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 export default ClarityChat;
-

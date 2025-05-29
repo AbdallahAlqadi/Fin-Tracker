@@ -5,7 +5,6 @@ function LogOut() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // إزالة التوكن ثم الانتقال لصفحة تسجيل الدخول
     sessionStorage.removeItem('jwt');
     navigate('/login');
   }, [navigate]);

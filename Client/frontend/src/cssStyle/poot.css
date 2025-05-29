@@ -2,7 +2,7 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #F0F4F8; /* Light grayish-blue background */
+  background-color: #f8fafc; /* Lighter background for modern look */
   color: #2D3748; /* Dark gray-blue text */
   line-height: 1.6;
 }
@@ -14,16 +14,16 @@ body {
   max-width: 900px;
   margin: 0 auto;
   background-color: #FFFFFF; /* White container background */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 30px rgba(65, 105, 225, 0.1); /* Softer shadow with blue tint */
   overflow: hidden;
-  border-radius: 8px; /* Optional: slightly rounded container */
+  border-radius: 12px; /* Slightly more rounded for modern look */
 }
 
 /* Header */
 .clarity-chat-header {
-  padding: 18px 20px;
-  background-color: #EBF8FF; /* Light blue header */
-  border-bottom: 1px solid #BEE3F8; /* Slightly darker light blue border */
+  padding: 20px 24px;
+  background-color: #4169E1; /* Royal Blue header as requested */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white border */
   position: relative;
   z-index: 2;
 }
@@ -36,7 +36,7 @@ body {
 
 .clarity-chat-header h1 {
   font-size: 1.6em;
-  color: #2C5282; /* Darker blue for header text */
+  color: #FFFFFF; /* White text for contrast on blue */
   margin: 0;
   display: flex;
   align-items: center;
@@ -45,42 +45,46 @@ body {
 }
 
 .clarity-chat-header h1 .app-icon { /* Class for the icon span/svg */
-  color: #3182CE; /* Main blue accent */
+  color: #FFFFFF; /* White icon */
   display: flex;
   align-items: center;
 }
 
 .clarity-chat-new-chat-btn {
-  background-color: #3182CE; /* Main blue accent */
-  color: #FFFFFF;
+  background-color: #FFFFFF; /* White button on blue header */
+  color: #4169E1; /* Blue text */
   border: none;
-  padding: 9px 18px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.9em;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .clarity-chat-new-chat-btn:hover {
-  background-color: #2B6CB0; /* Darker blue on hover */
+  background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent on hover */
+  transform: translateY(-2px); /* Subtle lift effect */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Filter Panel */
 .clarity-chat-filter-panel {
-  padding: 15px 20px;
-  background-color: #F7FAFC; /* Very light gray-blue */
+  padding: 16px 24px;
+  background-color: #FFFFFF; /* White background */
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   flex-wrap: wrap;
-  border-bottom: 1px solid #E2E8F0; /* Light border */
+  border-bottom: 1px solid rgba(65, 105, 225, 0.1); /* Very subtle blue border */
 }
 
 .clarity-chat-filter-panel label {
   color: #4A5568; /* Medium gray-blue text */
   font-size: 0.9em;
   margin-right: 5px;
+  font-weight: 500;
 }
 
 .clarity-chat-filter-panel select,
@@ -89,46 +93,53 @@ body {
 .clarity-chat-filter-panel input[type="number"] {
   background-color: #FFFFFF;
   color: #2D3748;
-  border: 1px solid #CBD5E0; /* Light gray border */
-  padding: 8px 12px;
-  border-radius: 6px;
+  border: 1px solid rgba(65, 105, 225, 0.3); /* Light blue border */
+  padding: 10px 14px;
+  border-radius: 8px;
   font-size: 0.9em;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(65, 105, 225, 0.05);
 }
 
 .clarity-chat-filter-panel select:focus,
 .clarity-chat-filter-panel input:focus {
   outline: none;
-  border-color: #3182CE; /* Main blue accent */
-  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+  border-color: #4169E1; /* Royal Blue accent */
+  box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.2);
 }
 
 .clarity-chat-filter-panel button {
-  background-color: #3182CE;
+  background-color: #4169E1; /* Royal Blue button */
   color: white;
   border: none;
-  padding: 9px 18px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.9em;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  font-weight: 600;
+  transition: all 0.3s ease;
   margin-left: auto;
+  box-shadow: 0 2px 10px rgba(65, 105, 225, 0.2);
 }
 
 .clarity-chat-filter-panel button:hover {
-  background-color: #2B6CB0;
+  background-color: #3a5ecc; /* Slightly darker blue on hover */
+  transform: translateY(-2px); /* Subtle lift effect */
+  box-shadow: 0 4px 12px rgba(65, 105, 225, 0.3);
 }
 
 .clarity-chat-filter-panel button:disabled {
-  background-color: #A0AEC0; /* Lighter gray for disabled */
+  background-color: #CBD5E0; /* Lighter gray for disabled */
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Chat Container */
 .clarity-chat-main-container {
   flex-grow: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   background-color: #FFFFFF; /* White chat area */
@@ -138,7 +149,7 @@ body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 /* Message Styling */
@@ -149,15 +160,16 @@ body {
 }
 
 .clarity-chat-message .avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 10px;
+  margin-right: 12px;
   flex-shrink: 0;
-  background-color: #E2E8F0; /* Light gray avatar bg */
+  background-color: rgba(65, 105, 225, 0.1); /* Very light blue avatar bg */
+  box-shadow: 0 2px 10px rgba(65, 105, 225, 0.1);
 }
 
 .clarity-chat-message.user {
@@ -165,10 +177,10 @@ body {
 }
 
 .clarity-chat-message.user .avatar {
-  margin-left: 10px;
+  margin-left: 12px;
   margin-right: 0;
   order: 2;
-  background-color: #BEE3F8; /* Light blue for user avatar */
+  background-color: rgba(65, 105, 225, 0.2); /* Light blue for user avatar */
 }
 
 .clarity-chat-message.user .clarity-chat-message-content-wrapper {
@@ -177,41 +189,41 @@ body {
 }
 
 .clarity-chat-message.bot .avatar {
-  background-color: #C6F6D5; /* Light green for bot avatar for contrast */
+  background-color: rgba(65, 105, 225, 0.15); /* Light blue for bot avatar */
 }
 
 .clarity-chat-message .avatar svg {
   font-size: 20px;
-  color: #4A5568;
+  color: #4169E1; /* Blue icon color */
 }
 
 .clarity-chat-message-content-wrapper {
   display: flex;
   flex-direction: column;
-  max-width: calc(100% - 46px);
+  max-width: calc(100% - 52px);
 }
 
 .clarity-chat-message-content {
-  padding: 10px 15px;
-  border-radius: 12px;
+  padding: 12px 18px;
+  border-radius: 16px;
   color: #2D3748;
   position: relative;
   width: fit-content;
   max-width: 100%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   line-height: 1.5;
 }
 
 .clarity-chat-message.user .clarity-chat-message-content {
-  background-color: #EBF8FF; /* Light blue for user messages */
+  background-color: #4169E1; /* Royal Blue for user messages */
   border-bottom-right-radius: 4px;
   align-self: flex-end;
-  color: #2C5282; /* Darker blue text for user messages */
+  color: #FFFFFF; /* White text for contrast */
 }
 
 .clarity-chat-message.bot .clarity-chat-message-content {
-  background-color: #F7FAFC; /* Very light gray for bot messages */
-  border: 1px solid #E2E8F0;
+  background-color: #F8FAFC; /* Very light gray for bot messages */
+  border: 1px solid rgba(65, 105, 225, 0.1);
   border-bottom-left-radius: 4px;
   align-self: flex-start;
 }
@@ -219,10 +231,10 @@ body {
 /* Professional Report Styling */
 .clarity-chat-message.report .clarity-chat-message-content {
   background-color: #FFFFFF; /* White background for reports */
-  border: 1px solid #BEE3F8; /* Light blue border */
-  border-radius: 8px; /* Standard border radius */
-  padding: 18px 22px;
-  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.1);
+  border: 1px solid rgba(65, 105, 225, 0.2); /* Light blue border */
+  border-radius: 12px; /* Rounded border radius */
+  padding: 24px 28px;
+  box-shadow: 0 5px 20px rgba(65, 105, 225, 0.1);
   width: 100%; /* Reports can take more width if needed */
   max-width: 95%; /* Allow slightly wider reports */
   align-self: flex-start; /* Align reports to the left */
@@ -231,74 +243,86 @@ body {
 .clarity-chat-message.report .clarity-chat-message-content h1,
 .clarity-chat-message.report .clarity-chat-message-content h2,
 .clarity-chat-message.report .clarity-chat-message-content h3 {
-  color: #2C5282; /* Dark blue for report headings */
+  color: #4169E1; /* Royal Blue for report headings */
   margin-top: 0;
-  margin-bottom: 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(65, 105, 225, 0.1);
+  font-weight: 600;
 }
 
 .clarity-chat-message.report .clarity-chat-message-content p {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   color: #4A5568; /* Medium gray-blue for report text */
+  line-height: 1.7;
 }
 
 .clarity-chat-message.report .clarity-chat-message-content ul,
 .clarity-chat-message.report .clarity-chat-message-content ol {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   padding-left: 25px;
   color: #4A5568;
 }
 
 .clarity-chat-message.report .clarity-chat-message-content li {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .clarity-chat-message-content .time {
-  font-size: 0.7em;
-  color: #718096; /* Lighter gray for time */
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.8); /* Lighter white for time on blue */
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
+}
+
+.clarity-chat-message.bot .time,
+.clarity-chat-message.report .time {
+  text-align: left;
+  color: #718096; /* Gray for time on light backgrounds */
 }
 
 .clarity-chat-message.user .time {
   text-align: right;
 }
-.clarity-chat-message.bot .time,
-.clarity-chat-message.report .time {
-  text-align: left;
-}
 
 /* Copy Button Styling */
 .clarity-chat-copy-text-button {
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid #E2E8F0;
-  color: #718096;
-  padding: 2px 4px;
-  border-radius: 4px;
+  background: rgba(65, 105, 225, 0.1);
+  border: 1px solid rgba(65, 105, 225, 0.2);
+  color: #4169E1;
+  padding: 3px 6px;
+  border-radius: 6px;
   cursor: pointer;
   position: absolute;
   bottom: 4px;
   opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition: all 0.3s ease;
   font-size: 0.8em;
 }
 
 .clarity-chat-message.user .clarity-chat-copy-text-button {
-  left: -28px;
+  left: -32px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
 }
 
 .clarity-chat-message.bot .clarity-chat-copy-text-button,
 .clarity-chat-message.report .clarity-chat-copy-text-button {
-  right: -28px;
+  right: -32px;
 }
 
 .clarity-chat-message-content:hover .clarity-chat-copy-text-button {
   opacity: 1;
 }
 .clarity-chat-copy-text-button:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #2D3748;
+  background: rgba(65, 105, 225, 0.2);
+  color: #4169E1;
+  transform: translateY(-2px);
+}
+.clarity-chat-message.user .clarity-chat-copy-text-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
 }
 .clarity-chat-copy-text-button svg {
   font-size: 11px;
@@ -308,18 +332,19 @@ body {
 /* Code Block Styling */
 .clarity-chat-copyable-code {
   position: relative;
-  margin: 12px 0;
+  margin: 16px 0;
 }
 .clarity-chat-copyable-code pre {
-  background-color: #F7FAFC !important; /* Very light gray for code blocks */
-  border-radius: 6px;
-  padding: 12px !important;
-  font-size: 0.8em !important;
+  background-color: #F8FAFC !important; /* Very light gray for code blocks */
+  border-radius: 10px;
+  padding: 16px !important;
+  font-size: 0.85em !important;
   direction: ltr;
   text-align: left;
   overflow-x: auto;
-  border: 1px solid #E2E8F0;
+  border: 1px solid rgba(65, 105, 225, 0.1);
   color: #2D3748 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 .clarity-chat-copyable-code code {
   font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace !important;
@@ -327,39 +352,40 @@ body {
 }
 .clarity-chat-copy-code-button {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   display: flex;
   align-items: center;
-  background-color: #E2E8F0;
-  color: #4A5568;
-  border: 1px solid #CBD5E0;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 0.7em;
+  background-color: rgba(65, 105, 225, 0.1);
+  color: #4169E1;
+  border: 1px solid rgba(65, 105, 225, 0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75em;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.3s ease;
 }
 .clarity-chat-copy-code-button:hover {
-  background-color: #CBD5E0;
-  color: #2D3748;
+  background-color: rgba(65, 105, 225, 0.2);
+  color: #4169E1;
+  transform: translateY(-1px);
 }
 .clarity-chat-copy-code-button svg {
-  margin-right: 3px;
+  margin-right: 4px;
 }
 
 /* Typing Indicator */
 .clarity-chat-message.bot.typing .clarity-chat-message-content {
-  padding: 12px 15px;
-  background-color: #F7FAFC;
-  border: 1px solid #E2E8F0;
+  padding: 14px 18px;
+  background-color: #F8FAFC;
+  border: 1px solid rgba(65, 105, 225, 0.1);
 }
 .clarity-chat-typing-indicator span {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   margin: 0 2px;
-  background-color: #A0AEC0; /* Medium gray for typing dots */
+  background-color: #4169E1; /* Blue for typing dots */
   border-radius: 50%;
   animation: clarity-chat-typing-bounce 1.4s infinite ease-in-out both;
 }
@@ -375,73 +401,77 @@ body {
 /* Chat Input Form */
 .clarity-chat-form {
   display: flex;
-  padding: 12px 15px;
-  border-top: 1px solid #E2E8F0;
-  background-color: #F7FAFC; /* Light gray for form background */
-  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(65, 105, 225, 0.1);
+  background-color: #FFFFFF; /* White for form background */
+  gap: 12px;
   align-items: flex-end;
 }
 
 .clarity-chat-form textarea {
   flex-grow: 1;
-  padding: 10px 15px;
-  border-radius: 20px;
-  border: 1px solid #CBD5E0;
+  padding: 12px 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(65, 105, 225, 0.3);
   background-color: #FFFFFF;
   color: #2D3748;
   font-size: 0.95em;
   resize: none;
-  min-height: 42px;
+  min-height: 48px;
   max-height: 120px;
-  line-height: 1.4;
+  line-height: 1.5;
   overflow-y: auto;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(65, 105, 225, 0.05);
 }
 .clarity-chat-form textarea::placeholder {
   color: #A0AEC0;
 }
 .clarity-chat-form textarea:focus {
   outline: none;
-  border-color: #3182CE;
-  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+  border-color: #4169E1;
+  box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.15);
 }
 
 .clarity-chat-form-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 42px;
+  gap: 10px;
+  height: 48px;
 }
 
 .clarity-chat-form .clarity-chat-file-attach-label,
 .clarity-chat-form .clarity-chat-send-btn {
-  background-color: #EBF8FF; /* Light blue for icon buttons */
-  color: #3182CE; /* Main blue accent */
-  border: 1px solid #BEE3F8;
-  width: 42px;
-  height: 42px;
+  background-color: rgba(65, 105, 225, 0.1); /* Light blue for icon buttons */
+  color: #4169E1; /* Royal Blue accent */
+  border: 1px solid rgba(65, 105, 225, 0.2);
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1em;
-  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(65, 105, 225, 0.1);
 }
 
 .clarity-chat-form .clarity-chat-file-attach-label:hover,
 .clarity-chat-form .clarity-chat-send-btn:hover {
-  background-color: #BEE3F8; /* Darker light blue on hover */
-  color: #2C5282;
-  border-color: #90CDF4;
+  background-color: rgba(65, 105, 225, 0.2); /* Darker light blue on hover */
+  color: #4169E1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(65, 105, 225, 0.2);
 }
 
 .clarity-chat-form .clarity-chat-send-btn {
-  background-color: #3182CE; /* Main blue accent for send */
+  background-color: #4169E1; /* Royal Blue accent for send */
   color: #FFFFFF;
   border: none;
 }
 .clarity-chat-form .clarity-chat-send-btn:hover {
-  background-color: #2B6CB0;
+  background-color: #3a5ecc;
   color: #FFFFFF;
 }
 
@@ -450,6 +480,8 @@ body {
   color: #718096;
   cursor: not-allowed;
   border: none;
+  transform: none;
+  box-shadow: none;
 }
 
 .clarity-chat-form input[type="file"] {
@@ -459,22 +491,25 @@ body {
 .clarity-chat-language-selector-wrapper {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: #4A5568;
   background-color: #FFFFFF;
-  padding: 0px 8px;
-  border-radius: 18px;
-  height: 36px;
-  border: 1px solid #CBD5E0;
-  transition: border-color 0.3s;
+  padding: 0px 10px;
+  border-radius: 24px;
+  height: 40px;
+  border: 1px solid rgba(65, 105, 225, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(65, 105, 225, 0.05);
 }
 .clarity-chat-language-selector-wrapper:hover {
-    border-color: #3182CE;
+  border-color: #4169E1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(65, 105, 225, 0.1);
 }
 
 .clarity-chat-language-selector-wrapper svg {
   font-size: 1em;
-  color: #718096;
+  color: #4169E1;
 }
 .clarity-chat-language-selector-wrapper select {
   background-color: transparent;
@@ -495,52 +530,51 @@ body {
     font-size: 1.3em;
   }
   .clarity-chat-new-chat-btn {
-    padding: 7px 14px;
+    padding: 8px 16px;
     font-size: 0.8em;
   }
   .clarity-chat-filter-panel {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 12px;
+    padding: 14px 20px;
   }
   .clarity-chat-filter-panel button {
     margin-left: 0;
+    width: 100%;
   }
   .clarity-chat-messages-wrapper {
-    gap: 15px;
+    gap: 16px;
   }
   .clarity-chat-message {
     max-width: 90%;
   }
   .clarity-chat-form {
-    padding: 10px;
+    padding: 12px 16px;
     flex-wrap: wrap;
   }
   .clarity-chat-form textarea {
     font-size: 0.9em;
-    border-radius: 18px;
-    min-height: 40px;
+    border-radius: 20px;
+    min-height: 44px;
   }
   .clarity-chat-form-controls {
     width: 100%;
     justify-content: space-between;
-    margin-top: 5px;
-    height: 40px;
+    margin-top: 8px;
+    height: 44px;
   }
   .clarity-chat-form .clarity-chat-file-attach-label,
   .clarity-chat-form .clarity-chat-send-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     font-size: 1em;
   }
   .clarity-chat-language-selector-wrapper {
-    height: 34px;
-    padding: 0 6px;
+    height: 36px;
+    padding: 0 8px;
   }
 }
-
-
-
 
 /* Report Viewer Modal Styling */
 .clarity-chat-report-modal-overlay {
@@ -549,7 +583,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(45, 55, 72, 0.6); /* Dimmed background (dark gray-blue with opacity) */
+  background-color: rgba(45, 55, 72, 0.7); /* Dimmed background (dark gray-blue with opacity) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -557,7 +591,7 @@ body {
   padding: 20px;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .clarity-chat-report-modal-overlay.visible {
@@ -567,8 +601,8 @@ body {
 
 .clarity-chat-report-modal {
   background-color: #FFFFFF; /* White modal background */
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(65, 105, 225, 0.2);
   width: 100%;
   max-width: 800px; /* Max width for the modal */
   max-height: 90vh; /* Max height */
@@ -576,7 +610,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   transform: scale(0.95);
-  transition: transform 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .clarity-chat-report-modal-overlay.visible .clarity-chat-report-modal {
@@ -584,9 +618,9 @@ body {
 }
 
 .clarity-chat-report-modal-header {
-  padding: 15px 20px;
-  background-color: #EBF8FF; /* Light blue header */
-  border-bottom: 1px solid #BEE3F8; /* Slightly darker light blue border */
+  padding: 18px 24px;
+  background-color: #4169E1; /* Royal Blue header */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -595,7 +629,7 @@ body {
 .clarity-chat-report-modal-header h2 {
   margin: 0;
   font-size: 1.3em;
-  color: #2C5282; /* Darker blue for header text */
+  color: #FFFFFF; /* White text for contrast */
   font-weight: 600;
 }
 
@@ -603,123 +637,242 @@ body {
   background: none;
   border: none;
   font-size: 1.8em;
-  color: #718096; /* Medium gray for close icon */
+  color: rgba(255, 255, 255, 0.8); /* White for close icon */
   cursor: pointer;
   padding: 5px;
   line-height: 1;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .clarity-chat-report-modal-close-btn:hover {
-  color: #2C5282; /* Darker blue on hover */
+  color: #FFFFFF; /* Brighter white on hover */
+  transform: rotate(90deg);
 }
 
 .clarity-chat-report-modal-content {
-  padding: 25px 30px;
+  padding: 28px 32px;
   overflow-y: auto;
   flex-grow: 1;
   color: #2D3748; /* Default text color for modal content */
 }
 
-/* Styling for Markdown content within the modal */
-.clarity-chat-report-modal-content h1,
-.clarity-chat-report-modal-content h2,
-.clarity-chat-report-modal-content h3,
-.clarity-chat-report-modal-content h4 {
-  color: #2C5282; /* Dark blue for headings */
-  margin-top: 1.2em;
-  margin-bottom: 0.6em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid #E2E8F0; /* Light border for separation */
-}
-.clarity-chat-report-modal-content h1:first-child,
-.clarity-chat-report-modal-content h2:first-child,
-.clarity-chat-report-modal-content h3:first-child,
-.clarity-chat-report-modal-content h4:first-child {
-    margin-top: 0;
+/* Collapsible Sections Styling */
+.clarity-report-section {
+  margin-bottom: 24px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(65, 105, 225, 0.08);
+  border: 1px solid rgba(65, 105, 225, 0.1);
+  background-color: #FFFFFF;
 }
 
-.clarity-chat-report-modal-content p {
-  margin-bottom: 1em;
-  line-height: 1.7;
+.clarity-report-heading {
+  margin: 0;
+  padding: 16px 20px;
+  background-color: rgba(65, 105, 225, 0.05);
+  color: #4169E1;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(65, 105, 225, 0.1);
+}
+
+.clarity-report-heading:hover {
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+.clarity-report-heading-content {
+  flex: 1;
+}
+
+.clarity-report-toggle-btn {
+  background: none;
+  border: none;
+  color: #4169E1;
+  font-size: 1.2em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  background-color: rgba(65, 105, 225, 0.1);
+  margin-left: 10px;
+}
+
+.clarity-report-toggle-btn:hover {
+  background-color: rgba(65, 105, 225, 0.2);
+  transform: translateY(-2px);
+}
+
+.clarity-report-content {
+  padding: 0 20px;
+  max-height: 2000px; /* Large enough to contain any content */
+  overflow: hidden;
+  transition: all 0.5s ease;
+  opacity: 1;
+  transform-origin: top;
+  transform: scaleY(1);
+}
+
+.clarity-report-content.collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  transform: scaleY(0);
+}
+
+/* Styling for Markdown content within the modal */
+.clarity-report-content h1,
+.clarity-report-content h2,
+.clarity-report-content h3,
+.clarity-report-content h4 {
+  color: #4169E1; /* Royal Blue for headings */
+  margin-top: 1.4em;
+  margin-bottom: 0.7em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid rgba(65, 105, 225, 0.1); /* Light border for separation */
+  font-weight: 600;
+}
+
+.clarity-report-content h1:first-child,
+.clarity-report-content h2:first-child,
+.clarity-report-content h3:first-child,
+.clarity-report-content h4:first-child {
+  margin-top: 1em;
+}
+
+.clarity-report-content p {
+  margin-bottom: 1.2em;
+  line-height: 1.8;
   color: #4A5568; /* Medium gray-blue for paragraph text */
 }
 
-.clarity-chat-report-modal-content ul,
-.clarity-chat-report-modal-content ol {
-  margin-bottom: 1em;
+.clarity-report-content ul,
+.clarity-report-content ol {
+  margin-bottom: 1.2em;
   padding-left: 1.8em;
   color: #4A5568;
 }
 
-.clarity-chat-report-modal-content li {
-  margin-bottom: 0.5em;
+.clarity-report-content li {
+  margin-bottom: 0.6em;
+  line-height: 1.7;
 }
 
-.clarity-chat-report-modal-content strong {
+.clarity-report-content strong {
   color: #2D3748; /* Slightly darker for emphasis */
-}
-
-.clarity-chat-report-modal-content em {
-  color: #2B6CB0; /* Blue for italicized emphasis */
-}
-
-.clarity-chat-report-modal-content blockquote {
-  border-left: 4px solid #BEE3F8; /* Light blue border for blockquotes */
-  padding-left: 1em;
-  margin-left: 0;
-  margin-right: 0;
-  margin-bottom: 1em;
-  color: #718096; /* Lighter text for blockquotes */
-  font-style: italic;
-}
-
-.clarity-chat-report-modal-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.5em;
-  font-size: 0.9em;
-}
-
-.clarity-chat-report-modal-content th,
-.clarity-chat-report-modal-content td {
-  border: 1px solid #CBD5E0; /* Light gray borders for table cells */
-  padding: 10px 12px;
-  text-align: left;
-}
-
-.clarity-chat-report-modal-content th {
-  background-color: #F0F4F8; /* Light grayish-blue for table headers */
-  color: #2C5282;
   font-weight: 600;
 }
 
-.clarity-chat-report-modal-content code:not(pre code) {
-  background-color: #E2E8F0;
-  color: #2D3748;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-  font-size: 0.85em;
+.clarity-report-content em {
+  color: #4169E1; /* Blue for italicized emphasis */
 }
 
-.clarity-chat-report-modal-content .clarity-chat-copyable-code pre {
-  background-color: #F7FAFC !important;
-  border: 1px solid #E2E8F0;
-  padding: 15px !important;
+.clarity-report-content blockquote {
+  border-left: 4px solid #4169E1;
+  padding-left: 16px;
+  margin-left: 0;
+  color: #4A5568;
+  font-style: italic;
 }
 
-/* Placeholder for chart if needed */
-.clarity-chat-report-modal-content .report-chart-placeholder {
-  background-color: #EBF8FF;
-  border: 1px dashed #BEE3F8;
-  padding: 20px;
-  text-align: center;
-  color: #718096;
-  border-radius: 6px;
-  margin: 1.5em 0;
-  min-height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.clarity-report-content a {
+  color: #4169E1;
+  text-decoration: none;
+  border-bottom: 1px dotted #4169E1;
+  transition: all 0.2s ease;
 }
 
+.clarity-report-content a:hover {
+  color: #3a5ecc;
+  border-bottom: 1px solid #3a5ecc;
+}
+
+/* Table styling within reports */
+.clarity-report-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 0.9em;
+  box-shadow: 0 2px 10px rgba(65, 105, 225, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.clarity-report-content th {
+  background-color: #4169E1;
+  color: #FFFFFF;
+  text-align: left;
+  padding: 12px 15px;
+  font-weight: 600;
+}
+
+.clarity-report-content td {
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(65, 105, 225, 0.1);
+}
+
+.clarity-report-content tr:nth-child(even) {
+  background-color: rgba(65, 105, 225, 0.05);
+}
+
+.clarity-report-content tr:last-child td {
+  border-bottom: none;
+}
+
+.clarity-report-content tr:hover {
+  background-color: rgba(65, 105, 225, 0.1);
+}
+
+/* Animation for collapsible sections */
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Responsive adjustments for modal */
+@media (max-width: 768px) {
+  .clarity-chat-report-modal-header {
+    padding: 15px 20px;
+  }
+  
+  .clarity-chat-report-modal-header h2 {
+    font-size: 1.1em;
+  }
+  
+  .clarity-chat-report-modal-content {
+    padding: 20px 24px;
+  }
+  
+  .clarity-report-heading {
+    padding: 14px 16px;
+  }
+  
+  .clarity-report-content {
+    padding: 0 16px;
+  }
+}
