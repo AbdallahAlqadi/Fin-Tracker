@@ -1,22 +1,21 @@
 const mongoose = require("mongoose");
 
-// --- MODIFIED Budget Schema ---
+// Revised Budget Schema without UserCardId
 const BudgetSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
-    products: [{
-        // Can reference either an admin category or a user-created card
-        CategoriesId: { type: mongoose.Schema.Types.ObjectId, ref: "categories" }, // Optional ref to admin categories
-        UserCardId:   { type: mongoose.Schema.Types.ObjectId, ref: "usercards" }, // Optional ref to user cards
-        valueitem: { type: Number, default: 0, required: true },
-        date:      { type: Date, required: true } // Date is required
-    }]
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
+  products: [{
+    // Reference only to admin categories
+    CategoriesId: { type: mongoose.Schema.Types.ObjectId, ref: "categories", required: true },
+    valueitem:     { type: Number, default: 0, required: true },
+    date:          { type: Date, required: true }
+  }]
 });
 
-// Add a check to ensure at least one ID is provided per product
+// Validate that products array items always have a CategoriesId
 BudgetSchema.path("products").validate(function (products) {
-    if (!products) return true; // Allow empty array
-    return products.every(p => p.CategoriesId || p.UserCardId);
-}, "Each budget product must have either a CategoriesId or a UserCardId.");
+  if (!products) return true; // Allow empty array
+  return products.every(p => !!p.CategoriesId);
+}, "Each budget product must have a CategoriesId.");
 
 const Budget = mongoose.model("budget", BudgetSchema);
 module.exports = Budget;
