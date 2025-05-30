@@ -21,10 +21,7 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Drawer, // Changed from Modal/Dialog
   Button,
   useMediaQuery,
   LinearProgress,
@@ -150,27 +147,6 @@ const modernTheme = createTheme({
             }
         }
     },
-    MuiDialogTitle: {
-        styleOverrides: {
-            root: {
-                backgroundColor: "#5DB7A8",
-                color: "#FFFFFF",
-                padding: "8px 16px", // Reduced padding
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-            }
-        }
-    },
-    MuiDialogActions: {
-        styleOverrides: {
-            root: {
-                padding: "8px 16px", // Reduced padding
-                borderTop: "1px solid #E0E0E0",
-                backgroundColor: "#F4F7F6", 
-            }
-        }
-    }
   },
 });
 
@@ -254,6 +230,131 @@ const DetailItem = ({ icon, label, value, valueColor }) => (
     </Paper>
 );
 
+// *** NEW DRAWER COMPONENT ***
+const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals }) => {
+    const theme = useTheme();
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const drawerWidth = isSmallScreen ? '90vw' : 400; // Adjust width for responsiveness
+
+    if (!category) return null;
+
+    const percentage = totals[category.CategoriesId?.categoryType]
+        ? ((category.valueitem / totals[category.CategoriesId.categoryType]) * 100).toFixed(1)
+        : "0.0";
+
+    return (
+        <Drawer
+            anchor="right" // Slide from the right
+            open={open}
+            onClose={handleClose}
+            PaperProps={{
+                sx: {
+                    width: drawerWidth,
+                    borderTopLeftRadius: theme.shape.borderRadius,
+                    borderBottomLeftRadius: theme.shape.borderRadius,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    maxHeight: '100vh', // Ensure drawer doesn't exceed viewport height
+                    backgroundColor: theme.palette.background.default, // Use default background
+                }
+            }}
+        >
+            {/* Drawer Header */}
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                p: '8px 16px',
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.common.white,
+                flexShrink: 0,
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                    <InfoIcon sx={{ mr: 1, fontSize: '1.25rem' }} />
+                    <Typography variant="h6" component="div" sx={{ fontSize: '1rem' }}>
+                        Category Details
+                    </Typography>
+                </Box>
+                <IconButton
+                    aria-label="close"
+                    onClick={handleClose}
+                    size="small"
+                    sx={{ color: theme.palette.common.white }}
+                >
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            </Box>
+
+            {/* Drawer Content - Scrollable */}
+            <Box sx={{
+                p: { xs: 2, sm: 3 },
+                overflowY: 'auto', // Make content scrollable
+                flexGrow: 1, // Allow content to take available space
+            }}>
+                {category && (
+                    <Box>
+                        <Box display="flex" flexDirection="column" alignItems="center" sx={{ mb: 3 }}>
+                            <Avatar
+                                src={getImageUrl(category.CategoriesId?.image)}
+                                alt={category.CategoriesId?.categoryName || "Category"}
+                                sx={{
+                                    width: { xs: 100, sm: 140 },
+                                    height: { xs: 100, sm: 140 },
+                                    mb: 2,
+                                    boxShadow: theme.shadows[4],
+                                    border: `3px solid ${theme.palette.common.white}`,
+                                }}
+                            />
+                            <Typography variant="h4" component="h2" sx={{ fontWeight: "bold", color: theme.palette.text.primary, textAlign: "center", mb: 0.5 }}>
+                                {category.CategoriesId?.categoryName || "Unknown"}
+                            </Typography>
+                            <Chip
+                                icon={<LabelIcon />}
+                                label={category.CategoriesId?.categoryType || "N/A"}
+                                size="small"
+                                color={category.CategoriesId?.categoryType === "Revenues" ? "success" : category.CategoriesId?.categoryType === "Expenses" ? "error" : "default"}
+                                sx={{ fontWeight: 500 }}
+                            />
+                        </Box>
+
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <DetailItem
+                                    icon={<MonetizationOnIcon />}
+                                    label="Value"
+                                    value={`$${parseFloat(category.valueitem).toFixed(2)}`}
+                                    valueColor={category.CategoriesId?.categoryType === "Revenues" ? theme.palette.success.dark : theme.palette.error.dark}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <DetailItem
+                                    icon={<PieChartIcon />}
+                                    label={`Percentage of ${filterType}`}
+                                    value={`${percentage}%`}
+                                />
+                            </Grid>
+                            {/* Add more DetailItems if needed */}
+                        </Grid>
+                    </Box>
+                )}
+            </Box>
+
+            {/* Drawer Footer */}
+            <Box sx={{
+                p: '8px 16px',
+                borderTop: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.background.paper, // Use paper background for footer
+                textAlign: 'right', // Align button to the right
+                flexShrink: 0,
+            }}>
+                <Button onClick={handleClose} variant="contained" color="primary" size="small" sx={{ minWidth: '100px' }}>
+                    Close
+                </Button>
+            </Box>
+        </Drawer>
+    );
+};
+
 const GraphComponent = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -261,12 +362,11 @@ const GraphComponent = () => {
   const [filterType, setFilterType] = useState("Revenues");
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
-  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false); // Changed state name
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const d3ColorScale = d3.scaleOrdinal([...schemePastel1, ...schemeTableau10]); 
   const theme = useTheme(); 
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     fetchBudget();
@@ -358,11 +458,13 @@ const GraphComponent = () => {
 
   const handleItemClick = (item) => {
     setSelectedCategory(item);
-    setModalOpen(true);
+    setDrawerOpen(true); // Open Drawer
   };
   
-  const handleCloseModal = () => {
-    setModalOpen(false);
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false); // Close Drawer
+    // Optionally add a small delay before clearing category to allow animation
+    setTimeout(() => setSelectedCategory(null), 300); 
   };
 
   useEffect(() => {
@@ -371,7 +473,7 @@ const GraphComponent = () => {
     } else {
       d3.select(svgRef.current).selectAll("*").remove();
     }
-  }, [filteredItems, loading, d3ColorScale]); 
+  }, [filteredItems, loading, d3ColorScale, theme]); 
 
   const drawPieChart = (data) => {
     const width = 700;
@@ -505,6 +607,7 @@ const GraphComponent = () => {
             minHeight: "calc(100vh - 64px)", 
           }}
         >
+          {/* Filters Section */}
           <Paper
             elevation={0} 
             sx={{
@@ -529,9 +632,7 @@ const GraphComponent = () => {
                 onChange={(e) => setDateType(e.target.value)}
                 label="Date Type"
                 variant="outlined"
-                sx={{
-                  borderRadius: theme.shape.borderRadius,
-                }}
+                sx={{ borderRadius: theme.shape.borderRadius }}
               >
                 <MenuItem value="full">Full Date</MenuItem>
                 <MenuItem value="month">Month</MenuItem>
@@ -564,9 +665,7 @@ const GraphComponent = () => {
                 onChange={(e) => setFilterType(e.target.value)}
                 label="Type"
                 variant="outlined"
-                 sx={{
-                  borderRadius: theme.shape.borderRadius,
-                }}
+                 sx={{ borderRadius: theme.shape.borderRadius }}
               >
                 <MenuItem value="Revenues">Revenues</MenuItem>
                 <MenuItem value="Expenses">Expenses</MenuItem>
@@ -574,6 +673,7 @@ const GraphComponent = () => {
             </FormControl>
           </Paper>
 
+          {/* Totals Section */}
           <Box
             sx={{
               mb: 3,
@@ -583,7 +683,7 @@ const GraphComponent = () => {
               gap: { xs: 2, md: 3 }, 
             }}
           >
-            <TotalCard gradientBg={`linear-gradient(135deg, ${theme.palette.success.light}, ${theme.palette.success.main})`}>
+             <TotalCard gradientBg={`linear-gradient(135deg, ${theme.palette.success.light}, ${theme.palette.success.main})`}>
               <CardContent>
                 <Box display="flex" justifyContent="center" alignItems="center" gap={1.5} mb={1}>
                   <TrendingUpIcon sx={{ fontSize: 32, color: theme.palette.common.white }} />
@@ -632,6 +732,7 @@ const GraphComponent = () => {
             </TotalCard>
           </Box>
 
+          {/* Main Content: Chart and List/Cards */}
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
               <CircularProgress size={50} sx={{color: theme.palette.primary.main}}/>
@@ -644,6 +745,7 @@ const GraphComponent = () => {
             </Box>
           ) : (
             <>
+              {/* Pie Chart and Category List */}
               <Grid container spacing={3} justifyContent="center">
                 <Grid item xs={12} md={7} lg={8}>
                     <Paper elevation={0} sx={{ 
@@ -703,6 +805,7 @@ const GraphComponent = () => {
                 </Grid>
               </Grid>
 
+              {/* Rectangular Cards Section */}
               <Grid container spacing={3} sx={{mt: 1}} justifyContent="center">
                 {filteredItems.map((item, index) => {
                   const percentage =
@@ -772,98 +875,14 @@ const GraphComponent = () => {
           )}
         </Container>
 
-        <Dialog
-          open={modalOpen}
-          onClose={handleCloseModal}
-          fullWidth
-          maxWidth="sm" 
-          fullScreen={fullScreen}
-          PaperProps={{
-            sx: {
-              borderRadius: fullScreen ? 0 : theme.shape.borderRadius + 4, // e.g. 16px
-              m: fullScreen ? 0 : 2,
-              overflow: 'hidden', // Changed to hidden to clip title and actions
-              bgcolor: theme.palette.background.default,
-            }
-          }}
-        >
-          <DialogTitle>
-            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                <InfoIcon sx={{ mr: 1, fontSize: '1.25rem' }} /> {/* Slightly smaller icon */} 
-                <Typography variant="h6" component="div" sx={{ fontSize: '1rem' }}> {/* Smaller title font */} 
-                    Category Details
-                </Typography>
-            </Box>
-            <IconButton
-              aria-label="close"
-              onClick={handleCloseModal}
-              size="small" // Smaller IconButton
-              sx={{
-                color: (theme) => theme.palette.common.white, // Ensure contrast with title background
-              }}
-            >
-              <CloseIcon fontSize="small"/> {/* Smaller CloseIcon */} 
-            </IconButton>
-          </DialogTitle>
-          <DialogContent sx={{ p: {xs: 2, sm: 3}, overflowY: 'auto', maxHeight: fullScreen ? 'calc(100vh - 88px)' : 'calc(80vh - 88px)' }}> {/* Adjusted maxHeight for smaller title/actions */} 
-            {selectedCategory && (
-              <Box>
-                <Box display="flex" flexDirection="column" alignItems="center" sx={{ mb: 3 }}>
-                  <Avatar
-                    src={getImageUrl(selectedCategory.CategoriesId?.image)}
-                    alt={selectedCategory.CategoriesId?.categoryName || "Category"}
-                    sx={{
-                      width: { xs: 100, sm: 140 },
-                      height: { xs: 100, sm: 140 },
-                      mb: 2,
-                      boxShadow: theme.shadows[4],
-                      border: `3px solid ${theme.palette.common.white}`,
-                    }}
-                  />
-                  <Typography variant="h4" component="h2" sx={{ fontWeight: "bold", color: theme.palette.text.primary, textAlign: "center", mb: 0.5 }}>
-                    {selectedCategory.CategoriesId?.categoryName || "Unknown"}
-                  </Typography>
-                   <Chip 
-                        icon={<LabelIcon />} 
-                        label={selectedCategory.CategoriesId?.categoryType || "N/A"} 
-                        size="small"
-                        color={selectedCategory.CategoriesId?.categoryType === "Revenues" ? "success" : selectedCategory.CategoriesId?.categoryType === "Expenses" ? "error" : "default"}
-                        sx={{ fontWeight: 500 }}
-                    />
-                </Box>
-                
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <DetailItem 
-                            icon={<MonetizationOnIcon />}
-                            label="Value"
-                            value={`$${parseFloat(selectedCategory.valueitem).toFixed(2)}`}
-                            valueColor={selectedCategory.CategoriesId?.categoryType === "Revenues" ? theme.palette.success.dark : theme.palette.error.dark}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <DetailItem 
-                            icon={<PieChartIcon />}
-                            label={`Percentage of ${filterType}`}
-                            value={`${selectedCategory && totals[selectedCategory.CategoriesId?.categoryType]
-                                ? (
-                                    (selectedCategory.valueitem /
-                                    totals[selectedCategory.CategoriesId.categoryType]) *
-                                    100
-                                ).toFixed(1)
-                                : "0.0"}%`}
-                        />
-                    </Grid>
-                </Grid>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseModal} variant="contained" color="primary" size="small" sx={{minWidth: '100px'}}> {/* Smaller button */} 
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Use the NEW Drawer Component */}
+        <CategoryDetailDrawer 
+            open={drawerOpen} 
+            handleClose={handleCloseDrawer} 
+            category={selectedCategory} 
+            filterType={filterType}
+            totals={totals}
+        />
       </>
   );
 };
