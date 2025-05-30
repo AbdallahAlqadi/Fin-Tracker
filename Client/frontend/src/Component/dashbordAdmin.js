@@ -148,12 +148,16 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
   };
 
   const renderCategoryCard = (cat) => {
-    const color = cat.categoryType === 'Expenses' ? 'red' : 'blue';
+    const color = cat.categoryType === 'Expenses' ? '#ef4444' : '#2563eb';
+    const borderStyle = cat.categoryType === 'Expenses' 
+      ? '1px solid rgba(239, 68, 68, 0.3)' 
+      : '1px solid rgba(37, 99, 235, 0.3)';
+    
     return (
       <div
         key={cat._id}
         className="category-card"
-        style={{ border: `2px solid ${color}` }}
+        style={{ border: borderStyle }}
       >
         <div className="card-image">
           {cat.image ? (
@@ -171,7 +175,7 @@ const CategoryList = ({ categories, onDelete, onUpdate }) => {
         </div>
         <div className="card-content">
           <h3>{cat.categoryName}</h3>
-          <p style={{ color: color, fontWeight: 'bold' }}>
+          <p style={{ color: color, fontWeight: '600' }}>
             {cat.categoryType}
           </p>
         </div>
@@ -323,6 +327,8 @@ const CombinedPage = () => {
       );
       if (res.status === 200) {
         setCategories(categories.filter((cat) => cat._id !== id));
+        setSuccessMessage('Category deleted successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (err) {
       alert(err.message);
@@ -340,6 +346,8 @@ const CombinedPage = () => {
         setCategories(
           categories.map((cat) => (cat._id === id ? res.data.data : cat))
         );
+        setSuccessMessage('Category updated successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (err) {
       alert(
