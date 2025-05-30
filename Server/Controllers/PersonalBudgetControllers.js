@@ -1,157 +1,125 @@
-const BudgetModel = require("../models/PersonalBudget "); // Assuming path is correct
+const Budget = require("../models/PersonalBudget "); // Assuming path is correct
 const Category = require("../models/categoryData"); // Assuming path is correct
 
-// --- GET User Budget ---
+
 exports.getUserBudget = async (req, res) => {
-  try {
-    const budget = await BudgetModel.findOne({ userId: req.user })
-      .populate("products.CategoriesId"); // Populate admin categories only
-
-    if (!budget) {
-      // If no budget document exists yet, return an empty structure
-      return res.status(200).json({ userId: req.user, products: [] });
+    try {
+        const budget = await Budget.findOne({ userId: req.user }).populate('products.CategoriesId');
+        res.status(200).json(budget);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    res.status(200).json(budget);
-  } catch (error) {
-    console.error("Error fetching budget:", error);
-    res.status(500).json({ error: "Failed to fetch budget data.", details: error.message });
-  }
 };
 
-// --- Add Budget Item ---
+// Add budget item
 exports.addBudget = async (req, res) => {
-  const { CategoriesId, valueitem, date } = req.body;
-  const userId = req.user;
+    const { CategoriesId, valueitem, date } = req.body;
+    const userId = req.user;
 
-  if (!CategoriesId) {
-    return res.status(400).json({ error: "Please provide a CategoriesId." });
-  }
-  if (!valueitem || !date) {
-    return res.status(400).json({ error: "Value and date are required." });
-  }
+    // تحويل التاريخ المرسل إلى صيغة YYYY-MM-DD
+    const selectedDate = new Date(date).toISOString().split('T')[0];
 
-  const selectedDate = new Date(date).toISOString().split("T")[0]; // Normalize date to YYYY-MM-DD
-  const startDate = new Date(selectedDate);
-  const endDate = new Date(new Date(selectedDate).setDate(startDate.getDate() + 1));
+    try {
+        // التحقق من وجود الفئة في نفس التاريخ
+        const existingBudget = await Budget.findOne({
+            userId,
+            products: {
+                $elemMatch: {
+                    CategoriesId,
+                    date: {
+                        $gte: new Date(selectedDate),
+                        $lt: new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() + 1))
+                    }
+                }
+            }
+        });
 
-  try {
-    // Check if this category already exists for this user on this date
-    const existingEntry = await BudgetModel.findOne({
-      userId,
-      products: {
-        $elemMatch: {
-          CategoriesId,
-          date: { $gte: startDate, $lt: endDate }
+        if (existingBudget) {
+            return res.status(400).json({ error: 'لا يمكنك إضافة نفس الفئة أكثر من مرة في نفس التاريخ.' });
         }
-      }
-    });
 
-    if (existingEntry) {
-      return res.status(400).json({ error: "You have already added an entry for this category on this date." });
+        // إضافة العنصر الجديد
+        const updatedBudget = await Budget.findOneAndUpdate(
+            { userId },
+            {
+                $push: {
+                    products: {
+                        CategoriesId,
+                        valueitem,
+                        date: new Date(selectedDate)
+                    }
+                }
+            },
+            { new: true, upsert: true }
+        );
+
+        return res.status(200).json({ message: 'تمت الإضافة بنجاح.', budget: updatedBudget });
+    } catch (error) {
+        console.error('Error in addBudget:', error);
+        return res.status(500).json({ error: error.message });
     }
-
-    // Create the new product entry
-    const newProduct = { CategoriesId, valueitem, date: startDate };
-
-    // Add the new product entry to the user's budget
-    const updatedBudget = await BudgetModel.findOneAndUpdate(
-      { userId },
-      { $push: { products: newProduct } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    ).populate("products.CategoriesId");
-
-    return res.status(200).json({ message: "Budget item added successfully.", budget: updatedBudget });
-  } catch (error) {
-    console.error("Error in addBudget:", error);
-    return res.status(500).json({ error: "Failed to add budget item.", details: error.message });
-  }
 };
 
-// --- Update Budget Item ---
+// Update budget item
 exports.updateBudget = async (req, res) => {
-  const { CategoriesId, valueitem, date } = req.body;
-  const userId = req.user;
+    const { CategoriesId, valueitem, date } = req.body;
+    const userId = req.user;
 
-  if (!CategoriesId) {
-    return res.status(400).json({ error: "Please provide a CategoriesId for identification." });
-  }
-  if (valueitem === undefined || valueitem === null || !date) {
-    return res.status(400).json({ error: "New value and date are required." });
-  }
+    // تحويل التاريخ إلى صيغة YYYY-MM-DD
+    const selectedDate = new Date(date).toISOString().split('T')[0];
 
-  const selectedDate = new Date(date).toISOString().split("T")[0];
-  const startDate = new Date(selectedDate);
-  const endDate = new Date(new Date(selectedDate).setDate(startDate.getDate() + 1));
+    try {
+        const budget = await Budget.findOne({ userId });
+        if (!budget) {
+            return res.status(404).json({ error: 'Budget not found' });
+        }
 
-  try {
-    const budget = await BudgetModel.findOne({ userId });
-    if (!budget) {
-      return res.status(404).json({ error: "Budget not found for this user." });
+        // البحث عن العنصر بناءً على CategoriesId والتاريخ
+        const budgetIndex = budget.products.findIndex((item) =>
+            item.CategoriesId.toString() === CategoriesId &&
+            new Date(item.date).toISOString().split('T')[0] === selectedDate
+        );
+
+        if (budgetIndex > -1) {
+            budget.products[budgetIndex].valueitem = valueitem;
+            await budget.save();
+            res.status(200).json(budget);
+        } else {
+            res.status(404).json({ error: 'Category not found in budget for the specified date' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    // Find the index of the product to update
-    const productIndex = budget.products.findIndex(item => {
-      const itemDate = new Date(item.date).toISOString().split("T")[0];
-      return itemDate === selectedDate && item.CategoriesId.toString() === CategoriesId;
-    });
-
-    if (productIndex > -1) {
-      budget.products[productIndex].valueitem = valueitem;
-      await budget.save();
-
-      const updatedBudget = await BudgetModel.findById(budget._id)
-        .populate("products.CategoriesId");
-      return res.status(200).json({ message: "Budget item updated successfully.", budget: updatedBudget });
-    } else {
-      return res.status(404).json({ error: "Budget item for this category not found on the specified date." });
-    }
-  } catch (error) {
-    console.error("Error updating budget:", error);
-    return res.status(500).json({ error: "Failed to update budget item.", details: error.message });
-  }
 };
 
-// --- Delete Budget Item ---
+// Delete budget item
 exports.deleteBudget = async (req, res) => {
-  const { CategoriesId, date } = req.body;
-  const userId = req.user;
+    const { CategoriesId, date } = req.body;
+    const userId = req.user;
 
-  if (!CategoriesId) {
-    return res.status(400).json({ error: "Please provide a CategoriesId for identification." });
-  }
-  if (!date) {
-    return res.status(400).json({ error: "Date is required to identify the item to delete." });
-  }
+    // تحويل التاريخ إلى صيغة YYYY-MM-DD
+    const selectedDate = new Date(date).toISOString().split('T')[0];
 
-  const selectedDate = new Date(date).toISOString().split("T")[0];
-  const startDate = new Date(selectedDate);
-  const endDate = new Date(new Date(selectedDate).setDate(startDate.getDate() + 1));
+    try {
+        const budget = await Budget.findOne({ userId });
+        if (!budget) {
+            return res.status(404).json({ error: 'Budget not found' });
+        }
 
-  try {
-    const budget = await BudgetModel.findOne({ userId });
-    if (!budget) {
-      return res.status(404).json({ error: "Budget not found for this user." });
+        // البحث عن العنصر بناءً على CategoriesId والتاريخ
+        const budgetIndex = budget.products.findIndex((item) =>
+            item.CategoriesId.toString() === CategoriesId &&
+            new Date(item.date).toISOString().split('T')[0] === selectedDate
+        );
+
+        if (budgetIndex > -1) {
+            budget.products.splice(budgetIndex, 1);
+            await budget.save();
+            res.status(200).json({ message: 'Category deleted successfully', budget });
+        } else {
+            res.status(404).json({ error: 'Category not found in budget for the specified date' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    // Find the index of the product to delete
-    const productIndex = budget.products.findIndex(item => {
-      const itemDate = new Date(item.date).toISOString().split("T")[0];
-      return itemDate === selectedDate && item.CategoriesId.toString() === CategoriesId;
-    });
-
-    if (productIndex > -1) {
-      budget.products.splice(productIndex, 1);
-      await budget.save();
-
-      const updatedBudget = await BudgetModel.findById(budget._id)
-        .populate("products.CategoriesId");
-      return res.status(200).json({ message: "Budget item deleted successfully.", budget: updatedBudget });
-    } else {
-      return res.status(404).json({ error: "Budget item for this category not found on the specified date." });
-    }
-  } catch (error) {
-    console.error("Error deleting budget item:", error);
-    return res.status(500).json({ error: "Failed to delete budget item.", details: error.message });
-  }
 };
