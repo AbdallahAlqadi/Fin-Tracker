@@ -23,7 +23,7 @@ import {
   InputLabel,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
-import { styled, keyframes, alpha } from '@mui/system'; // Added alpha for transparency
+import { styled, keyframes, alpha } from '@mui/system';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
@@ -32,32 +32,31 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
-// --- ORIGINAL THEME COLORS (Reverted) ---
+// تحديث لوحة الألوان لتصبح أكثر هدوءًا واحترافية
 const originalThemeColors = {
-  backgroundGradientStart: '#F0F8FF',
+  backgroundGradientStart: '#F0F8FF', // الاحتفاظ بالتدرج الخفيف
   backgroundGradientEnd: '#E6F2FF',
-  primaryAccent: '#4A90E2', // Original Blue
-  textPrimary: '#333333', // Darker text for light background
-  textSecondary: '#666666', // Original secondary text
-  expense: '#FF5252', // Original Red for expenses
-  income: '#4CAF50', // Original Green for income
-  surface: '#FFFFFF', // White for cards, dialogs
-  dialogSurface: '#FAFAFA', // Light gray for dialog content areas
+  primaryAccent: '#1565C0', // أزرق أغمق وأكثر احترافية
+  textPrimary: '#212121', // رمادي غامق للنص الأساسي
+  textSecondary: '#616161', // رمادي متوسط للنص الثانوي
+  expense: '#C62828', // أحمر خافت للمصروفات
+  income: '#2E7D32', // أخضر داكن للإيرادات
+  surface: '#FFFFFF', // أبيض نظيف
+  dialogSurface: '#FAFAFA', // رمادي فاتح جدًا للحوار
   inputBackground: '#FFFFFF',
-  borderColor: '#DDDDDD', // Lighter border for light theme
+  borderColor: '#E0E0E0', // حدود رمادية ناعمة
   white: '#FFFFFF',
-  buttonTextLight: '#FFFFFF', // For contained buttons
-  buttonTextDark: '#4A90E2', // For outlined buttons
+  buttonTextLight: '#FFFFFF', // للأزرار المملوءة
+  buttonTextDark: '#1565C0', // للأزرار المحددة بالحدود
 };
 
-// Smooth animation for cards (remains the same)
+// الرسوم المتحركة تبقى كما هي لأنها حديثة
 const floatAnimation = keyframes`
   0% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
   100% { transform: translateY(0); }
 `;
 
-// Fade-in animation for cards (remains the same)
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -69,7 +68,7 @@ const fadeIn = keyframes`
   }
 `;
 
-// Modern design for category card with dynamic border color based on type
+// تصميم بطاقة الفئة مع تحديد لون الحدود بناءً على النوع
 const CategoryCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'type',
 })(({ theme, type }) => ({
@@ -77,7 +76,7 @@ const CategoryCard = styled(Box, {
   backgroundColor: originalThemeColors.surface,
   borderRadius: '20px',
   padding: theme.spacing(3),
-  width: '190px', // Card width remains 190px, ensure 5 fit with gaps
+  width: '190px',
   height: '190px',
   display: 'flex',
   flexDirection: 'column',
@@ -98,9 +97,8 @@ const CategoryCard = styled(Box, {
     height: '150px',
     padding: theme.spacing(2.5),
   },
-  // Adjust card width slightly if needed to fit 5 in a row more comfortably on medium screens
   [theme.breakpoints.between('md', 'lg')]: {
-    width: '170px', // Example: slightly smaller for 5 cards on medium screens
+    width: '170px',
     height: '170px',
   },
 }));
@@ -114,7 +112,7 @@ const DashboardUser = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
-  const [scale, setScale] = useState(1); // Title scale effect
+  const [scale, setScale] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [addedItems, setAddedItems] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,8 +124,8 @@ const DashboardUser = () => {
   const [newErrorMessage, setNewErrorMessage] = useState('');
   const [isNewSubmitting, setIsNewSubmitting] = useState(false);
 
-  const isSmallDevice = useMediaQuery('(max-width:600px)'); // Adjusted breakpoint for small device grid
-  const isMediumDevice = useMediaQuery('(max-width:900px)'); // Breakpoint for potentially 3-4 cards
+  const isSmallDevice = useMediaQuery('(max-width:600px)');
+  const isMediumDevice = useMediaQuery('(max-width:900px)');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -136,7 +134,7 @@ const DashboardUser = () => {
         setCategories(response.data.data);
         const initialVisibleItems = response.data.data.reduce((acc, category) => {
           if (!acc[category.categoryType]) {
-            acc[category.categoryType] = 12; // Or 10 if we want to show 2 full rows of 5
+            acc[category.categoryType] = 12;
           }
           return acc;
         }, {});
@@ -218,7 +216,7 @@ const DashboardUser = () => {
   const handleLoadMore = (type) => {
     setVisibleItems((prev) => ({
       ...prev,
-      [type]: prev[type] + 10, // Load 10 more (2 rows of 5)
+      [type]: prev[type] + 10,
     }));
   };
 
@@ -477,13 +475,12 @@ const DashboardUser = () => {
             <Box
               sx={{
                 display: 'grid',
-                // Updated gridTemplateColumns for 5 cards per row on larger screens
                 gridTemplateColumns: {
-                  xs: 'repeat(auto-fit, minmax(150px, 1fr))', // Keep responsive for very small screens (1-2 cards)
-                  sm: 'repeat(auto-fit, minmax(170px, 1fr))', // Responsive for small screens (2-3 cards)
-                  md: 'repeat(5, 1fr)', // 5 cards for medium screens and up
+                  xs: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  sm: 'repeat(auto-fit, minmax(170px, 1fr))',
+                  md: 'repeat(5, 1fr)',
                 },
-                gap: { xs: 2, sm: 2.5, md: 3 }, // Adjusted gaps for 5 columns
+                gap: { xs: 2, sm: 2.5, md: 3 },
                 justifyContent: 'center',
               }}
             >
@@ -513,8 +510,7 @@ const DashboardUser = () => {
                             opacity: isAdded ? 0.6 : 1,
                             filter: isAdded ? 'grayscale(50%)' : 'none',
                             pointerEvents: isAdded ? 'none' : 'auto',
-                            // Ensure cards can shrink if needed to fit 5 across, or adjust CategoryCard width
-                            minWidth: 0, 
+                            minWidth: 0,
                           }}
                           aria-disabled={isAdded}
                         >
@@ -528,7 +524,7 @@ const DashboardUser = () => {
                               }
                               alt={category.categoryName}
                               sx={{
-                                width: { xs: 60, sm: 70, md: 80 }, // Adjusted image size for card changes
+                                width: { xs: 60, sm: 70, md: 80 },
                                 height: { xs: 60, sm: 70, md: 80 },
                                 borderRadius: '50%',
                                 mb: 1.5,
@@ -579,7 +575,6 @@ const DashboardUser = () => {
         ))
       )}
 
-      {/* Dialog for Adding Budget Item */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -755,7 +750,6 @@ const DashboardUser = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog for Adding New Category */}
       <Dialog
         open={newDialogOpen}
         onClose={handleNewDialogClose}
@@ -967,4 +961,3 @@ const DashboardUser = () => {
 };
 
 export default DashboardUser;
-
