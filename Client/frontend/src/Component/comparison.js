@@ -14,6 +14,12 @@ import {
   Checkbox,
   Grid,
   Paper,
+  Chip,
+  Tooltip,
+  IconButton,
+  Fade,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -27,9 +33,18 @@ import {
   LineElement,
   PointElement,
   Title,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend,
+  Filler,
 } from "chart.js";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
+import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import DateRangeIcon from "@mui/icons-material/DateRange";
+import EventIcon from "@mui/icons-material/Event";
 import "../cssStyle/comparsion.css";
 
 // Register Chart.js components
@@ -40,55 +55,188 @@ ChartJS.register(
   LineElement,
   PointElement,
   Title,
-  Tooltip,
-  Legend
+  ChartTooltip,
+  Legend,
+  Filler
 );
 
-// Styled Select component
+// Styled components with modern design principles
+const StyledContainer = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(4, 5, 6),
+  background: "linear-gradient(145deg, #f9fafe 0%, #eef2ff 100%)",
+  borderRadius: "24px",
+  boxShadow: "0 10px 40px rgba(0, 0, 0, 0.08)",
+  maxWidth: "1200px",
+  margin: "40px auto",
+  transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: "0 15px 50px rgba(0, 0, 0, 0.12)",
+  },
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(3),
+    borderRadius: "20px",
+  },
+}));
+
+const ControlPanel = styled(Paper)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  padding: theme.spacing(3, 4),
+  borderRadius: "20px",
+  background: "rgba(255, 255, 255, 0.9)",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 8px 32px rgba(31, 38, 135, 0.1)",
+  border: "1px solid rgba(255, 255, 255, 0.18)",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    boxShadow: "0 8px 32px rgba(31, 38, 135, 0.15)",
+  },
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
 const StyledSelect = styled(Select)(({ theme }) => ({
-  borderRadius: "12px",
-  backgroundColor: "#ffffff",
-  boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)",
+  borderRadius: "14px",
+  backgroundColor: "rgba(255, 255, 255, 0.8)",
+  backdropFilter: "blur(5px)",
+  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.05)",
   transition: "all 0.3s ease",
   "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.primary.main,
-  },
-  "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.primary.dark,
-  },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.secondary.main,
-    borderWidth: "3px",
-  },
-}));
-
-// Styled Checkbox component
-const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
-  color: theme.palette.secondary.main,
-  "&.Mui-checked": {
-    color: theme.palette.secondary.main,
-  },
-  "& .MuiSvgIcon-root": {
-    fontSize: 28,
-    transition: "transform 0.2s ease",
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderWidth: "1px",
   },
   "&:hover": {
-    transform: "scale(1.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: theme.palette.primary.light,
+    },
+  },
+  "&.Mui-focused": {
+    backgroundColor: "#ffffff",
+    boxShadow: "0 0 0 2px rgba(63, 81, 181, 0.2)",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: theme.palette.primary.main,
+      borderWidth: "2px",
+    },
   },
 }));
 
-// Styled Radio component
-const StyledRadio = styled(Radio)(({ theme }) => ({
-  color: theme.palette.primary.main,
+const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
+  color: theme.palette.secondary.main,
+  padding: "10px",
   "&.Mui-checked": {
     color: theme.palette.primary.main,
   },
+  "& .MuiSvgIcon-root": {
+    fontSize: 24,
+    transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+  },
   "&:hover": {
-    transform: "scale(1.1)",
+    backgroundColor: "rgba(63, 81, 181, 0.08)",
+    "& .MuiSvgIcon-root": {
+      transform: "scale(1.1)",
+    },
   },
 }));
 
+const StyledRadio = styled(Radio)(({ theme }) => ({
+  color: theme.palette.text.secondary,
+  padding: "10px",
+  "&.Mui-checked": {
+    color: theme.palette.primary.main,
+  },
+  "& .MuiSvgIcon-root": {
+    fontSize: 24,
+    transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+  },
+  "&:hover": {
+    backgroundColor: "rgba(63, 81, 181, 0.08)",
+    "& .MuiSvgIcon-root": {
+      transform: "scale(1.1)",
+    },
+  },
+}));
+
+const FilterChip = styled(Chip)(({ theme, selected }) => ({
+  margin: theme.spacing(0.5),
+  borderRadius: "12px",
+  fontWeight: 500,
+  transition: "all 0.2s ease",
+  backgroundColor: selected ? theme.palette.primary.main : "rgba(255, 255, 255, 0.9)",
+  color: selected ? "#fff" : theme.palette.text.primary,
+  border: selected ? "none" : "1px solid rgba(0, 0, 0, 0.12)",
+  boxShadow: selected ? "0 4px 10px rgba(63, 81, 181, 0.25)" : "none",
+  "&:hover": {
+    backgroundColor: selected ? theme.palette.primary.dark : "rgba(63, 81, 181, 0.08)",
+    transform: "translateY(-2px)",
+    boxShadow: selected 
+      ? "0 6px 12px rgba(63, 81, 181, 0.3)" 
+      : "0 4px 8px rgba(0, 0, 0, 0.1)",
+  },
+  "&:active": {
+    transform: "translateY(0)",
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+  },
+}));
+
+const ChartContainer = styled(Box)(({ theme }) => ({
+  width: "100%",
+  height: "500px",
+  position: "relative",
+  backgroundColor: "#ffffff",
+  borderRadius: "20px",
+  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+  padding: theme.spacing(3),
+  transition: "all 0.3s ease",
+  "&:hover": {
+    boxShadow: "0 15px 35px rgba(0, 0, 0, 0.12)",
+  },
+  [theme.breakpoints.down("sm")]: {
+    height: "400px",
+    padding: theme.spacing(2),
+  },
+}));
+
+const MonthCard = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  padding: theme.spacing(3),
+  borderRadius: "16px",
+  background: "linear-gradient(145deg, #ffffff 0%, #f9fafc 100%)",
+  boxShadow: "0 6px 20px rgba(0, 0, 0, 0.06)",
+  transition: "all 0.3s ease",
+  border: "1px solid rgba(230, 230, 250, 0.7)",
+  "&:hover": {
+    transform: "translateY(-3px)",
+    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+  },
+}));
+
+const EmptyStateContainer = styled(Box)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "400px",
+  backgroundColor: "#ffffff",
+  borderRadius: "20px",
+  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+  padding: theme.spacing(3),
+}));
+
+const StyledTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  marginBottom: theme.spacing(1),
+  background: "linear-gradient(90deg, #3f51b5 0%, #7986cb 100%)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  textShadow: "0 2px 10px rgba(63, 81, 181, 0.15)",
+}));
+
 const Comparison = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState([]);
@@ -98,9 +246,20 @@ const Comparison = () => {
   const [chartType, setChartType] = useState("bar");
   const [showRevenues, setShowRevenues] = useState(true);
   const [showExpenses, setShowExpenses] = useState(true);
+  const [chartHovered, setChartHovered] = useState(false);
 
   useEffect(() => {
     fetchBudget();
+    
+    // Add subtle entrance animation
+    const timer = setTimeout(() => {
+      const container = document.getElementById("main-container");
+      if (container) {
+        container.style.opacity = "1";
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const token = sessionStorage.getItem("jwt");
@@ -209,28 +368,47 @@ const Comparison = () => {
   const getChartData = () => {
     const labels = Object.keys(filteredItems);
     const datasets = [];
+    
     if (showRevenues) {
       datasets.push({
         label: "Revenues",
         data: labels.map((label) => filteredItems[label].Revenues || 0),
-        backgroundColor: "rgba(46, 204, 113, 0.8)",
+        backgroundColor: "rgba(46, 204, 113, 0.7)",
         borderColor: "rgba(46, 204, 113, 1)",
         borderWidth: 2,
-        fill: chartType === "line" ? false : true,
+        fill: chartType === "line" ? "start" : undefined,
         tension: 0.4,
+        pointBackgroundColor: "rgba(46, 204, 113, 1)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: "#fff",
+        pointHoverBorderColor: "rgba(46, 204, 113, 1)",
+        pointHoverBorderWidth: 2,
       });
     }
+    
     if (showExpenses) {
       datasets.push({
         label: "Expenses",
         data: labels.map((label) => filteredItems[label].Expenses || 0),
-        backgroundColor: "rgba(231, 76, 60, 0.8)",
+        backgroundColor: "rgba(231, 76, 60, 0.7)",
         borderColor: "rgba(231, 76, 60, 1)",
         borderWidth: 2,
-        fill: chartType === "line" ? false : true,
+        fill: chartType === "line" ? "start" : undefined,
         tension: 0.4,
+        pointBackgroundColor: "rgba(231, 76, 60, 1)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: "#fff",
+        pointHoverBorderColor: "rgba(231, 76, 60, 1)",
+        pointHoverBorderWidth: 2,
       });
     }
+    
     return {
       labels,
       datasets,
@@ -239,41 +417,107 @@ const Comparison = () => {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top",
+        align: "end",
         labels: {
-          font: { size: 16, weight: "bold" },
+          boxWidth: 15,
+          usePointStyle: true,
+          pointStyle: "circle",
           padding: 20,
+          font: { 
+            size: 14,
+            weight: "600",
+            family: "'Poppins', sans-serif"
+          },
         },
       },
       title: {
         display: true,
         text: "Budget Comparison",
-        font: { size: 28, weight: "bold" },
+        font: { 
+          size: 24, 
+          weight: "bold",
+          family: "'Poppins', sans-serif"
+        },
         color: "#2c3e50",
         padding: { top: 20, bottom: 20 },
       },
       tooltip: {
         backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleFont: { size: 16 },
+        titleFont: { size: 16, weight: "bold" },
         bodyFont: { size: 14 },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: true,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed.y !== null) {
+              label += new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              }).format(context.parsed.y);
+            }
+            return label;
+          }
+        }
       },
     },
     scales: {
       x: {
-        grid: { display: false },
-        ticks: { font: { size: 14 } },
+        grid: { 
+          display: false,
+          drawBorder: false,
+        },
+        ticks: { 
+          font: { 
+            size: 12,
+            weight: "500",
+            family: "'Poppins', sans-serif"
+          },
+          color: "#64748b",
+          padding: 10,
+        },
       },
       y: {
-        grid: { color: "rgba(0, 0, 0, 0.1)" },
-        ticks: { font: { size: 14 }, beginAtZero: true },
+        grid: { 
+          color: "rgba(0, 0, 0, 0.05)",
+          drawBorder: false,
+        },
+        ticks: { 
+          font: { 
+            size: 12,
+            weight: "500",
+            family: "'Poppins', sans-serif"
+          },
+          color: "#64748b",
+          padding: 10,
+          callback: function(value) {
+            return '$' + value.toLocaleString();
+          }
+        },
+        beginAtZero: true,
       },
     },
-    maintainAspectRatio: false,
     animation: {
       duration: 1500,
-      easing: "easeOutBounce",
+      easing: "easeOutQuart",
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    onHover: (event, chartElements) => {
+      setChartHovered(chartElements.length > 0);
     },
   };
 
@@ -334,48 +578,61 @@ const Comparison = () => {
     const updatedSelectedDays = selectedDays.filter(day => !day.startsWith(`${monthKey}-`));
     setSelectedDays([...updatedSelectedDays, ...selectedDaysForMonth]);
   };
+  
+  const getMonthName = (monthNum) => {
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    return months[monthNum - 1];
+  };
+
+  const getDateTypeIcon = () => {
+    switch(dateType) {
+      case "year": return <CalendarMonthIcon />;
+      case "month": return <DateRangeIcon />;
+      case "day": return <EventIcon />;
+      default: return <CalendarMonthIcon />;
+    }
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box
+      <StyledContainer
         id="main-container"
         sx={{
-          padding: { xs: 2, sm: 3, md: 4 },
-          background: "linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%)",
-          borderRadius: "20px",
-          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
-          maxWidth: { xs: "95%", sm: "90%", md: "1200px" },
-          margin: "30px auto",
-          transition: "transform 0.3s ease",
-          "&:hover": {
-            transform: "translateY(-5px)",
-          },
+          opacity: 0,
+          transition: "opacity 0.5s ease-in-out",
         }}
       >
-        <Paper
-          id="controls-container"
-          elevation={6}
-          sx={{
-            marginBottom: 4,
-            padding: { xs: 2, sm: 3 },
-            borderRadius: "16px",
-            background: "linear-gradient(135deg, #ffffff 0%, #eef2f7 100%)",
-            boxShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
-          }}
-        >
+        <ControlPanel elevation={3}>
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} sm="auto">
-              <FormControl
-                id="date-type-select"
-                sx={{
-                  minWidth: 160,
-                }}
-              >
-                <InputLabel sx={{ fontWeight: "bold" }}>Date Type</InputLabel>
+            <Grid item xs={12}>
+              <StyledTitle variant="h5" gutterBottom>
+                Budget Comparison Dashboard
+              </StyledTitle>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Visualize and compare your revenues and expenses across different time periods
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel 
+                  id="date-type-select-label"
+                  sx={{ 
+                    fontWeight: 500,
+                    color: theme.palette.primary.main
+                  }}
+                >
+                  Date Type
+                </InputLabel>
                 <StyledSelect
+                  labelId="date-type-select-label"
                   value={dateType}
                   onChange={(e) => setDateType(e.target.value)}
                   label="Date Type"
+                  startAdornment={getDateTypeIcon()}
                 >
                   <MenuItem value="year">Year</MenuItem>
                   <MenuItem value="month">Month</MenuItem>
@@ -383,111 +640,114 @@ const Comparison = () => {
                 </StyledSelect>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm="auto">
-              <RadioGroup
-                row
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value)}
-              >
-                <FormControlLabel
-                  value="bar"
-                  control={<StyledRadio />}
-                  label="Bar Chart"
-                  sx={{ fontWeight: "bold" }}
-                />
-                <FormControlLabel
-                  value="line"
-                  control={<StyledRadio />}
-                  label="Line Chart"
-                  sx={{ fontWeight: "bold" }}
-                />
-              </RadioGroup>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <RadioGroup
+                  row
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value)}
+                  sx={{ justifyContent: "center" }}
+                >
+                  <Tooltip title="Bar Chart" arrow placement="top">
+                    <FormControlLabel
+                      value="bar"
+                      control={<StyledRadio icon={<BarChartIcon />} checkedIcon={<BarChartIcon />} />}
+                      label="Bar"
+                      sx={{ fontWeight: 500 }}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Line Chart" arrow placement="top">
+                    <FormControlLabel
+                      value="line"
+                      control={<StyledRadio icon={<ShowChartIcon />} checkedIcon={<ShowChartIcon />} />}
+                      label="Line"
+                      sx={{ fontWeight: 500 }}
+                    />
+                  </Tooltip>
+                </RadioGroup>
+              </Box>
             </Grid>
-            <Grid item xs={12} sm="auto">
+            
+            <Grid item xs={12} sm={6} md={3}>
               <FormControlLabel
                 control={
                   <StyledCheckbox
                     checked={showRevenues}
                     onChange={(e) => setShowRevenues(e.target.checked)}
+                    icon={<PaidOutlinedIcon />}
+                    checkedIcon={<PaidOutlinedIcon />}
                   />
                 }
-                label="Show Revenues"
-                sx={{ fontWeight: "bold" }}
+                label="Revenues"
+                sx={{ fontWeight: 500 }}
               />
             </Grid>
-            <Grid item xs={12} sm="auto">
+            
+            <Grid item xs={12} sm={6} md={3}>
               <FormControlLabel
                 control={
                   <StyledCheckbox
                     checked={showExpenses}
                     onChange={(e) => setShowExpenses(e.target.checked)}
+                    icon={<AccountBalanceWalletOutlinedIcon />}
+                    checkedIcon={<AccountBalanceWalletOutlinedIcon />}
                   />
                 }
-                label="Show Expenses"
-                sx={{ fontWeight: "bold" }}
+                label="Expenses"
+                sx={{ fontWeight: 500 }}
               />
             </Grid>
           </Grid>
-        </Paper>
+        </ControlPanel>
 
-        <Box id="date-selection-container" sx={{ marginBottom: 4 }}>
+        <Box sx={{ mb: 4 }}>
           {dateType === "year" && (
-            <Grid container spacing={2}>
-              {availableYears.map((year) => (
-                <Grid item xs={6} sm={4} md={3} key={year}>
-                  <FormControlLabel
-                    control={
-                      <StyledCheckbox
-                        checked={selectedYear.includes(year)}
-                        onChange={() => handleYearChange(year)}
-                      />
-                    }
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+                Select Years:
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+                {availableYears.map((year) => (
+                  <FilterChip
+                    key={year}
                     label={year}
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "8px",
-                      padding: "8px",
-                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
-                      transition: "all 0.3s ease",
-                      "&:hover": { boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)" },
-                    }}
+                    selected={selectedYear.includes(year)}
+                    onClick={() => handleYearChange(year)}
+                    clickable
                   />
-                </Grid>
-              ))}
-            </Grid>
+                ))}
+              </Box>
+            </Box>
           )}
 
           {dateType === "month" && selectedYear.length > 0 && (
-            <Grid container spacing={2}>
-              {availableMonths.map((month) => (
-                <Grid item xs={6} sm={4} md={3} key={month}>
-                  <FormControlLabel
-                    control={
-                      <StyledCheckbox
-                        checked={selectedMonths.includes(month)}
-                        onChange={() => handleMonthChange(month)}
-                      />
-                    }
-                    label={`Month ${month}`}
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "8px",
-                      padding: "8px",
-                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
-                      transition: "all 0.3s ease",
-                      "&:hover": { boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)" },
-                    }}
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+                Select Months:
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+                {availableMonths.map((month) => (
+                  <FilterChip
+                    key={month}
+                    label={getMonthName(month)}
+                    selected={selectedMonths.includes(month)}
+                    onClick={() => handleMonthChange(month)}
+                    clickable
                   />
-                </Grid>
-              ))}
-            </Grid>
+                ))}
+              </Box>
+            </Box>
           )}
 
           {dateType === "day" &&
             selectedYear.length > 0 &&
             selectedMonths.length > 0 && (
-              <Box id="day-selection">
-                {availableDays.length > 0 && (
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+                  Select Days:
+                </Typography>
+                {availableDays.length > 0 ? (
                   <>
                     {Object.entries(
                       availableDays.reduce((acc, day) => {
@@ -500,42 +760,46 @@ const Comparison = () => {
                     ).map(([key, days]) => {
                       const [year, month] = key.split("-");
                       return (
-                        <Box
-                          key={key}
-                          sx={{
-                            marginBottom: 3,
-                            padding: { xs: 2, sm: 3 },
-                            borderRadius: "12px",
-                            background: "linear-gradient(135deg, #ffffff 0%, #f9fbfc 100%)",
-                            boxShadow: "0 6px 15px rgba(0, 0, 0, 0.1)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
-                            },
-                          }}
-                        >
+                        <MonthCard key={key}>
                           <Typography
                             variant="h6"
-                            sx={{ fontWeight: "bold", color: "#2c3e50" }}
+                            sx={{ fontWeight: 600, color: theme.palette.primary.main, mb: 2 }}
                           >
-                            {`Month ${month.padStart(2, "0")} (${year})`}
+                            {`${getMonthName(parseInt(month))} ${year}`}
                           </Typography>
-                          <FormControl sx={{ minWidth: 200, marginTop: 1 }}>
+                          <FormControl fullWidth>
                             <InputLabel>Days</InputLabel>
                             <StyledSelect
                               multiple
                               value={selectedDays.filter(day => days.includes(day))}
                               onChange={(e) => handleDayChangeForMonth(key, e.target.value)}
                               label="Days"
-                              renderValue={(selected) => {
-                                if (selected.length === 0) {
-                                  return "No days selected";
-                                } else if (selected.length <= 3) {
-                                  return selected.join(", ");
-                                } else {
-                                  return `${selected.length} days selected`;
-                                }
-                              }}
+                              renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                  {selected.length === 0 ? (
+                                    <Typography variant="body2" color="text.secondary">
+                                      No days selected
+                                    </Typography>
+                                  ) : selected.length <= 3 ? (
+                                    selected.map((value) => (
+                                      <Chip 
+                                        key={value} 
+                                        label={value.split('-')[2]} 
+                                        size="small"
+                                        sx={{ 
+                                          backgroundColor: theme.palette.primary.main,
+                                          color: '#fff',
+                                          fontWeight: 500
+                                        }}
+                                      />
+                                    ))
+                                  ) : (
+                                    <Typography variant="body2" fontWeight={500}>
+                                      {`${selected.length} days selected`}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              )}
                               MenuProps={{
                                 PaperProps: {
                                   style: {
@@ -548,70 +812,69 @@ const Comparison = () => {
                               {days.map((day) => (
                                 <MenuItem key={day} value={day}>
                                   <StyledCheckbox checked={selectedDays.includes(day)} />
-                                  {day}
+                                  {`Day ${day.split('-')[2]}`}
                                 </MenuItem>
                               ))}
                             </StyledSelect>
                           </FormControl>
-                        </Box>
+                        </MonthCard>
                       );
                     })}
                   </>
+                ) : (
+                  <Typography variant="body1" color="text.secondary">
+                    Please select a year and month first to see available days.
+                  </Typography>
                 )}
               </Box>
             )}
         </Box>
 
         {loading ? (
-          <Box
-            id="loading-container"
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: { xs: "250px", sm: "300px" },
-            }}
-          >
-            <CircularProgress size={70} sx={{ color: "#3498db" }} />
-          </Box>
-        ) : Object.keys(filteredItems).length === 0 ? (
-          <Box
-            id="no-items-container"
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: { xs: "250px", sm: "300px" },
-            }}
-          >
-            <Typography
-              variant="h4"
-              sx={{ color: "#7f8c8d", fontWeight: "bold" }}
-            >
-              No Items
+          <EmptyStateContainer>
+            <CircularProgress size={60} sx={{ color: theme.palette.primary.main, mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" fontWeight={500}>
+              Loading your budget data...
             </Typography>
-          </Box>
+          </EmptyStateContainer>
+        ) : Object.keys(filteredItems).length === 0 ? (
+          <EmptyStateContainer>
+            <Typography
+              variant="h5"
+              sx={{ color: "#7f8c8d", fontWeight: 600, mb: 2 }}
+            >
+              No Data Available
+            </Typography>
+            <Typography variant="body1" color="text.secondary" align="center">
+              Please select different filters or add budget items to see the comparison.
+            </Typography>
+          </EmptyStateContainer>
         ) : (
-          <Box
-            id="chart-container"
-            sx={{
-              width: "100%",
-              height: { xs: "400px", sm: "500px" },
-              position: "relative",
-              backgroundColor: "#fff",
-              borderRadius: "16px",
-              boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
-              padding: 2,
-            }}
-          >
-            {chartType === "bar" ? (
-              <Bar data={getChartData()} options={chartOptions} />
-            ) : (
-              <Line data={getChartData()} options={chartOptions} />
-            )}
-          </Box>
+          <Fade in={true} timeout={500}>
+            <ChartContainer
+              onMouseEnter={() => setChartHovered(true)}
+              onMouseLeave={() => setChartHovered(false)}
+              sx={{
+                transform: chartHovered ? "scale(1.01)" : "scale(1)",
+                transition: "transform 0.3s ease",
+              }}
+            >
+              <Box sx={{ position: "absolute", top: 12, right: 12 }}>
+                <Tooltip title="Click and drag to zoom, double-click to reset" arrow>
+                  <IconButton size="small">
+                    <InfoOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              {chartType === "bar" ? (
+                <Bar data={getChartData()} options={chartOptions} />
+              ) : (
+                <Line data={getChartData()} options={chartOptions} />
+              )}
+            </ChartContainer>
+          </Fade>
         )}
-      </Box>
+      </StyledContainer>
     </LocalizationProvider>
   );
 };

@@ -6,96 +6,75 @@ import axios from 'axios';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
-  FaUserCircle,
-  FaRobot,
-  FaPaperclip,
-  FaPaperPlane,
-  FaCopy,
-  FaCheck,
-  FaComments,
   FaGlobe,
-  FaTimes, // For modal close button
-  FaExternalLinkAlt, // For a button to open report in modal
-  FaChevronDown, // For collapsible sections
-  FaChevronUp, // For collapsible sections
-  FaAngleDown, // Alternative icon
-  FaAngleUp // Alternative icon
+  FaTimes,
+  FaChevronDown,
+  FaChevronUp,
+  FaFilter,
+  FaCalendarAlt,
+  FaFileAlt,
+  FaListUl,
+  FaRegFileAlt,
+  FaHistory,
+  FaDownload,
+  FaPrint,
+  FaShare,
+  FaSearch,
+  FaInfoCircle,
+  FaTag,
+  FaThumbsUp,
+  FaThumbsDown,
+  FaBookmark,
+  FaEye
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
 
-function ClarityChat() {
-  const initialBotMessage = {
-    sender: 'bot',
-    text: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟',
-    time: getCurrentTime(),
-    formatted: true
-  };
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('chatHistory');
-    return saved ? JSON.parse(saved) : [initialBotMessage];
-  });
-  const [input, setInput] = useState('');
-  const [attachedFile, setAttachedFile] = useState(null);
-  const [attachedFileData, setAttachedFileData] = useState(null);
-  const [isTyping, setIsTyping] = useState(false);
-  const [responseLanguage, setResponseLanguage] = useState('ar');
-  const chatMessagesRef = useRef(null);
-  const fileInputRef = useRef(null);
-
+function ModernReportDashboard() {
+  // State for budget data
   const [budgetItems, setBudgetItems] = useState([]);
   const [loadingBudget, setLoadingBudget] = useState(true);
   const [dateType, setDateType] = useState('month');
   const [filterDate, setFilterDate] = useState(new Date());
   const [filterType, setFilterType] = useState('All');
-
-  // State for Report Modal
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportModalContent, setReportModalContent] = useState('');
-  const [reportModalTitle, setReportModalTitle] = useState('');
+  
+  // State for Report Display
+  const [reportContent, setReportContent] = useState('');
+  const [reportTitle, setReportTitle] = useState('');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [reportHistory, setReportHistory] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [bookmarkedReports, setBookmarkedReports] = useState([]);
+  const [reportFeedback, setReportFeedback] = useState({});
+  const [activeReportId, setActiveReportId] = useState(null);
   
   // State for collapsible sections
   const [collapsedSections, setCollapsedSections] = useState({});
-
+  
+  // State for language
+  const [responseLanguage, setResponseLanguage] = useState('en');
+  
+  // References
+  const reportContentRef = useRef(null);
+  
+  // API configuration
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'http://127.0.0.1:5004/api/getUserBudget';
   const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w';
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
+  // Fetch budget data on component mount
   useEffect(() => {
     fetchBudget();
   }, []);
 
+  // Scroll to top when report content changes
   useEffect(() => {
-    scrollToBottom();
-    localStorage.setItem('chatHistory', JSON.stringify(messages));
-  }, [messages]);
-
-  useEffect(() => {
-    // Add/remove class to body when modal opens/closes to prevent background scroll
-    if (isReportModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
+    if (reportContentRef.current && reportContent) {
+      reportContentRef.current.scrollTop = 0;
     }
-    // Cleanup function to restore scroll on component unmount
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isReportModalOpen]);
+  }, [reportContent]);
 
-  function scrollToBottom() {
-    if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
-    }
-  }
-
-  function getCurrentTime() {
-    const now = new Date();
-    let h = now.getHours(), m = now.getMinutes();
-    if (h < 10) h = '0' + h; if (m < 10) m = '0' + m;
-    return `${h}:${m}`;
-  }
-
+  // Fetch budget data from API
   async function fetchBudget() {
     setLoadingBudget(true);
     try {
@@ -119,9 +98,13 @@ function ClarityChat() {
     }
   }
 
+  // Group budget items by category
   const groupedBudgetItems = useMemo(() => groupByCategory(budgetItems), [budgetItems]);
+  
+  // Filter budget items based on selected filters
   const filteredItems = useMemo(() => filterItems(budgetItems), [budgetItems, filterDate, dateType, filterType]);
 
+  // Group items by category
   function groupByCategory(items) {
     return items.reduce((acc, item) => {
       const cat = item.CategoriesId?.categoryName || 'Unknown';
@@ -131,6 +114,7 @@ function ClarityChat() {
     }, {});
   }
 
+  // Filter items based on selected filters
   function filterItems(items) {
     let filtered = items;
     if (filterDate) {
@@ -157,7 +141,8 @@ function ClarityChat() {
     return Object.values(grouped).filter(i => i.CategoriesId?.categoryName && i.CategoriesId.categoryName !== 'Unknown');
   }
 
-  async function getReportContent(items) { // Renamed from getReport to avoid confusion
+  // Generate report content
+  async function getReportContent(items) {
     if (items.length === 0) {
       return responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير مفصل.' : 'Insufficient data to generate a detailed report.';
     }
@@ -224,7 +209,7 @@ ${JSON.stringify(items, null, 2)}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.65, maxOutputTokens: 3500, topP: 0.9, topK: 40 } // Adjusted temp, increased max tokens for richer content
+        generationConfig: { temperature: 0.65, maxOutputTokens: 3500, topP: 0.9, topK: 40 }
       })
     });
     if (!res.ok) {
@@ -241,20 +226,21 @@ ${JSON.stringify(items, null, 2)}
     }
   }
 
+  // Handle report generation
   async function handleGenerateReport() {
     const items = filteredItems;
     if (items.length === 0) {
-      setMessages(prev => [
-        ...prev,
-        { sender: 'bot', text: responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير.' : 'Not enough data to generate a report.', time: getCurrentTime(), formatted: false }
-      ]);
+      alert(responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير.' : 'Not enough data to generate a report.');
       return;
     }
-    setIsTyping(true);
+    
+    setIsGeneratingReport(true);
+    
     try {
       const reportText = await getReportContent(items);
       const locale = responseLanguage === 'ar' ? 'ar-EG' : 'en-US';
       let dateStr;
+      
       if (dateType === 'full') {
         dateStr = filterDate.toLocaleDateString(locale);
       } else if (dateType === 'month') {
@@ -262,157 +248,41 @@ ${JSON.stringify(items, null, 2)}
       } else {
         dateStr = filterDate.toLocaleDateString(locale, { year: 'numeric' });
       }
+      
       const title = responseLanguage === 'ar'
         ? `التقرير المالي لـ ${filterType === "All" ? "جميع الأنواع" : filterType} في ${dateStr}`
         : `Financial Report for ${filterType === "All" ? "All Types" : filterType} in ${dateStr}`;
       
-      setReportModalTitle(title);
-      setReportModalContent(reportText); // The report text already includes its own H1 from the prompt
-      setIsReportModalOpen(true);
+      setReportTitle(title);
+      setReportContent(reportText);
       
       // Reset collapsed sections state when opening a new report
       setCollapsedSections({});
-
-      // Add a message to chat indicating report is ready and can be viewed
-      setMessages(prev => [
-        ...prev,
-        {
-          sender: 'bot',
-          text: responseLanguage === 'ar' ? `تم إنشاء تقريرك بنجاح. يمكنك عرضه الآن.` : `Your report has been generated successfully. You can view it now.`,
-          time: getCurrentTime(),
-          formatted: false, // Keep it simple, or make it a button-like text
-          isReportNotification: true, // Custom flag to potentially style it differently or add action
-          reportTitleForModal: title, // Pass title and content for re-opening
-          reportContentForModal: reportText
+      
+      // Add to report history
+      const newReport = {
+        id: Date.now(),
+        title,
+        content: reportText,
+        date: new Date().toLocaleString(locale),
+        filters: {
+          dateType,
+          date: dateStr,
+          type: filterType
         }
-      ]);
-
+      };
+      
+      setReportHistory(prev => [newReport, ...prev.slice(0, 9)]);
+      
     } catch (err) {
       console.error(err);
-      setMessages(prev => [
-        ...prev,
-        { sender: 'bot', text: responseLanguage === 'ar' ? 'عذراً، لم أتمكن من جلب التقرير.' : 'Sorry, I couldn\'t retrieve the report.', time: getCurrentTime(), formatted: false }
-      ]);
+      alert(responseLanguage === 'ar' ? 'عذراً، لم نتمكن من إنشاء التقرير.' : 'Sorry, we couldn\'t generate the report.');
     } finally {
-      setIsTyping(false);
+      setIsGeneratingReport(false);
     }
   }
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-  function handleFileUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
-      alert(responseLanguage === 'ar' ? 'الملف كبير جدًا. الحد الأقصى 5 ميجابايت.' : 'File is too large. Maximum size is 5MB.');
-      return;
-    }
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      alert(responseLanguage === 'ar' ? 'مسموح فقط بملفات Excel وCSV.' : 'Only Excel and CSV files are allowed.');
-      return;
-    }
-    setAttachedFile(file);
-    const reader = new FileReader();
-    reader.onload = evt => {
-      try {
-        if (file.name.endsWith('.csv')) {
-          const text = evt.target.result;
-          const rows = text.split('\n').map(row => row.split(','));
-          setAttachedFileData(rows);
-        } else {
-          const wb = XLSX.read(evt.target.result, { type: 'binary' });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
-          setAttachedFileData(json);
-        }
-      } catch (err) {
-        console.error('Error reading file:', err);
-        alert(responseLanguage === 'ar' ? 'خطأ في قراءة الملف. حاول مرة أخرى.' : 'Error reading file. Please try again.');
-      }
-    };
-    if (file.name.endsWith('.csv')) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsBinaryString(file);
-    }
-    if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-    }
-  }
-
-  async function getBotResponse(message, fileData = null, language = 'ar') {
-    const prompt = fileData
-      ? `Attached file (${attachedFile.name.endsWith('.csv') ? 'CSV' : 'Excel'}) contains the following data:\n${JSON.stringify(fileData)}\nQuestion: ${message}\nPlease respond in ${language === 'en' ? 'English' : 'Arabic'}, using Markdown formatting where necessary.`
-      : `Question: ${message}\nPlease respond in ${language === 'en' ? 'English' : 'Arabic'}, using Markdown formatting where necessary.`;
-    const res = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1500, topP: 0.9, topK: 40 }
-      })
-    });
-    if (!res.ok) throw new Error('Network error');
-    const data = await res.json();
-    return data.candidates[0].content.parts[0].text;
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const msg = input.trim();
-    if (!msg && !attachedFileData) return;
-    setMessages(prev => [
-      ...prev,
-      { sender: 'user', text: msg || (attachedFile ? attachedFile.name : 'File attached'), time: getCurrentTime(), formatted: false }
-    ]);
-    setInput(''); setIsTyping(true);
-    try {
-      const reply = await getBotResponse(msg, attachedFileData, responseLanguage);
-      setMessages(prev => [...prev, { sender: 'bot', text: reply, time: getCurrentTime(), formatted: true }]);
-    } catch (err) {
-      console.error('Error getting response:', err);
-      setMessages(prev => [
-        ...prev,
-        { sender: 'bot', text: responseLanguage === 'ar' ? 'عذراً، حدث خطأ. حاول مرة أخرى.' : 'Sorry, an error occurred. Please try again.', time: getCurrentTime(), formatted: false }
-      ]);
-    } finally {
-      setIsTyping(false);
-      setAttachedFile(null);
-      setAttachedFileData(null);
-    }
-  }
-
-  function handleCopyText(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert(responseLanguage === 'ar' ? 'تم نسخ النص!' : 'Text copied!');
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
-      alert(responseLanguage === 'ar' ? 'فشل نسخ النص.' : 'Failed to copy text.');
-    });
-  }
-
-  function handleOpenReportModal(title, content) {
-    setReportModalTitle(title);
-    setReportModalContent(content);
-    setIsReportModalOpen(true);
-    // Reset collapsed sections state when opening a report
-    setCollapsedSections({});
-  }
-
-  function handleCloseReportModal() {
-    setIsReportModalOpen(false);
-  }
-
-  function handleNewChat() {
-    if (window.confirm(responseLanguage === 'ar' ? 'هل أنت متأكد من بدء محادثة جديدة؟ سيتم مسح المحادثة الحالية.' : 'Are you sure you want to start a new chat? Current conversation will be cleared.')) {
-      setMessages([initialBotMessage]);
-      setInput('');
-      setAttachedFile(null);
-      setAttachedFileData(null);
-    }
-  }
-
-  // Function to toggle section collapse state
+  // Toggle section collapse
   function toggleSection(sectionId) {
     setCollapsedSections(prev => ({
       ...prev,
@@ -420,365 +290,508 @@ ${JSON.stringify(items, null, 2)}
     }));
   }
 
-  // Function to generate a unique ID for each section based on heading text
-  function getSectionId(text) {
-    return `section-${text.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+  // Handle print report
+  function handlePrintReport() {
+    const printWindow = window.open('', '_blank');
+    
+    if (!printWindow) {
+      alert(responseLanguage === 'ar' ? 'يرجى السماح بالنوافذ المنبثقة لطباعة التقرير.' : 'Please allow pop-ups to print the report.');
+      return;
+    }
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="${responseLanguage === 'ar' ? 'rtl' : 'ltr'}" lang="${responseLanguage}">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${reportTitle}</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          h1, h2, h3, h4 {
+            color: #4169E1;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+          }
+          h1 {
+            text-align: center;
+            font-size: 1.8em;
+            border-bottom: 2px solid #4169E1;
+            padding-bottom: 0.3em;
+          }
+          ul, ol {
+            padding-left: 2em;
+          }
+          li {
+            margin-bottom: 0.5em;
+          }
+          blockquote {
+            border-left: 4px solid #4169E1;
+            padding-left: 1em;
+            margin-left: 0;
+            color: #555;
+          }
+          @media print {
+            body {
+              font-size: 12pt;
+            }
+            h1 {
+              font-size: 18pt;
+            }
+            h2 {
+              font-size: 16pt;
+            }
+            h3 {
+              font-size: 14pt;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${reportTitle}</h1>
+        <div class="report-content">
+          ${reportContent.replace(/\n/g, '<br>')}
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait for content to load before printing
+    setTimeout(() => {
+      printWindow.print();
+      // Close the window after print dialog is closed (optional)
+      // printWindow.close();
+    }, 500);
   }
 
-  function renderMessage(msg, index) {
-    if (msg.sender === 'bot' && msg.isReportNotification) {
-      // Special rendering for report notifications
-      return (
-        <div key={index} className={`clarity-chat-message ${msg.sender}`}>
-          <div className="avatar">
-            <FaRobot />
-          </div>
-          <div className="clarity-chat-message-content-wrapper">
-            <div className="clarity-chat-message-content">
-              {msg.text}
-              <button 
-                onClick={() => handleOpenReportModal(msg.reportTitleForModal, msg.reportContentForModal)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  marginLeft: '10px',
-                  background: '#4169E1',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  fontSize: '0.8em',
-                  cursor: 'pointer'
-                }}
-              >
-                <FaExternalLinkAlt style={{ marginRight: '5px' }} /> 
-                {responseLanguage === 'ar' ? 'عرض التقرير' : 'View Report'}
-              </button>
-              <span className="time">{msg.time}</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
+  // Handle download report as PDF
+  function handleDownloadReport() {
+    // This is a placeholder - in a real implementation, you would use a library like jsPDF
+    // or make a server request to generate a PDF
+    alert(responseLanguage === 'ar' ? 'سيتم تنفيذ وظيفة تنزيل PDF في الإصدار النهائي.' : 'PDF download functionality will be implemented in the final version.');
+  }
 
-    return (
-      <div key={index} className={`clarity-chat-message ${msg.sender} ${msg.sender === 'bot' && isTyping && index === messages.length - 1 ? 'typing' : ''}`}>
-        <div className="avatar">
-          {msg.sender === 'user' ? <FaUserCircle /> : <FaRobot />}
-        </div>
-        <div className="clarity-chat-message-content-wrapper">
-          <div className="clarity-chat-message-content">
-            {msg.sender === 'bot' && isTyping && index === messages.length - 1 ? (
-              <div className="clarity-chat-typing-indicator">
-                <span></span><span></span><span></span>
-              </div>
-            ) : msg.formatted ? (
-              <ReactMarkdown
-                children={msg.text}
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code({node, inline, className, children, ...props}) {
-                    const match = /language-(\w+)/.exec(className || '');
-                    return !inline ? (
-                      <div className="clarity-chat-copyable-code">
-                        <button 
-                          className="clarity-chat-copy-code-button"
-                          onClick={() => handleCopyText(String(children).replace(/\n$/, ''))}
-                        >
-                          <FaCopy /> {responseLanguage === 'ar' ? 'نسخ' : 'Copy'}
-                        </button>
-                        <SyntaxHighlighter
-                          children={String(children).replace(/\n$/, '')}
-                          style={tomorrow}
-                          language={match ? match[1] : 'text'}
-                          PreTag="pre"
-                          {...props}
-                        />
-                      </div>
-                    ) : (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    );
-                  }
-                }}
-              />
-            ) : (
-              msg.text
-            )}
-            {!isTyping && (
-              <button 
-                className="clarity-chat-copy-text-button"
-                onClick={() => handleCopyText(msg.text)}
-              >
-                <FaCopy />
-              </button>
-            )}
-            <span className="time">{msg.time}</span>
-          </div>
-        </div>
-      </div>
+  // Handle export report as Excel
+  function handleExportToExcel() {
+    // This is a placeholder - in a real implementation, you would format the data and use XLSX library
+    alert(responseLanguage === 'ar' ? 'سيتم تنفيذ وظيفة تصدير Excel في الإصدار النهائي.' : 'Excel export functionality will be implemented in the final version.');
+  }
+
+  // Handle share report
+  function handleShareReport() {
+    // This is a placeholder - in a real implementation, you would implement sharing functionality
+    alert(responseLanguage === 'ar' ? 'سيتم تنفيذ وظيفة المشاركة في الإصدار النهائي.' : 'Sharing functionality will be implemented in the final version.');
+  }
+
+  // Format date for display
+  function formatDate(date, type) {
+    const locale = responseLanguage === 'ar' ? 'ar-EG' : 'en-US';
+    const dateObj = new Date(date);
+    
+    if (type === 'full') {
+      return dateObj.toLocaleDateString(locale);
+    } else if (type === 'month') {
+      return dateObj.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+    } else {
+      return dateObj.toLocaleDateString(locale, { year: 'numeric' });
+    }
+  }
+
+  // Load a report from history
+  function loadReportFromHistory(report) {
+    setReportTitle(report.title);
+    setReportContent(report.content);
+    setCollapsedSections({});
+    setActiveReportId(report.id);
+  }
+  
+  // Toggle bookmark for a report
+  function toggleBookmark(reportId) {
+    if (bookmarkedReports.includes(reportId)) {
+      setBookmarkedReports(prev => prev.filter(id => id !== reportId));
+    } else {
+      setBookmarkedReports(prev => [...prev, reportId]);
+    }
+  }
+  
+  // Submit feedback for a report
+  function submitFeedback(reportId, isPositive) {
+    setReportFeedback(prev => ({
+      ...prev,
+      [reportId]: isPositive
+    }));
+    
+    // Show feedback confirmation with animation
+    const feedbackElement = document.getElementById(`feedback-${isPositive ? 'positive' : 'negative'}`);
+    if (feedbackElement) {
+      feedbackElement.classList.add('feedback-active');
+      setTimeout(() => {
+        feedbackElement.classList.remove('feedback-active');
+      }, 2000);
+    }
+  }
+  
+  // Search in reports
+  function searchReports(term) {
+    setSearchTerm(term);
+  }
+  
+  // Get filtered history based on search term
+  const filteredHistory = useMemo(() => {
+    if (!searchTerm.trim()) return reportHistory;
+    
+    return reportHistory.filter(report => 
+      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }
-
-  // Custom components for ReactMarkdown to handle collapsible sections
-  const CollapsibleComponents = {
-    h1: ({node, children, ...props}) => {
-      const sectionId = getSectionId(children[0]);
-      const isCollapsed = collapsedSections[sectionId] || false;
-      
-      return (
-        <div className="clarity-report-section">
-          <h1 
-            className="clarity-report-heading" 
-            onClick={() => toggleSection(sectionId)}
-            {...props}
-          >
-            <span className="clarity-report-heading-content">{children}</span>
-            <button className="clarity-report-toggle-btn">
-              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
-            </button>
-          </h1>
-          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
-            {/* Content will be rendered here by ReactMarkdown */}
-          </div>
-        </div>
-      );
-    },
-    h2: ({node, children, ...props}) => {
-      const sectionId = getSectionId(children[0]);
-      const isCollapsed = collapsedSections[sectionId] || false;
-      
-      return (
-        <div className="clarity-report-section">
-          <h2 
-            className="clarity-report-heading" 
-            onClick={() => toggleSection(sectionId)}
-            {...props}
-          >
-            <span className="clarity-report-heading-content">{children}</span>
-            <button className="clarity-report-toggle-btn">
-              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
-            </button>
-          </h2>
-          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
-            {/* Content will be rendered here by ReactMarkdown */}
-          </div>
-        </div>
-      );
-    },
-    h3: ({node, children, ...props}) => {
-      const sectionId = getSectionId(children[0]);
-      const isCollapsed = collapsedSections[sectionId] || false;
-      
-      return (
-        <div className="clarity-report-section">
-          <h3 
-            className="clarity-report-heading" 
-            onClick={() => toggleSection(sectionId)}
-            {...props}
-          >
-            <span className="clarity-report-heading-content">{children}</span>
-            <button className="clarity-report-toggle-btn">
-              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
-            </button>
-          </h3>
-          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
-            {/* Content will be rendered here by ReactMarkdown */}
-          </div>
-        </div>
-      );
-    },
-    h4: ({node, children, ...props}) => {
-      const sectionId = getSectionId(children[0]);
-      const isCollapsed = collapsedSections[sectionId] || false;
-      
-      return (
-        <div className="clarity-report-section">
-          <h4 
-            className="clarity-report-heading" 
-            onClick={() => toggleSection(sectionId)}
-            {...props}
-          >
-            <span className="clarity-report-heading-content">{children}</span>
-            <button className="clarity-report-toggle-btn">
-              {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
-            </button>
-          </h4>
-          <div className={`clarity-report-content ${isCollapsed ? 'collapsed' : ''}`}>
-            {/* Content will be rendered here by ReactMarkdown */}
-          </div>
-        </div>
-      );
-    },
-    // Add other components from the original code
-    code({node, inline, className, children, ...props}) {
-      const match = /language-(\w+)/.exec(className || '');
-      return !inline ? (
-        <div className="clarity-chat-copyable-code">
-          <button 
-            className="clarity-chat-copy-code-button"
-            onClick={() => handleCopyText(String(children).replace(/\n$/, ''))}
-          >
-            <FaCopy /> {responseLanguage === 'ar' ? 'نسخ' : 'Copy'}
-          </button>
-          <SyntaxHighlighter
-            children={String(children).replace(/\n$/, '')}
-            style={tomorrow}
-            language={match ? match[1] : 'text'}
-            PreTag="pre"
-            {...props}
-          />
-        </div>
-      ) : (
-        <code className={className} {...props}>
-          {children}
-        </code>
-      );
-    }
-  };
+  }, [reportHistory, searchTerm]);
 
   return (
-    <div className="clarity-chat-container">
-      <div className="clarity-chat-header">
-        <div className="clarity-chat-header-top">
-          <h1>
-            <span className="app-icon"><FaComments /></span>
-            {responseLanguage === 'ar' ? 'مساعد التقارير المالية' : 'Financial Reports Assistant'}
-          </h1>
-          <button className="clarity-chat-new-chat-btn" onClick={handleNewChat}>
-            {responseLanguage === 'ar' ? 'محادثة جديدة' : 'New Chat'}
-          </button>
-        </div>
-      </div>
-
-      <div className="clarity-chat-filter-panel">
-        <div>
-          <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
-          <select value={dateType} onChange={e => setDateType(e.target.value)}>
-            <option value="full">{responseLanguage === 'ar' ? 'يوم' : 'Day'}</option>
-            <option value="month">{responseLanguage === 'ar' ? 'شهر' : 'Month'}</option>
-            <option value="year">{responseLanguage === 'ar' ? 'سنة' : 'Year'}</option>
-          </select>
-        </div>
-        
-        <div>
-          <label>{responseLanguage === 'ar' ? 'التاريخ:' : 'Date:'}</label>
-          {dateType === 'full' && (
-            <input 
-              type="date" 
-              value={filterDate.toISOString().split('T')[0]} 
-              onChange={e => setFilterDate(new Date(e.target.value))}
-            />
-          )}
-          {dateType === 'month' && (
-            <input 
-              type="month" 
-              value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`}
-              onChange={e => {
-                const [year, month] = e.target.value.split('-');
-                setFilterDate(new Date(parseInt(year), parseInt(month) - 1, 1));
-              }}
-            />
-          )}
-          {dateType === 'year' && (
-            <input 
-              type="number" 
-              value={filterDate.getFullYear()} 
-              onChange={e => setFilterDate(new Date(parseInt(e.target.value), 0, 1))}
-              min="2000" 
-              max="2100"
-            />
-          )}
-        </div>
-        
-        <div>
-          <label>{responseLanguage === 'ar' ? 'النوع:' : 'Type:'}</label>
-          <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-            <option value="All">{responseLanguage === 'ar' ? 'الكل' : 'All'}</option>
-            <option value="Income">{responseLanguage === 'ar' ? 'دخل' : 'Income'}</option>
-            <option value="Expense">{responseLanguage === 'ar' ? 'مصروف' : 'Expense'}</option>
-          </select>
-        </div>
-        
-        <button onClick={handleGenerateReport} disabled={loadingBudget}>
-          {responseLanguage === 'ar' ? 'إنشاء تقرير' : 'Generate Report'}
-        </button>
-      </div>
-
-      <div className="clarity-chat-main-container" ref={chatMessagesRef}>
-        <div className="clarity-chat-messages-wrapper">
-          {messages.map((msg, index) => renderMessage(msg, index))}
-        </div>
-      </div>
-
-      <form className="clarity-chat-form" onSubmit={handleSubmit}>
-        <textarea
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder={responseLanguage === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message here...'}
-          rows={1}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
-        />
-        <div className="clarity-chat-form-controls">
-          <div className="clarity-chat-language-selector-wrapper">
-            <FaGlobe />
-            <select 
-              value={responseLanguage} 
-              onChange={e => setResponseLanguage(e.target.value)}
-              aria-label={responseLanguage === 'ar' ? 'اختر لغة الرد' : 'Select response language'}
-            >
-              <option value="ar">العربية</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-          
-          <label className="clarity-chat-file-attach-label" htmlFor="file-upload">
-            <FaPaperclip />
-          </label>
-          <input 
-            id="file-upload" 
-            type="file" 
-            ref={fileInputRef}
-            onChange={handleFileUpload} 
-            accept=".xlsx,.xls,.csv"
-          />
-          
-          <button 
-            type="submit" 
-            className="clarity-chat-send-btn"
-            disabled={(!input.trim() && !attachedFileData) || isTyping}
-          >
-            <FaPaperPlane />
-          </button>
-        </div>
-      </form>
-
-      {/* Report Modal with Collapsible Sections */}
-      <div className={`clarity-chat-report-modal-overlay ${isReportModalOpen ? 'visible' : ''}`}>
-        <div className="clarity-chat-report-modal">
-          <div className="clarity-chat-report-modal-header">
-            <h2>{reportModalTitle}</h2>
-            <button className="clarity-chat-report-modal-close-btn" onClick={handleCloseReportModal}>
-              <FaTimes />
+    <div className="modern-report-dashboard" dir={responseLanguage === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="header-content">
+          <h1><FaFileAlt /> {responseLanguage === 'ar' ? 'لوحة التقارير المالية' : 'Financial Reports Dashboard'}</h1>
+          <div className="header-actions">
+            <button className="language-toggle" onClick={() => setResponseLanguage(prev => prev === 'ar' ? 'en' : 'ar')}>
+              <FaGlobe /> {responseLanguage === 'ar' ? 'English' : 'العربية'}
             </button>
           </div>
-          <div className="clarity-chat-report-modal-content">
-            <ReactMarkdown
-              children={reportModalContent}
-              remarkPlugins={[remarkGfm]}
-              components={CollapsibleComponents}
-            />
-          </div>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="dashboard-content">
+        {/* Sidebar */}
+        <aside className="dashboard-sidebar">
+          <div className="sidebar-section">
+            <h3><FaHistory /> {responseLanguage === 'ar' ? 'التقارير السابقة' : 'Report History'}</h3>
+            <div className="search-container">
+              <div className="search-input-wrapper">
+                <FaSearch className="search-icon" />
+                <input 
+                  type="text" 
+                  className="search-input" 
+                  placeholder={responseLanguage === 'ar' ? 'بحث في التقارير...' : 'Search reports...'}
+                  value={searchTerm}
+                  onChange={(e) => searchReports(e.target.value)}
+                />
+                {searchTerm && (
+                  <button 
+                    className="clear-search" 
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <FaTimes />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="report-history-list">
+              {filteredHistory.length > 0 ? (
+                filteredHistory.map(report => (
+                  <div 
+                    key={report.id} 
+                    className={`history-item ${activeReportId === report.id ? 'active' : ''}`}
+                    onClick={() => loadReportFromHistory(report)}
+                  >
+                    <FaRegFileAlt className="history-icon" />
+                    <div className="history-item-details">
+                      <h4>{report.title}</h4>
+                      <span>{report.date}</span>
+                    </div>
+                    <div className="history-item-actions">
+                      <button 
+                        className={`bookmark-button ${bookmarkedReports.includes(report.id) ? 'bookmarked' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(report.id);
+                        }}
+                        title={bookmarkedReports.includes(report.id) ? 'Remove bookmark' : 'Bookmark report'}
+                      >
+                        <FaBookmark />
+                      </button>
+                      <button 
+                        className="view-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadReportFromHistory(report);
+                        }}
+                        title="View report"
+                      >
+                        <FaEye />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : searchTerm ? (
+                <p className="no-history">
+                  {responseLanguage === 'ar' 
+                    ? 'لا توجد نتائج مطابقة لبحثك.' 
+                    : 'No matching results for your search.'}
+                </p>
+              ) : (
+                <p className="no-history">
+                  {responseLanguage === 'ar' 
+                    ? 'لا توجد تقارير سابقة. قم بإنشاء تقرير جديد للبدء.' 
+                    : 'No previous reports. Create a new report to get started.'}
+                </p>
+              )}
+            </div>
+            {bookmarkedReports.length > 0 && (
+              <div className="bookmarked-section">
+                <h4><FaBookmark /> {responseLanguage === 'ar' ? 'التقارير المحفوظة' : 'Bookmarked Reports'}</h4>
+                <div className="bookmarked-list">
+                  {reportHistory
+                    .filter(report => bookmarkedReports.includes(report.id))
+                    .map(report => (
+                      <div 
+                        key={`bookmark-${report.id}`} 
+                        className="bookmarked-item"
+                        onClick={() => loadReportFromHistory(report)}
+                      >
+                        <FaRegFileAlt />
+                        <span>{report.title}</span>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Main Panel */}
+        <main className="dashboard-main">
+          {/* Filter Panel */}
+          <div className="filter-panel">
+            <h2><FaFilter /> {responseLanguage === 'ar' ? 'تصفية البيانات' : 'Filter Data'}</h2>
+            <div className="filter-controls">
+              <div className="filter-group">
+                <label>{responseLanguage === 'ar' ? 'نوع التاريخ:' : 'Date Type:'}</label>
+                <select 
+                  value={dateType} 
+                  onChange={(e) => setDateType(e.target.value)}
+                >
+                  <option value="full">{responseLanguage === 'ar' ? 'يوم محدد' : 'Specific Day'}</option>
+                  <option value="month">{responseLanguage === 'ar' ? 'شهر' : 'Month'}</option>
+                  <option value="year">{responseLanguage === 'ar' ? 'سنة' : 'Year'}</option>
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label><FaCalendarAlt /> {responseLanguage === 'ar' ? 'التاريخ:' : 'Date:'}</label>
+                {dateType === 'full' && (
+                  <input 
+                    type="date" 
+                    value={filterDate.toISOString().split('T')[0]} 
+                    onChange={(e) => setFilterDate(new Date(e.target.value))}
+                  />
+                )}
+                {dateType === 'month' && (
+                  <input 
+                    type="month" 
+                    value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`} 
+                    onChange={(e) => setFilterDate(new Date(e.target.value))}
+                  />
+                )}
+                {dateType === 'year' && (
+                  <input 
+                    type="number" 
+                    value={filterDate.getFullYear()} 
+                    onChange={(e) => {
+                      const newDate = new Date(filterDate);
+                      newDate.setFullYear(e.target.value);
+                      setFilterDate(newDate);
+                    }}
+                    min="2000" 
+                    max="2100"
+                  />
+                )}
+              </div>
+
+              <div className="filter-group">
+                <label><FaListUl /> {responseLanguage === 'ar' ? 'النوع:' : 'Type:'}</label>
+                <select 
+                  value={filterType} 
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="All">{responseLanguage === 'ar' ? 'الكل' : 'All'}</option>
+                  <option value="Income">{responseLanguage === 'ar' ? 'دخل' : 'Income'}</option>
+                  <option value="Expense">{responseLanguage === 'ar' ? 'مصروف' : 'Expense'}</option>
+                </select>
+              </div>
+
+              <button 
+                className="generate-report-btn" 
+                onClick={handleGenerateReport}
+                disabled={isGeneratingReport || loadingBudget}
+              >
+                {isGeneratingReport 
+                  ? (responseLanguage === 'ar' ? 'جاري الإنشاء...' : 'Generating...') 
+                  : (responseLanguage === 'ar' ? 'إنشاء التقرير' : 'Generate Report')}
+              </button>
+            </div>
+          </div>
+
+          {/* Report Display */}
+          <div className="report-display">
+            {reportContent ? (
+              <>
+                <div className="report-header">
+                  <h2>{reportTitle}</h2>
+                  <div className="report-actions">
+                    <button onClick={handlePrintReport} title={responseLanguage === 'ar' ? 'طباعة' : 'Print'}>
+                      <FaPrint />
+                    </button>
+                    <button onClick={handleDownloadReport} title={responseLanguage === 'ar' ? 'تنزيل PDF' : 'Download PDF'}>
+                      <FaDownload />
+                    </button>
+                    <button onClick={handleExportToExcel} title={responseLanguage === 'ar' ? 'تصدير إلى Excel' : 'Export to Excel'}>
+                      <FaFileAlt />
+                    </button>
+                    <button onClick={handleShareReport} title={responseLanguage === 'ar' ? 'مشاركة' : 'Share'}>
+                      <FaShare />
+                    </button>
+                  </div>
+                </div>
+                {reportContent && (
+                  <div className="report-feedback">
+                    <div className="feedback-question">
+                      {responseLanguage === 'ar' ? 'هل كان هذا التقرير مفيداً؟' : 'Was this report helpful?'}
+                    </div>
+                    <div className="feedback-buttons">
+                      <button 
+                        className={`feedback-button ${reportFeedback[activeReportId] === true ? 'active' : ''}`}
+                        onClick={() => submitFeedback(activeReportId, true)}
+                        id="feedback-positive"
+                      >
+                        <FaThumbsUp /> {responseLanguage === 'ar' ? 'نعم' : 'Yes'}
+                      </button>
+                      <button 
+                        className={`feedback-button ${reportFeedback[activeReportId] === false ? 'active' : ''}`}
+                        onClick={() => submitFeedback(activeReportId, false)}
+                        id="feedback-negative"
+                      >
+                        <FaThumbsDown /> {responseLanguage === 'ar' ? 'لا' : 'No'}
+                      </button>
+                    </div>
+                    <div className="report-tags">
+                      <FaTag /> 
+                      <span className="tag">{filterType === 'All' ? 'All Types' : filterType}</span>
+                      <span className="tag">{dateType === 'month' ? 'Monthly' : dateType === 'year' ? 'Yearly' : 'Daily'}</span>
+                      <button 
+                        className={`bookmark-button-large ${bookmarkedReports.includes(activeReportId) ? 'bookmarked' : ''}`}
+                        onClick={() => toggleBookmark(activeReportId)}
+                      >
+                        <FaBookmark /> {bookmarkedReports.includes(activeReportId) 
+                          ? (responseLanguage === 'ar' ? 'إزالة من المحفوظات' : 'Remove Bookmark') 
+                          : (responseLanguage === 'ar' ? 'حفظ التقرير' : 'Bookmark Report')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="report-content" ref={reportContentRef}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({node, ...props}) => <h1 className="report-h1" {...props} />,
+                      h2: ({node, ...props}) => <h2 className="report-h2" {...props} />,
+                      h3: ({node, children, ...props}) => {
+                        // Generate a unique ID for this section based on the heading text
+                        const sectionId = children.toString().replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                        const isCollapsed = collapsedSections[sectionId];
+                        
+                        return (
+                          <div className="collapsible-section">
+                            <h3 
+                              className="report-h3 collapsible-header" 
+                              onClick={() => toggleSection(sectionId)}
+                              {...props}
+                            >
+                              {children}
+                              {isCollapsed ? <FaChevronDown className="collapse-icon" /> : <FaChevronUp className="collapse-icon" />}
+                            </h3>
+                            <div className={`collapsible-content ${isCollapsed ? 'collapsed' : ''}`}>
+                              {/* Content will be rendered here by ReactMarkdown */}
+                            </div>
+                          </div>
+                        );
+                      },
+                      h4: ({node, ...props}) => <h4 className="report-h4" {...props} />,
+                      p: ({node, ...props}) => <p className="report-paragraph" {...props} />,
+                      ul: ({node, ...props}) => <ul className="report-list" {...props} />,
+                      ol: ({node, ...props}) => <ol className="report-ordered-list" {...props} />,
+                      li: ({node, ...props}) => <li className="report-list-item" {...props} />,
+                      blockquote: ({node, ...props}) => <blockquote className="report-blockquote" {...props} />,
+                      code: ({node, inline, className, children, ...props}) => {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                          <div className="report-code-block">
+                            <SyntaxHighlighter
+                              style={tomorrow}
+                              language={match[1]}
+                              PreTag="div"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          </div>
+                        ) : (
+                          <code className="report-inline-code" {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      table: ({node, ...props}) => <table className="report-table" {...props} />,
+                      thead: ({node, ...props}) => <thead className="report-thead" {...props} />,
+                      tbody: ({node, ...props}) => <tbody className="report-tbody" {...props} />,
+                      tr: ({node, ...props}) => <tr className="report-tr" {...props} />,
+                      th: ({node, ...props}) => <th className="report-th" {...props} />,
+                      td: ({node, ...props}) => <td className="report-td" {...props} />
+                    }}
+                  >
+                    {reportContent}
+                  </ReactMarkdown>
+                </div>
+              </>
+            ) : (
+              <div className="empty-report-state">
+                <FaFileAlt className="empty-icon" />
+                <h3>
+                  {responseLanguage === 'ar' 
+                    ? 'لم يتم إنشاء أي تقرير بعد' 
+                    : 'No Report Generated Yet'}
+                </h3>
+                <p>
+                  {responseLanguage === 'ar'
+                    ? 'استخدم لوحة التصفية أعلاه لتحديد المعايير وإنشاء تقرير جديد.'
+                    : 'Use the filter panel above to set criteria and generate a new report.'}
+                </p>
+                <button 
+                  className="generate-report-btn" 
+                  onClick={handleGenerateReport}
+                  disabled={isGeneratingReport || loadingBudget}
+                >
+                  {responseLanguage === 'ar' ? 'إنشاء تقرير جديد' : 'Generate New Report'}
+                </button>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
 }
 
-export default ClarityChat;
+export default ModernReportDashboard;
