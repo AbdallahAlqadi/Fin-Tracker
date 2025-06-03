@@ -140,3 +140,48 @@ exports.getAllUsers = async (req, res) => {
 
 
 
+  exports.updateUser = async (req, res) => {
+    const userId = req.user; // يأتي من veryfyjwt
+    const { username, email, password } = req.body;
+  
+    try {
+      // التحقق من وجود المستخدم
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'المستخدم غير موجود' });
+      }
+  
+      // إذا أرسل المستخدم اسم جديد، نحدّثه
+      if (username) {
+        user.username = username;
+      }
+  
+      // إذا أرسل المستخدم بريد إلكتروني جديد، نتحقق أولاً أن البريد غير مستخدم مسبقاً
+      if (email && email !== user.email) {
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+          return res.status(400).json({ message: 'هذا البريد مسجل لمستخدم آخر' });
+        }
+        user.email = email;
+      }
+  
+      // إذا أرسل المستخدم كلمة مرور جديدة، نشفّرها ثم نحدّثها
+      if (password) {
+        const hashed = await bcrypt.hash(password, 10);
+        user.password = hashed;
+      }
+  
+      // حفظ التعديلات في قاعدة البيانات
+      const updatedUser = await user.save();
+  
+      // نرجع البيانات مع استثناء الحقل password من الاستجابة
+      const { password: _, ...userWithoutPassword } = updatedUser.toObject();
+      res.status(200).json({
+        message: 'تم تحديث بيانات المستخدم بنجاح',
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      res.status(500).json({ message: error.message });
+    }
+  };
