@@ -171,227 +171,101 @@ function Settings() {
     setFeedbackSubmitting(false);
   };
 
-  // Base styles
-  const buttonStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "12px 24px",
-    fontSize: "16px",
-    fontWeight: 500,
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "background-color 0.2s ease",
-  };
-
-  const containerStyle = {
-    display: "flex",
-    gap: "16px",
-    marginTop: "20px",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  };
-
-  const modalOverlayStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  };
-
-  const modalStyle = {
-    backgroundColor: "#fff",
-    padding: "24px",
-    borderRadius: "8px",
-    width: "420px",
-    boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
-    position: "relative",
-  };
-
-  const closeIconStyle = {
-    position: "absolute",
-    top: "16px",
-    right: "16px",
-    cursor: "pointer",
-    fontSize: "18px",
-    color: "#555",
-  };
-
-  const formGroupStyle = {
-    marginBottom: "16px",
-  };
-
-  const labelStyle = {
-    display: "block",
-    marginBottom: "6px",
-    fontWeight: 500,
-    color: "#333",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    fontSize: "14px",
-    boxSizing: "border-box",
-  };
-
-  const textareaStyle = {
-    width: "100%",
-    height: "100px",
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    fontSize: "14px",
-    resize: "vertical",
-    boxSizing: "border-box",
-  };
-
-  const formButtonStyle = {
-    ...buttonStyle,
-    justifyContent: "center",
-    width: "100%",
-    marginTop: "8px",
-  };
-
-  const feedbackMessageStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    marginTop: "12px",
-    fontSize: "14px",
-  };
-
   return (
-    <div style={{ padding: "40px 20px", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "24px", color: "#2c3e50" }}>
-        Account Settings
-      </h1>
+    <div className="settings-container">
+      <div className="settings-header">
+        <h1>Account Settings</h1>
+        <p className="settings-subtitle">Manage your account preferences and data</p>
+      </div>
 
-      <div style={containerStyle}>
+      <div className="settings-actions">
         {/* Delete All Budget Button */}
         <button
-          style={{
-            ...buttonStyle,
-            backgroundColor: "#e74c3c",
-            color: "#fff",
-          }}
+          className="settings-button danger-button"
           onClick={handleDeleteAll}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#c0392b")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#e74c3c")}
         >
           <FaTrash />
-          Delete All Budget
+          <span>Delete All Budget</span>
         </button>
 
         {/* Edit Profile Button */}
         <button
-          style={{
-            ...buttonStyle,
-            backgroundColor: "#3498db",
-            color: "#fff",
-          }}
+          className="settings-button primary-button"
           onClick={() => setShowEditModal(true)}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#2980b9")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3498db")}
         >
           <FaUserEdit />
-          Edit Profile
+          <span>Edit Profile</span>
         </button>
 
         {/* Delete Account Button */}
         <button
-          style={{
-            ...buttonStyle,
-            backgroundColor: "#8e44ad",
-            color: "#fff",
-          }}
+          className="settings-button warning-button"
           onClick={handleDeleteAccount}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#71368a")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#8e44ad")}
         >
           <FaUserSlash />
-          Delete Account
+          <span>Delete Account</span>
         </button>
 
         {/* Give Feedback Button */}
         <button
-          style={{
-            ...buttonStyle,
-            backgroundColor: "#27ae60",
-            color: "#fff",
-          }}
+          className="settings-button success-button"
           onClick={() => setShowFeedbackModal(true)}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#229954")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
         >
           <FaCommentDots />
-          Give Feedback
+          <span>Give Feedback</span>
         </button>
       </div>
 
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalStyle}>
-            <FaTimes
-              style={closeIconStyle}
-              onClick={() => setShowEditModal(false)}
-            />
-            <h2 style={{ marginBottom: "20px", textAlign: "center", color: "#2c3e50" }}>
-              Edit Profile
-            </h2>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Edit Profile</h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
             <form onSubmit={handleUpdateUser}>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Username</label>
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
                 <input
                   type="text"
+                  id="username"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
                   placeholder="New username"
-                  style={inputStyle}
+                  className="form-input"
                 />
               </div>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Email</label>
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
                 <input
                   type="email"
+                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="New email"
-                  style={inputStyle}
+                  className="form-input"
                 />
               </div>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Password</label>
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
                 <input
                   type="password"
+                  id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="New password"
-                  style={inputStyle}
+                  className="form-input"
                 />
               </div>
               <button
                 type="submit"
-                style={{
-                  ...formButtonStyle,
-                  backgroundColor: "#2ecc71",
-                  color: "#fff",
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#2ecc71")}
+                className="form-button success-button"
               >
                 Save Changes
               </button>
@@ -402,46 +276,38 @@ function Settings() {
 
       {/* Feedback Modal */}
       {showFeedbackModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalStyle}>
-            <FaTimes
-              style={closeIconStyle}
-              onClick={() => setShowFeedbackModal(false)}
-            />
-            <h2 style={{ marginBottom: "20px", textAlign: "center", color: "#2c3e50" }}>
-              Send Feedback
-            </h2>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Send Feedback</h2>
+              <button className="modal-close" onClick={() => setShowFeedbackModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
             <form onSubmit={handleFeedbackSubmit}>
-              <div style={formGroupStyle}>
+              <div className="form-group">
                 <textarea
                   name="feedback"
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
                   placeholder="Write your comment here..."
-                  style={textareaStyle}
+                  className="form-textarea"
                   required
                 />
               </div>
               <button
                 type="submit"
-                style={{
-                  ...formButtonStyle,
-                  backgroundColor: "#27ae60",
-                  color: "#fff",
-                }}
+                className="form-button success-button"
                 disabled={feedbackSubmitting}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#229954")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
               >
                 {feedbackSubmitting ? "Sending..." : "Send Feedback"} <FaPaperPlane />
               </button>
             </form>
             {feedbackMessage.text && (
               <div
-                style={{
-                  ...feedbackMessageStyle,
-                  color: feedbackMessage.type === "success" ? "#27ae60" : "#e74c3c",
-                }}
+                className={`feedback-message ${
+                  feedbackMessage.type === "success" ? "success" : "error"
+                }`}
               >
                 {feedbackMessage.type === "success" ? <FaCheckCircle /> : <FaExclamationCircle />}{" "}
                 {feedbackMessage.text}
@@ -450,6 +316,282 @@ function Settings() {
           </div>
         </div>
       )}
+
+      {/* CSS Styles */}
+      <style jsx>{`
+        /* Modern CSS Reset */
+        *, *::before, *::after {
+          box-sizing: border-box;
+        }
+
+        /* Main Container Styles */
+        .settings-container {
+          padding: 2.5rem 1.5rem;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+          max-width: 1200px;
+          margin: 0 auto;
+          color: #334155;
+          background-color: #f8fafc;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Header Styles */
+        .settings-header {
+          text-align: center;
+          margin-bottom: 2.5rem;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .settings-header h1 {
+          font-size: 2.25rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin-bottom: 0.5rem;
+        }
+
+        .settings-subtitle {
+          font-size: 1rem;
+          color: #64748b;
+          margin-top: 0;
+        }
+
+        /* Button Container */
+        .settings-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          justify-content: center;
+          margin-bottom: 2rem;
+        }
+
+        /* Button Styles */
+        .settings-button {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.875rem 1.5rem;
+          font-size: 0.95rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          min-width: 200px;
+          justify-content: center;
+        }
+
+        .settings-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-button:active {
+          transform: translateY(0);
+        }
+
+        .primary-button {
+          background-color: #3b82f6;
+          color: white;
+        }
+
+        .primary-button:hover {
+          background-color: #2563eb;
+        }
+
+        .danger-button {
+          background-color: #ef4444;
+          color: white;
+        }
+
+        .danger-button:hover {
+          background-color: #dc2626;
+        }
+
+        .warning-button {
+          background-color: #8b5cf6;
+          color: white;
+        }
+
+        .warning-button:hover {
+          background-color: #7c3aed;
+        }
+
+        .success-button {
+          background-color: #10b981;
+          color: white;
+        }
+
+        .success-button:hover {
+          background-color: #059669;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(4px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+          animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+          background-color: white;
+          padding: 2rem;
+          border-radius: 12px;
+          width: 90%;
+          max-width: 480px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          position: relative;
+          animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #64748b;
+          font-size: 1.25rem;
+          padding: 0.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+          background-color: #f1f5f9;
+          color: #334155;
+        }
+
+        /* Form Styles */
+        .form-group {
+          margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+          color: #334155;
+          font-size: 0.95rem;
+        }
+
+        .form-input, .form-textarea {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          font-size: 0.95rem;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+          background-color: #f8fafc;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-textarea {
+          height: 120px;
+          resize: vertical;
+        }
+
+        .form-button {
+          width: 100%;
+          padding: 0.875rem;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s ease;
+          margin-top: 0.5rem;
+        }
+
+        .form-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        /* Feedback Message */
+        .feedback-message {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          padding: 0.75rem;
+          border-radius: 8px;
+          font-size: 0.9rem;
+        }
+
+        .feedback-message.success {
+          background-color: rgba(16, 185, 129, 0.1);
+          color: #059669;
+        }
+
+        .feedback-message.error {
+          background-color: rgba(239, 68, 68, 0.1);
+          color: #dc2626;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+          .settings-button {
+            width: 100%;
+          }
+          
+          .settings-header h1 {
+            font-size: 1.75rem;
+          }
+          
+          .modal-content {
+            padding: 1.5rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }
