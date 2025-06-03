@@ -185,3 +185,25 @@ exports.getAllUsers = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+
+  exports.deleteUser = async (req, res) => {
+    const userId = req.user; // يأتي من veryfyjwt
+  
+    try {
+      // نحاول إيجاد المستخدم وحذفه
+      const deleted = await User.findByIdAndDelete(userId);
+  
+      if (!deleted) {
+        return res.status(404).json({ message: 'المستخدم غير موجود أو تم حذفه مسبقًا' });
+      }
+  
+      // إذا أردت حذف بيانات مرتبطة بالمستخدم (مثل الميزانية)، يمكنك فعل ذلك هنا.
+      // مثال: await Budget.deleteOne({ userId });
+  
+      return res.status(200).json({ message: 'تم حذف الحساب بنجاح' });
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      return res.status(500).json({ message: error.message });
+    }
+  };

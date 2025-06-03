@@ -15,7 +15,6 @@ import DashboardUser from '../Component/dashbordUser';
 import BudgetItems from '../Component/datauser';
 import Graph from '../Component/graphdatauser';
 import Comparison from '../Component/comparison';
-import FeedbackForm from '../Component/FeedbackForm';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 import AddToDriveIcon from '@mui/icons-material/AddToDrive';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
@@ -30,6 +29,7 @@ import Poot from '../Component/Poot';
 import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const demoTheme = createTheme({
   palette: {
@@ -98,7 +98,6 @@ function DashboardLayoutBasic(props) {
     { path: '/showdatauser', component: <BudgetItems /> },
     { path: '/graphdatauser', component: <Graph /> },
     { path: '/comparison', component: <Comparison /> },
-    { path: '/fedback', component: <FeedbackForm /> },
     { path: '/fedbackuser', component: <FedbackUser /> },
     { path: '/homepage', component: <HomePage /> },
     { path: '/alluser', component: <AcountUser /> },
@@ -132,20 +131,16 @@ function DashboardLayoutBasic(props) {
       title: 'Comparison',
       icon: <SignalCellularAltIcon />,
     },
-    {
-      segment: 'fedback',
-      title: 'Fedback',
-      icon: <ChatIcon />,
-    },
+ 
     {
       segment: 'poot',
-      title: 'Poot',
+      title: 'Report',
       icon: <FaceIcon />,
     },
     {
       segment: 'setting',
       title: 'setting',
-      icon: <FaceIcon />,
+      icon: <SettingsIcon />,
     },
     {
       segment: 'logout',
@@ -211,20 +206,16 @@ function DashboardLayoutBasic(props) {
               title: 'FedbakUser',
               icon: <ChatBubbleIcon />,
             },
-            {
-              segment: 'fedback',
-              title: 'Fedback',
-              icon: <ChatIcon />,
-            },
+          
             {
               segment: 'poot',
-              title: 'Poot',
+              title: 'Report',
               icon: <FaceIcon />,
             },
             {
               segment: 'setting',
               title: 'setting',
-              icon: <FaceIcon />,
+              icon: <SettingsIcon />,
             },
             {
               segment: 'logout',
