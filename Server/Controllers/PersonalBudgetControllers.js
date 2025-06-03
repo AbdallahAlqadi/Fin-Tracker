@@ -123,3 +123,32 @@ exports.deleteBudget = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+
+
+// Delete all budget items for a user
+exports.deleteAllBudget = async (req, res) => {
+    const userId = req.user;
+
+    try {
+        // محاولة إيجاد ميزانية المستخدم وتفريغ مصفوفة المنتجات
+        const updatedBudget = await Budget.findOneAndUpdate(
+            { userId },
+            { $set: { products: [] } },
+            { new: true }
+        );
+
+        if (!updatedBudget) {
+            return res.status(404).json({ error: 'Budget not found' });
+        }
+
+        return res.status(200).json({
+            message: 'تم حذف جميع المصاريف والنفقات بنجاح.',
+            budget: updatedBudget
+        });
+    } catch (error) {
+        console.error('Error in deleteAllBudget:', error);
+        return res.status(500).json({ error: error.message });
+    }
+};

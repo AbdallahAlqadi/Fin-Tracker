@@ -27,6 +27,7 @@ import HomePage from '../Component/Homepage';
 import AcountUser from '../Component/AcountUser';
 import LogOut from '../Component/LogOut';
 import Poot from '../Component/Poot';
+import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
@@ -102,6 +103,8 @@ function DashboardLayoutBasic(props) {
     { path: '/homepage', component: <HomePage /> },
     { path: '/alluser', component: <AcountUser /> },
     { path: '/poot', component: <Poot /> },
+    { path: '/setting', component: <Settings /> },
+
 
     { path: '/logout', component: <LogOut /> },
 
@@ -139,7 +142,11 @@ function DashboardLayoutBasic(props) {
       title: 'Poot',
       icon: <FaceIcon />,
     },
-   
+    {
+      segment: 'setting',
+      title: 'setting',
+      icon: <FaceIcon />,
+    },
     {
       segment: 'logout',
       title: 'logout',
@@ -212,6 +219,11 @@ function DashboardLayoutBasic(props) {
             {
               segment: 'poot',
               title: 'Poot',
+              icon: <FaceIcon />,
+            },
+            {
+              segment: 'setting',
+              title: 'setting',
               icon: <FaceIcon />,
             },
             {
