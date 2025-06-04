@@ -16,7 +16,7 @@ import {
   IconButton,
   useMediaQuery,
   Container,
-  Fab,
+  Grid,
   Select,
   MenuItem,
   FormControl,
@@ -27,7 +27,6 @@ import { styled, keyframes, alpha } from '@mui/system';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
@@ -68,38 +67,32 @@ const fadeIn = keyframes`
   }
 `;
 
-// تصميم بطاقة الفئة مع تحديد لون الحدود بناءً على النوع
+// تصميم بطاقة الفئة المحدث مع تحسينات بصرية
 const CategoryCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'type',
 })(({ theme, type }) => ({
   border: `2px solid ${type && type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income}`,
   backgroundColor: originalThemeColors.surface,
-  borderRadius: '20px',
-  padding: theme.spacing(3),
-  width: '190px',
-  height: '190px',
+  borderRadius: '16px',
+  padding: theme.spacing(2.5),
+  height: '180px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   textAlign: 'center',
-  boxShadow: `0 8px 24px ${alpha(originalThemeColors.primaryAccent, 0.15)}`,
+  boxShadow: `0 8px 20px ${alpha(originalThemeColors.primaryAccent, 0.12)}`,
   cursor: 'pointer',
   transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.3s ease',
   animation: `${fadeIn} 0.6s ease-out forwards`,
   '&:hover': {
-    transform: 'scale(1.08)',
-    boxShadow: `0 12px 32px ${alpha(originalThemeColors.primaryAccent, 0.25)}`,
+    transform: 'scale(1.05)',
+    boxShadow: `0 12px 28px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
     borderColor: originalThemeColors.primaryAccent,
   },
   [theme.breakpoints.down('sm')]: {
-    width: '150px',
-    height: '150px',
-    padding: theme.spacing(2.5),
-  },
-  [theme.breakpoints.between('md', 'lg')]: {
-    width: '170px',
-    height: '170px',
+    height: '160px',
+    padding: theme.spacing(2),
   },
 }));
 
@@ -126,6 +119,7 @@ const DashboardUser = () => {
 
   const isSmallDevice = useMediaQuery('(max-width:600px)');
   const isMediumDevice = useMediaQuery('(max-width:900px)');
+  const isLargeDevice = useMediaQuery('(min-width:1200px)');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -317,7 +311,7 @@ const DashboardUser = () => {
 
   return (
     <Container
-      maxWidth="lg"
+      maxWidth="xl"
       sx={{
         py: { xs: 3, sm: 5 },
         minHeight: '100vh',
@@ -352,66 +346,67 @@ const DashboardUser = () => {
         </Typography>
       </Box>
 
-      <Autocomplete
-        freeSolo
-        options={categoryOptions}
-        onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            placeholder="Search for a category..."
-            variant="outlined"
-            sx={{
-              mb: { xs: 3, sm: 5 },
-              backgroundColor: originalThemeColors.inputBackground,
-              borderRadius: '30px',
-              boxShadow: `0 4px 15px ${alpha(originalThemeColors.primaryAccent, 0.1)}`,
-              '& .MuiOutlinedInput-root': {
+      <Box sx={{ mb: { xs: 3, sm: 5 }, maxWidth: '800px', mx: 'auto' }}>
+        <Autocomplete
+          freeSolo
+          options={categoryOptions}
+          onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="Search for a category..."
+              variant="outlined"
+              sx={{
+                backgroundColor: originalThemeColors.inputBackground,
                 borderRadius: '30px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': {
-                  borderColor: alpha(originalThemeColors.primaryAccent, 0.5),
-                  borderWidth: '1px',
+                boxShadow: `0 4px 15px ${alpha(originalThemeColors.primaryAccent, 0.1)}`,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '30px',
+                  color: originalThemeColors.textPrimary,
+                  '& fieldset': {
+                    borderColor: alpha(originalThemeColors.primaryAccent, 0.5),
+                    borderWidth: '1px',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: originalThemeColors.primaryAccent,
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: originalThemeColors.primaryAccent,
+                    boxShadow: `0 0 0 3px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+                  },
                 },
-                '&:hover fieldset': {
-                  borderColor: originalThemeColors.primaryAccent,
+                '& .MuiInputBase-input': {
+                  color: originalThemeColors.textPrimary,
+                  '&::placeholder': {
+                    color: originalThemeColors.textSecondary,
+                    opacity: 1,
+                  },
                 },
-                '&.Mui-focused fieldset': {
-                  borderColor: originalThemeColors.primaryAccent,
-                  boxShadow: `0 0 0 3px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
-                },
-              },
-              '& .MuiInputBase-input': {
-                color: originalThemeColors.textPrimary,
-                '&::placeholder': {
-                  color: originalThemeColors.textSecondary,
-                  opacity: 1,
-                },
-              },
-            }}
-            InputProps={{
-              ...params.InputProps,
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: originalThemeColors.textSecondary }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <>
-                  {params.InputProps.endAdornment}
-                  {searchQuery && (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setSearchQuery('')} edge="end" sx={{ color: originalThemeColors.textSecondary, '&:hover': { color: originalThemeColors.primaryAccent } }}>
-                        <ClearIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  )}
-                </>
-              ),
-            }}
-          />
-        )}
-      />
+              }}
+              InputProps={{
+                ...params.InputProps,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: originalThemeColors.textSecondary }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <>
+                    {params.InputProps.endAdornment}
+                    {searchQuery && (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setSearchQuery('')} edge="end" sx={{ color: originalThemeColors.textSecondary, '&:hover': { color: originalThemeColors.primaryAccent } }}>
+                          <ClearIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    )}
+                  </>
+                ),
+              }}
+            />
+          )}
+        />
+      </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 } }}>
         <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden', boxShadow: `0 2px 8px ${alpha(originalThemeColors.primaryAccent, 0.15)}` }}>
@@ -454,50 +449,37 @@ const DashboardUser = () => {
         </Typography>
       ) : (
         Object.keys(groupedCategories).map((type) => (
-          <Box key={type} sx={{ mb: { xs: 5, sm: 8 } }}>
+          <Box key={type} sx={{ mb: 6 }}>
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
-                backgroundColor: originalThemeColors.primaryAccent,
-                color: originalThemeColors.buttonTextLight,
-                p: { xs: 1.5, sm: 2 },
-                borderRadius: '8px',
-                boxShadow: `0 4px 12px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-                mb: { xs: 3, sm: 4 },
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                fontWeight: 'bold',
+                color: originalThemeColors.primaryAccent,
+                fontWeight: 600,
+                mb: 3,
+                pl: 2,
+                borderLeft: `4px solid ${type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income}`,
+                display: 'inline-block',
               }}
             >
-              {getCategoryIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
+              {type} {getCategoryIcon(type)}
             </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  sm: 'repeat(auto-fit, minmax(170px, 1fr))',
-                  md: 'repeat(5, 1fr)',
-                },
-                gap: { xs: 2, sm: 2.5, md: 3 },
-                justifyContent: 'center',
-              }}
-            >
-              {groupedCategories[type]
-                .slice(0, visibleItems[type])
-                .map((category) => {
-                  const isAdded = addedItems.includes(category._id);
-                  return (
-                    <Tooltip key={category._id} title={isAdded ? 'Added' : `Add to ${category.categoryName}`}>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            
+            {/* Обновленная сетка карточек - 5 карточек в ряд */}
+            <Grid container spacing={3} sx={{ mb: 2 }}>
+              {groupedCategories[type].slice(0, visibleItems[type]).map((category, index) => {
+                const isAdded = addedItems.includes(category._id);
+                return (
+                  <Grid item xs={12} sm={6} md={2.4} key={category._id}>
+                    <Tooltip
+                      title={isAdded ? "Already added" : `Add ${category.categoryName}`}
+                      placement="top"
+                      arrow
+                    >
+                      <Box sx={{ height: '100%' }}>
                         <CategoryCard
                           type={category.categoryType}
-                          component="div"
-                          role="button"
-                          tabIndex={isAdded ? -1 : 0}
                           onClick={isAdded ? undefined : () => handleClickOpen(category)}
-                          onKeyPress={
+                          onKeyDown={
                             isAdded
                               ? undefined
                               : (e) => {
@@ -511,6 +493,7 @@ const DashboardUser = () => {
                             filter: isAdded ? 'grayscale(50%)' : 'none',
                             pointerEvents: isAdded ? 'none' : 'auto',
                             minWidth: 0,
+                            height: '100%',
                           }}
                           aria-disabled={isAdded}
                         >
@@ -524,8 +507,8 @@ const DashboardUser = () => {
                               }
                               alt={category.categoryName}
                               sx={{
-                                width: { xs: 60, sm: 70, md: 80 },
-                                height: { xs: 60, sm: 70, md: 80 },
+                                width: { xs: 60, sm: 65, md: 70 },
+                                height: { xs: 60, sm: 65, md: 70 },
                                 borderRadius: '50%',
                                 mb: 1.5,
                                 objectFit: 'cover',
@@ -533,7 +516,7 @@ const DashboardUser = () => {
                               }}
                             />
                           )}
-                          <Typography variant="h6" sx={{ color: originalThemeColors.primaryAccent, fontWeight: 600, fontSize: {xs: '0.9rem', sm: '1rem', md: '1.1rem'} }}>
+                          <Typography variant="h6" sx={{ color: originalThemeColors.primaryAccent, fontWeight: 600, fontSize: {xs: '0.9rem', sm: '0.95rem', md: '1rem'} }}>
                             {category.categoryName}
                           </Typography>
                           {isAdded && (
@@ -544,9 +527,11 @@ const DashboardUser = () => {
                         </CategoryCard>
                       </Box>
                     </Tooltip>
-                  );
-                })}
-            </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+            
             {groupedCategories[type].length > visibleItems[type] && (
               <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
                 <Button
@@ -864,11 +849,11 @@ const DashboardUser = () => {
             borderRadius: '8px',
             fontWeight: 500,
             '&:hover': {
-              background: alpha(originalThemeColors.primaryAccent, 0.08),
               borderColor: originalThemeColors.primaryAccent,
+              background: alpha(originalThemeColors.primaryAccent, 0.08),
             }
           }}>
-            {newCategoryImage ? 'Change Image' : 'Choose Image'}
+            Upload Image
             <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
           {newErrorMessage && (
@@ -879,7 +864,7 @@ const DashboardUser = () => {
         </DialogContent>
         <DialogActions
           sx={{
-            p: { xs: 2, sm: 3 },
+            p: { xs: 2, sm: 2.5 },
             justifyContent: 'center',
             gap: 2,
             backgroundColor: originalThemeColors.dialogSurface,
@@ -933,29 +918,6 @@ const DashboardUser = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Fab
-        aria-label="add new category"
-        onClick={handleNewDialogOpen}
-        sx={{
-          position: 'fixed',
-          bottom: { xs: 20, sm: 32 },
-          right: { xs: 20, sm: 32 },
-          backgroundColor: originalThemeColors.primaryAccent,
-          color: originalThemeColors.buttonTextLight,
-          width: { xs: 56, sm: 64 },
-          height: { xs: 56, sm: 64 },
-          boxShadow: `0 8px 25px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
-          '&:hover': {
-            backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
-            transform: 'scale(1.1)',
-            boxShadow: `0 12px 35px ${alpha(originalThemeColors.primaryAccent, 0.4)}`,
-          },
-        }}
-      >
-        <AddIcon sx={{ fontSize: { xs: 28, sm: 32} }} />
-      </Fab>
     </Container>
   );
 };
