@@ -147,55 +147,95 @@ function ModernReportDashboard() {
       return responseLanguage === 'ar' ? 'لا توجد بيانات كافية لإنشاء تقرير مفصل.' : 'Insufficient data to generate a detailed report.';
     }
     const languageSpecificInstructions = responseLanguage === 'ar' ? 
-      `الرجاء تقديم تقرير مالي مفصل للغاية ومنظم وجذاب بصريًا باللغة العربية بناءً على البيانات التالية. يجب أن يتضمن التقرير:
-1.  **📊 عنوان رئيسي للتقرير واضح وجذاب** (مثال: "تحليل الأداء المالي لشهر [الشهر] [السنة] 📈")
-2.  **✨ مقدمة موجزة ومشوقة**: تلخيص لأهمية التقرير والفترة التي يغطيها، مع استخدام رمز تعبيري مناسب.
-3.  **🔍 تحليل شامل ومفصل**: 
-    *   لكل فئة رئيسية، استخدم عنوانًا فرعيًا (H3) مع رمز تعبيري ذي صلة (مثال: 💰 الإيرادات، 💸 المصروفات).
-    *   تحليل عميق لكل بند ضمن الفئة، مع إبراز الاتجاهات الرئيسية، والمقارنات (إذا أمكن)، وأي نقاط قوة (✅) أو ضعف (⚠️) ملحوظة.
-    *   استخدم فقرات قصيرة ومنظمة.
-4.  **💡 رؤى قابلة للتنفيذ**: 
-    *   تقديم رؤى واضحة ومحددة مستخلصة من البيانات، معنونة بـ "🎯 أهم الرؤى والاستنتاجات".
-    *   استخدم قائمة نقطية (bullet points) مع رموز تعبيرية لكل نقطة (مثال: •️⃣, 💡, 🔑).
-5.  **🚀 حلول عملية ومبتكرة**: 
-    *   اقتراح ما لا يقل عن 3-5 حلول عملية ومبتكرة لمعالجة أي تحديات تم تحديدها أو لتحسين الوضع المالي، معنونة بـ "🛠️ توصيات وحلول مقترحة".
-    *   يجب أن تكون الحلول مفصلة وقابلة للتطبيق، مع استخدام قائمة مرقمة وربما رموز تعبيرية لتوضيح كل حل.
-6.  **🔮 توقعات مستقبلية (إذا أمكن)**: 
-    *   بناءً على البيانات، قدم توقعات موجزة أو سيناريوهات محتملة، معنونة بـ "🔭 نظرة مستقبلية".
-    *   استخدم فقرة واضحة مع رمز تعبيري مناسب.
-7.  **🏁 خاتمة قوية**: 
-    *   ملخص لأهم النقاط والتوصيات الرئيسية، معنونة بـ "📌 الخلاصة والتوصيات النهائية".
-    *   استخدم فقرة ختامية مشجعة.
-8.  **🎨 تنسيق احترافي وجذاب**: 
-    *   استخدم تنسيق Markdown بشكل مكثف لجعل التقرير جذابًا وسهل القراءة.
-    *   استخدم العناوين (H1, H2, H3, H4)، والقوائم النقطية والرقمية، والنص الغامق والمائل.
-    *   تأكد من وجود مسافات بيضاء كافية بين الفقرات والأقسام لسهولة القراءة.
-    *   يجب أن يكون التقرير منظمًا بشكل جيد وقويًا في عرضه البصري والمحتوى.
+      `**مهم جداً: يرجى الالتزام الصارم بالتنسيق والهيكل المطلوبين أدناه لضمان الوضوح والفائدة.**
+
+الرجاء إنشاء تقرير مالي احترافي ومفصل باللغة العربية، مع التركيز على تقديم رؤى قابلة للتنفيذ وحلول عملية بناءً على بيانات الميزانية المرفقة. استخدم تنسيق Markdown بشكل فعال لجعله جذابًا وسهل القراءة. يجب أن يتضمن التقرير الأقسام التالية بالترتيب:
+
+1.  **📊 عنوان رئيسي واضح للتقرير:** يعكس بدقة محتوى التقرير والفترة الزمنية (مثال: "التحليل المالي المفصل لـ [نوع الفلتر] لشهر [الشهر] [السنة] 📈" أو "ملخص الأداء المالي السنوي لـ [السنة] 🗓️").
+
+2.  **✨ ملخص تنفيذي (مقدمة):** فقرة موجزة (3-4 جمل) تسلط الضوء على أهم النتائج والاستنتاجات الرئيسية في التقرير والفترة التي يغطيها.
+
+3.  **🔍 تحليل مفصل وعرض جدولي:**
+    *   **أولاً: عرض البيانات في جداول:**
+        *   إذا كانت هناك بيانات **إيرادات (Income)**، قم بإنشاء **جدول Markdown** لها بعنوان "💰 جدول الإيرادات". يجب أن يحتوي الجدول على عمودين: **الفئة** و **المبلغ**. أضف صفًا للإجمالي في نهاية الجدول.
+        *   إذا كانت هناك بيانات **مصروفات (Expense)**، قم بإنشاء **جدول Markdown** منفصل لها بعنوان "💸 جدول المصروفات". يجب أن يحتوي الجدول على عمودين: **الفئة** و **المبلغ**. أضف صفًا للإجمالي في نهاية الجدول.
+        *   مثال للجدول:
+            | الفئة          | المبلغ |
+            | -------------- | ------: |
+            | فئة الدخل 1   | 1500   |
+            | فئة الدخل 2   | 2000   |
+            | **الإجمالي** | **3500** |
+    *   **ثانياً: تحليل نصي موجز:**
+        *   بعد الجداول، قدم تحليلاً نصيًا موجزًا للأداء العام (فقرة أو اثنتين). سلط الضوء على أهم الفئات (الأكبر مبلغًا، أو ذات التغير الملحوظ إن أمكن المقارنة).
+        *   **للتقارير الشهرية:** ركز على مقارنة أداء الشهر الحالي بالشهر السابق (إذا كانت البيانات تسمح بذلك ضمنيًا) أو أبرز النقاط الرئيسية للشهر.
+        *   **للتقارير السنوية:** قدم نظرة عامة على أداء الفئات على مدار العام.
+
+4.  **🎯 أهم الرؤى والاستنتاجات:**
+    *   قسم مخصص بعنوان "🎯 أهم الرؤى والاستنتاجات".
+    *   استخدم قائمة نقطية (bullet points) لتقديم 3-5 رؤى واضحة ومحددة مستمدة *مباشرة* من تحليل البيانات والجداول المقدمة. تجنب التعميمات.
+    *   مثال: "•️⃣ شكلت [اسم الفئة] النسبة الأكبر من المصروفات هذا الشهر بقيمة [المبلغ]."
+
+5.  **💡 توصيات وحلول عملية:**
+    *   قسم مخصص بعنوان "💡 توصيات وحلول عملية".
+    *   قدم 2-4 توصيات **محددة جداً، قابلة للتطبيق فوراً، ومرتبطة بشكل مباشر** بالرؤى المذكورة في القسم السابق أو بملاحظات محددة من الجداول. **يجب أن تكون كل توصية نتيجة مباشرة لتحليل البيانات المقدمة.**
+    *   **تجنب تماماً النصائح العامة أو البديهية.** ركز على خطوات عملية يمكن للمستخدم اتخاذها.
+    *   اذكر بوضوح **لماذا** هذه التوصية مهمة (اربطها بالرؤية/البيانات) و **ما هو الإجراء المقترح** بشكل ملموس.
+    *   مثال: "1. **الرؤية المرتبطة:** شكلت مصروفات [اسم الفئة] نسبة X% من الإجمالي. **التوصية:** قم بمراجعة تفصيلية لفواتير [اسم الفئة] للشهر الماضي لتحديد البنود غير الضرورية التي يمكن إلغاؤها أو تقليلها، بهدف خفض هذا البند بنسبة Y% الشهر القادم."
+    *   مثال آخر: "2. **الرؤية المرتبطة:** انخفاض إيرادات [اسم الفئة] مقارنة بـ [فترة سابقة/متوسط]. **التوصية:** تحليل أسباب انخفاض إيرادات [اسم الفئة] عبر [إجراء محدد، مثلاً: التواصل مع العملاء الرئيسيين/مراجعة استراتيجية التسعير] واقتراح خطة لمعالجة ذلك خلال الأسبوعين القادمين."
+
+6.  **🏁 خاتمة:**
+    *   فقرة قصيرة تلخص النقاط الرئيسية وتؤكد على أهمية متابعة التوصيات.
+
+**تنسيق إضافي:**
+*   استخدم **النص الغامق** للعناوين الرئيسية والفرعية والمصطلحات الهامة.
+*   استخدم الرموز التعبيرية (emojis) بشكل مناسب لزيادة الجاذبية البصرية ولكن باعتدال.
+*   تأكد من وجود فواصل واضحة بين الأقسام باستخدام سطور فارغة.
+*   **مهم للتقارير الشهرية:** تأكد من أن التقرير يعكس ملخصًا واضحًا للشهر المحدد، وأن الجداول والتوصيات تركز على بيانات الشهر.
 ` :
-      `Please provide a highly detailed, well-organized, and visually engaging financial report in English based on the following data. The report must include:
-1.  **📊 Clear and Engaging Main Report Title** (e.g., "Financial Performance Analysis for [Month] [Year] 📈")
-2.  **✨ Brief and Engaging Introduction**: Summarizing the report's importance and the period it covers, using a relevant emoji.
-3.  **🔍 Comprehensive and Detailed Analysis**: 
-    *   For each main category, use a subheading (H3) with a relevant emoji (e.g., 💰 Revenues, 💸 Expenses).
-    *   In-depth analysis of each item within the category, highlighting key trends, comparisons (if possible), and any notable strengths (✅) or weaknesses (⚠️).
-    *   Use short, well-structured paragraphs.
-4.  **💡 Actionable Insights**: 
-    *   Present clear and specific insights derived from the data, titled "🎯 Key Insights and Conclusions".
-    *   Use bullet points with emojis for each point (e.g., •️⃣, 💡, 🔑).
-5.  **🚀 Practical and Innovative Solutions**: 
-    *   Propose at least 3-5 practical and innovative solutions to address any identified challenges or to improve the financial situation, titled "🛠️ Recommendations and Proposed Solutions".
-    *   Solutions should be detailed and actionable, using a numbered list and perhaps emojis to illustrate each solution.
-6.  **🔮 Future Outlook (if applicable)**: 
-    *   Based on the data, provide a brief outlook or potential scenarios, titled "🔭 Future Outlook".
-    *   Use a clear paragraph with a relevant emoji.
-7.  **🏁 Strong Conclusion**: 
-    *   Summary of the main points and key recommendations, titled "📌 Summary and Final Recommendations".
-    *   Use an encouraging concluding paragraph.
-8.  **🎨 Professional and Attractive Formatting**: 
-    *   Utilize Markdown extensively to make the report engaging and easy to read.
-    *   Use headings (H1, H2, H3, H4), bulleted and numbered lists, bold and italic text.
-    *   Ensure sufficient white space between paragraphs and sections for readability.
-    *   The report should be well-structured and strong in its visual presentation and content.
+      `**Very Important: Please strictly adhere to the requested format and structure below to ensure clarity and usefulness.**
+
+Please generate a professional and detailed financial report in English, focusing on actionable insights and practical solutions based on the provided budget data. Use Markdown formatting effectively for visual appeal and readability. The report must include the following sections in order:
+
+1.  **📊 Clear Main Report Title:** Accurately reflecting the report's content and time period (e.g., "Detailed Financial Analysis for [Filter Type] for [Month] [Year] 📈" or "Annual Financial Performance Summary for [Year] 🗓️").
+
+2.  **✨ Executive Summary (Introduction):** A concise paragraph (3-4 sentences) highlighting the most critical findings and key takeaways from the report and the period covered.
+
+3.  **🔍 Detailed Analysis and Tabular Display:**
+    *   **First: Display Data in Tables:**
+        *   If **Income** data exists, create a **Markdown table** for it titled "💰 Income Table". The table should have two columns: **Category** and **Amount**. Add a total row at the bottom.
+        *   If **Expense** data exists, create a separate **Markdown table** for it titled "💸 Expense Table". The table should have two columns: **Category** and **Amount**. Add a total row at the bottom.
+        *   Example Table:
+            | Category      | Amount |
+            | ------------- | -----: |
+            | Income Cat 1  | 1500   |
+            | Income Cat 2  | 2000   |
+            | **Total**     | **3500** |
+    *   **Second: Brief Textual Analysis:**
+        *   Following the tables, provide a brief textual analysis of the overall performance (1-2 paragraphs). Highlight the most significant categories (largest amounts, or notable changes if comparison is possible).
+        *   **For Monthly Reports:** Focus on comparing the current month's performance to the previous month (if implicitly possible from data) or highlight key points for the month.
+        *   **For Yearly Reports:** Provide an overview of category performance throughout the year.
+
+4.  **🎯 Key Insights and Conclusions:**
+    *   A dedicated section titled "🎯 Key Insights and Conclusions".
+    *   Use bullet points to present 3-5 clear, specific insights derived *directly* from the analysis of the provided data and tables. Avoid generalizations.
+    *   Example: "•️⃣ [Category Name] constituted the largest portion of expenses this month at [Amount]."
+
+5.  **💡 Practical Recommendations and Solutions:**
+    *   A dedicated section titled "💡 Practical Recommendations and Solutions".
+    *   Provide 2-4 recommendations that are **extremely specific, immediately actionable, and directly linked** to the insights mentioned in the previous section or specific observations from the tables. **Each recommendation must be a direct consequence of analyzing the provided data.**
+    *   **Strictly avoid generic or obvious advice.** Focus on practical steps the user can take.
+    *   Clearly state **why** the recommendation is important (link to insight/data) and **what the proposed action** is concretely.
+    *   Example: "1. **Linked Insight:** Expenses in [Category Name] constituted X% of the total. **Recommendation:** Conduct a detailed review of last month's invoices for [Category Name] to identify non-essential items that can be eliminated or reduced, aiming for a Y% reduction in this category next month."
+    *   Another Example: "2. **Linked Insight:** Revenue from [Category Name] decreased compared to [previous period/average]. **Recommendation:** Analyze the reasons for the revenue drop in [Category Name] by [specific action, e.g., contacting key clients/reviewing pricing strategy] and propose a plan to address it within the next two weeks."
+
+6.  **🏁 Conclusion:**
+    *   A brief paragraph summarizing the main points and emphasizing the importance of following up on recommendations.
+
+**Additional Formatting:**
+*   Use **bold text** for main and subheadings and important terms.
+*   Use emojis appropriately to enhance visual appeal, but sparingly.
+*   Ensure clear separation between sections using blank lines.
+*   **Important for Monthly Reports:** Ensure the report reflects a clear summary for the specific month, with tables and recommendations focused on that month's data.
 `;
 
     const prompt = `${languageSpecificInstructions}
