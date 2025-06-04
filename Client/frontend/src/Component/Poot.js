@@ -25,9 +25,15 @@ import {
   FaThumbsUp,
   FaThumbsDown,
   FaBookmark,
-  FaEye
+  FaEye,
+  FaFileExcel,
+  FaFilePdf,
+  FaWhatsapp,
+  FaFacebook
 } from 'react-icons/fa';
 import '../cssStyle/poot.css';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 function ModernReportDashboard() {
   // State for budget data
@@ -51,7 +57,10 @@ function ModernReportDashboard() {
   const [collapsedSections, setCollapsedSections] = useState({});
   
   // State for language
-  const [responseLanguage, setResponseLanguage] = useState('en');
+  const [responseLanguage, setResponseLanguage] = useState('ar');
+  
+  // State for share modal
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // References
   const reportContentRef = useRef(null);
@@ -313,6 +322,7 @@ ${JSON.stringify(items, null, 2)}
       };
       
       setReportHistory(prev => [newReport, ...prev.slice(0, 9)]);
+      setActiveReportId(newReport.id);
       
     } catch (err) {
       console.error(err);
@@ -330,172 +340,307 @@ ${JSON.stringify(items, null, 2)}
     }));
   }
 
-  // Handle print report
-  function handlePrintReport() {
-    const printWindow = window.open('', '_blank');
-    
-    if (!printWindow) {
-      alert(responseLanguage === 'ar' ? 'يرجى السماح بالنوافذ المنبثقة لطباعة التقرير.' : 'Please allow pop-ups to print the report.');
-      return;
-    }
-    
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html dir="${responseLanguage === 'ar' ? 'rtl' : 'ltr'}" lang="${responseLanguage}">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${reportTitle}</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-          }
-          h1, h2, h3, h4 {
-            color: #4169E1;
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-          }
-          h1 {
-            text-align: center;
-            font-size: 1.8em;
-            border-bottom: 2px solid #4169E1;
-            padding-bottom: 0.3em;
-          }
-          ul, ol {
-            padding-left: 2em;
-          }
-          li {
-            margin-bottom: 0.5em;
-          }
-          blockquote {
-            border-left: 4px solid #4169E1;
-            padding-left: 1em;
-            margin-left: 0;
-            color: #555;
-          }
-          @media print {
-            body {
-              font-size: 12pt;
-            }
-            h1 {
-              font-size: 18pt;
-            }
-            h2 {
-              font-size: 16pt;
-            }
-            h3 {
-              font-size: 14pt;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${reportTitle}</h1>
-        <div class="report-content">
-          ${reportContent.replace(/\n/g, '<br>')}
-        </div>
-      </body>
-      </html>
-    `;
-    
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    
-    // Wait for content to load before printing
-    setTimeout(() => {
-      printWindow.print();
-      // Close the window after print dialog is closed (optional)
-      // printWindow.close();
-    }, 500);
+  // Search reports
+  function searchReports(term) {
+    setSearchTerm(term);
   }
 
-  // Handle download report as PDF
-  function handleDownloadReport() {
-    // This is a placeholder - in a real implementation, you would use a library like jsPDF
-    // or make a server request to generate a PDF
-    alert(responseLanguage === 'ar' ? 'سيتم تنفيذ وظيفة تنزيل PDF في الإصدار النهائي.' : 'PDF download functionality will be implemented in the final version.');
-  }
+  // Get filtered history based on search term
+  const filteredHistory = useMemo(() => {
+    if (!searchTerm) return reportHistory;
+    return reportHistory.filter(report => 
+      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [reportHistory, searchTerm]);
 
-  // Handle export report as Excel
-  function handleExportToExcel() {
-    // This is a placeholder - in a real implementation, you would format the data and use XLSX library
-    alert(responseLanguage === 'ar' ? 'سيتم تنفيذ وظيفة تصدير Excel في الإصدار النهائي.' : 'Excel export functionality will be implemented in the final version.');
-  }
-
-  // Handle share report
-  function handleShareReport() {
-    // This is a placeholder - in a real implementation, you would implement sharing functionality
-    alert(responseLanguage === 'ar' ? 'سيتم تنفيذ وظيفة المشاركة في الإصدار النهائي.' : 'Sharing functionality will be implemented in the final version.');
-  }
-
-  // Format date for display
-  function formatDate(date, type) {
-    const locale = responseLanguage === 'ar' ? 'ar-EG' : 'en-US';
-    const dateObj = new Date(date);
-    
-    if (type === 'full') {
-      return dateObj.toLocaleDateString(locale);
-    } else if (type === 'month') {
-      return dateObj.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
-    } else {
-      return dateObj.toLocaleDateString(locale, { year: 'numeric' });
-    }
-  }
-
-  // Load a report from history
+  // Load report from history
   function loadReportFromHistory(report) {
     setReportTitle(report.title);
     setReportContent(report.content);
-    setCollapsedSections({});
     setActiveReportId(report.id);
+    setCollapsedSections({});
   }
-  
-  // Toggle bookmark for a report
+
+  // Toggle bookmark
   function toggleBookmark(reportId) {
-    if (bookmarkedReports.includes(reportId)) {
-      setBookmarkedReports(prev => prev.filter(id => id !== reportId));
-    } else {
-      setBookmarkedReports(prev => [...prev, reportId]);
-    }
+    setBookmarkedReports(prev => 
+      prev.includes(reportId)
+        ? prev.filter(id => id !== reportId)
+        : [...prev, reportId]
+    );
   }
-  
-  // Submit feedback for a report
+
+  // Submit feedback
   function submitFeedback(reportId, isPositive) {
     setReportFeedback(prev => ({
       ...prev,
       [reportId]: isPositive
     }));
     
-    // Show feedback confirmation with animation
-    const feedbackElement = document.getElementById(`feedback-${isPositive ? 'positive' : 'negative'}`);
-    if (feedbackElement) {
-      feedbackElement.classList.add('feedback-active');
+    // Add animation class to feedback button
+    const buttonId = isPositive ? 'feedback-positive' : 'feedback-negative';
+    const button = document.getElementById(buttonId);
+    if (button) {
+      button.classList.add('feedback-active');
       setTimeout(() => {
-        feedbackElement.classList.remove('feedback-active');
-      }, 2000);
+        button.classList.remove('feedback-active');
+      }, 500);
     }
   }
-  
-  // Search in reports
-  function searchReports(term) {
-    setSearchTerm(term);
+
+  // Print report
+  function handlePrintReport() {
+    window.print();
   }
-  
-  // Get filtered history based on search term
-  const filteredHistory = useMemo(() => {
-    if (!searchTerm.trim()) return reportHistory;
+
+  // Extract tables from Markdown content
+  function extractTablesFromMarkdown(markdown) {
+    const tables = [];
+    const tableRegex = /\|(.+)\|[\r\n]+\|([-:\s|]+)\|[\r\n]+((?:\|.+\|[\r\n]+)+)/g;
+    let match;
     
-    return reportHistory.filter(report => 
-      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.content.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [reportHistory, searchTerm]);
+    while ((match = tableRegex.exec(markdown)) !== null) {
+      const headerRow = match[1].split('|').map(cell => cell.trim());
+      const bodyRows = match[3].split('\n')
+        .filter(row => row.trim() !== '')
+        .map(row => {
+          return row.split('|')
+            .filter((cell, index) => index > 0 && index < headerRow.length + 1)
+            .map(cell => cell.trim().replace(/\*\*/g, ''));
+        });
+      
+      tables.push({
+        headers: headerRow,
+        rows: bodyRows
+      });
+    }
+    
+    return tables;
+  }
+
+  // Extract insights and recommendations from Markdown content
+  function extractInsightsAndRecommendations(markdown) {
+    const insights = [];
+    const recommendations = [];
+    
+    // Extract insights section
+    const insightsRegex = /🎯[^#]+/g;
+    const insightsMatch = markdown.match(insightsRegex);
+    if (insightsMatch) {
+      const insightsText = insightsMatch[0];
+      const insightItems = insightsText.match(/•️⃣[^\n]+/g);
+      if (insightItems) {
+        insights.push(...insightItems.map(item => item.trim()));
+      }
+    }
+    
+    // Extract recommendations section
+    const recommendationsRegex = /💡[^#]+/g;
+    const recommendationsMatch = markdown.match(recommendationsRegex);
+    if (recommendationsMatch) {
+      const recommendationsText = recommendationsMatch[0];
+      const recommendationItems = recommendationsText.match(/\d+\.\s+\*\*[^\n]+/g);
+      if (recommendationItems) {
+        recommendations.push(...recommendationItems.map(item => item.trim()));
+      }
+    }
+    
+    return { insights, recommendations };
+  }
+
+  // Export to Excel
+  function handleExportToExcel() {
+    try {
+      // Create a new workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Extract tables from Markdown
+      const tables = extractTablesFromMarkdown(reportContent);
+      
+      // Extract insights and recommendations
+      const { insights, recommendations } = extractInsightsAndRecommendations(reportContent);
+      
+      // Add tables to workbook
+      tables.forEach((table, index) => {
+        const sheetName = responseLanguage === 'ar' 
+          ? `جدول ${index + 1}` 
+          : `Table ${index + 1}`;
+        
+        // Prepare data for worksheet
+        const wsData = [
+          table.headers,
+          ...table.rows
+        ];
+        
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      });
+      
+      // Create insights worksheet
+      if (insights.length > 0) {
+        const insightsData = [
+          [responseLanguage === 'ar' ? 'الرؤى والاستنتاجات' : 'Insights and Conclusions'],
+          ...insights.map(insight => [insight])
+        ];
+        const insightsWs = XLSX.utils.aoa_to_sheet(insightsData);
+        XLSX.utils.book_append_sheet(wb, insightsWs, responseLanguage === 'ar' ? 'الرؤى' : 'Insights');
+      }
+      
+      // Create recommendations worksheet
+      if (recommendations.length > 0) {
+        const recommendationsData = [
+          [responseLanguage === 'ar' ? 'التوصيات والحلول' : 'Recommendations and Solutions'],
+          ...recommendations.map(recommendation => [recommendation])
+        ];
+        const recommendationsWs = XLSX.utils.aoa_to_sheet(recommendationsData);
+        XLSX.utils.book_append_sheet(wb, recommendationsWs, responseLanguage === 'ar' ? 'التوصيات' : 'Recommendations');
+      }
+      
+      // Generate Excel file
+      const fileName = `${reportTitle.replace(/[^\w\s]/gi, '_')}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      // Show success message
+      alert(responseLanguage === 'ar' 
+        ? 'تم تصدير التقرير إلى Excel بنجاح!' 
+        : 'Report exported to Excel successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert(responseLanguage === 'ar' 
+        ? 'حدث خطأ أثناء تصدير التقرير إلى Excel.' 
+        : 'Error exporting report to Excel.');
+    }
+  }
+
+  // Download as PDF
+  async function handleDownloadReport() {
+    if (!reportContentRef.current) return;
+    
+    try {
+      // Show loading message
+      const loadingMessage = responseLanguage === 'ar' 
+        ? 'جاري إنشاء ملف PDF...' 
+        : 'Creating PDF file...';
+      alert(loadingMessage);
+      
+      // Create a new jsPDF instance
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+      
+      // Set RTL if Arabic
+      if (responseLanguage === 'ar') {
+        pdf.setR2L(true);
+      }
+      
+      // Get the report content element
+      const reportElement = reportContentRef.current;
+      
+      // Use html2canvas to capture the report content
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Calculate dimensions to fit on A4
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      // Add new pages if content overflows
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      // Save the PDF
+      const fileName = `${reportTitle.replace(/[^\w\s]/gi, '_')}.pdf`;
+      pdf.save(fileName);
+      
+      // Show success message
+      alert(responseLanguage === 'ar' 
+        ? 'تم تنزيل التقرير كملف PDF بنجاح!' 
+        : 'Report downloaded as PDF successfully!');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert(responseLanguage === 'ar' 
+        ? 'حدث خطأ أثناء إنشاء ملف PDF.' 
+        : 'Error creating PDF file.');
+    }
+  }
+
+  // Share report
+  function handleShareReport() {
+    setShowShareModal(true);
+  }
+
+  // Close share modal
+  function closeShareModal() {
+    setShowShareModal(false);
+  }
+
+  // Share on WhatsApp
+  function shareOnWhatsApp() {
+    try {
+      // Create share text
+      const shareText = `${reportTitle}\n\n${reportContent.substring(0, 100)}...`;
+      
+      // Encode for URL
+      const encodedText = encodeURIComponent(shareText);
+      
+      // Create WhatsApp share URL
+      const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+      
+      // Open in new window
+      window.open(whatsappUrl, '_blank');
+      
+      // Close modal
+      closeShareModal();
+    } catch (error) {
+      console.error('Error sharing on WhatsApp:', error);
+      alert(responseLanguage === 'ar' 
+        ? 'حدث خطأ أثناء المشاركة على WhatsApp.' 
+        : 'Error sharing on WhatsApp.');
+    }
+  }
+
+  // Share on Facebook
+  function shareOnFacebook() {
+    try {
+      // Create Facebook share URL
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(reportTitle)}`;
+      
+      // Open in new window
+      window.open(facebookUrl, '_blank');
+      
+      // Close modal
+      closeShareModal();
+    } catch (error) {
+      console.error('Error sharing on Facebook:', error);
+      alert(responseLanguage === 'ar' 
+        ? 'حدث خطأ أثناء المشاركة على Facebook.' 
+        : 'Error sharing on Facebook.');
+    }
+  }
 
   return (
     <div className="modern-report-dashboard" dir={responseLanguage === 'ar' ? 'rtl' : 'ltr'}>
@@ -695,10 +840,10 @@ ${JSON.stringify(items, null, 2)}
                       <FaPrint />
                     </button>
                     <button onClick={handleDownloadReport} title={responseLanguage === 'ar' ? 'تنزيل PDF' : 'Download PDF'}>
-                      <FaDownload />
+                      <FaFilePdf />
                     </button>
                     <button onClick={handleExportToExcel} title={responseLanguage === 'ar' ? 'تصدير إلى Excel' : 'Export to Excel'}>
-                      <FaFileAlt />
+                      <FaFileExcel />
                     </button>
                     <button onClick={handleShareReport} title={responseLanguage === 'ar' ? 'مشاركة' : 'Share'}>
                       <FaShare />
@@ -747,7 +892,7 @@ ${JSON.stringify(items, null, 2)}
                     components={{
                       h1: ({node, ...props}) => <h1 className="report-h1" {...props} />,
                       h2: ({node, ...props}) => <h2 className="report-h2" {...props} />,
-                      h3: ({node, children, ...props}) => {
+                      h3: ({children, ...props}) => {
                         // Generate a unique ID for this section based on the heading text
                         const sectionId = children.toString().replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
                         const isCollapsed = collapsedSections[sectionId];
@@ -830,6 +975,31 @@ ${JSON.stringify(items, null, 2)}
           </div>
         </main>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="share-modal-overlay">
+          <div className="share-modal">
+            <div className="share-modal-header">
+              <h3>{responseLanguage === 'ar' ? 'مشاركة التقرير' : 'Share Report'}</h3>
+              <button className="close-modal" onClick={closeShareModal}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="share-modal-content">
+              <p>{responseLanguage === 'ar' ? 'اختر طريقة المشاركة:' : 'Choose sharing method:'}</p>
+              <div className="share-buttons">
+                <button className="share-button whatsapp" onClick={shareOnWhatsApp}>
+                  <FaWhatsapp /> WhatsApp
+                </button>
+                <button className="share-button facebook" onClick={shareOnFacebook}>
+                  <FaFacebook /> Facebook
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
