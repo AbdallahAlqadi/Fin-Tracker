@@ -16,7 +16,6 @@ import {
   IconButton,
   useMediaQuery,
   Container,
-  Grid,
   Select,
   MenuItem,
   FormControl,
@@ -31,68 +30,55 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
-// تحديث لوحة الألوان لتصبح أكثر هدوءًا واحترافية
-const originalThemeColors = {
-  backgroundGradientStart: '#F0F8FF', // الاحتفاظ بالتدرج الخفيف
-  backgroundGradientEnd: '#E6F2FF',
-  primaryAccent: '#1565C0', // أزرق أغمق وأكثر احترافية
-  textPrimary: '#212121', // رمادي غامق للنص الأساسي
-  textSecondary: '#616161', // رمادي متوسط للنص الثانوي
-  expense: '#C62828', // أحمر خافت للمصروفات
-  income: '#2E7D32', // أخضر داكن للإيرادات
-  surface: '#FFFFFF', // أبيض نظيف
-  dialogSurface: '#FAFAFA', // رمادي فاتح جدًا للحوار
+// جديد: لوحة ألوان هادئة وعصرية
+const themeColors = {
+  background: '#F9FAFB',
+  primaryAccent: '#0D47A1', // أزرق غامق محترف
+  textPrimary: '#212121',
+  textSecondary: '#424242',
+  expense: '#C62828',
+  income: '#2E7D32',
+  surface: '#FFFFFF',
+  dialogSurface: '#FFFFFF',
   inputBackground: '#FFFFFF',
-  borderColor: '#E0E0E0', // حدود رمادية ناعمة
-  white: '#FFFFFF',
-  buttonTextLight: '#FFFFFF', // للأزرار المملوءة
-  buttonTextDark: '#1565C0', // للأزرار المحددة بالحدود
+  borderColor: '#E0E0E0',
+  buttonTextLight: '#FFFFFF',
+  buttonTextDark: '#0D47A1',
 };
 
-// الرسوم المتحركة تبقى كما هي لأنها حديثة
-const floatAnimation = keyframes`
+// سهولة الحركة عند التحويم
+const hoverAnimation = keyframes`
   0% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-5px); }
   100% { transform: translateY(0); }
 `;
 
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-// تصميم بطاقة الفئة المحدث مع تحسينات بصرية
+// بطاقة التصنيف الحديثة
 const CategoryCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'type',
 })(({ theme, type }) => ({
-  border: `2px solid ${type && type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income}`,
-  backgroundColor: originalThemeColors.surface,
+  backgroundColor: themeColors.surface,
   borderRadius: '16px',
-  padding: theme.spacing(2.5),
+  padding: theme.spacing(2),
   height: '180px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   textAlign: 'center',
-  boxShadow: `0 8px 20px ${alpha(originalThemeColors.primaryAccent, 0.12)}`,
+  boxShadow: `0 4px 12px ${alpha(themeColors.textPrimary, 0.08)}`,
   cursor: 'pointer',
-  transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.3s ease',
-  animation: `${fadeIn} 0.6s ease-out forwards`,
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+  border: `1px solid ${alpha(themeColors.primaryAccent, 0.2)}`,
   '&:hover': {
-    transform: 'scale(1.05)',
-    boxShadow: `0 12px 28px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-    borderColor: originalThemeColors.primaryAccent,
+    transform: 'translateY(-5px)',
+    boxShadow: `0 8px 24px ${alpha(themeColors.textPrimary, 0.16)}`,
+    borderColor: themeColors.primaryAccent,
+    animation: `${hoverAnimation} 0.6s ease-in-out`,
   },
   [theme.breakpoints.down('sm')]: {
     height: '160px',
-    padding: theme.spacing(2),
+    padding: theme.spacing(1.5),
   },
 }));
 
@@ -118,28 +104,23 @@ const DashboardUser = () => {
   const [isNewSubmitting, setIsNewSubmitting] = useState(false);
 
   const isSmallDevice = useMediaQuery('(max-width:600px)');
-  const isMediumDevice = useMediaQuery('(max-width:900px)');
-  const isLargeDevice = useMediaQuery('(min-width:1200px)');
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
         setCategories(response.data.data);
-        const initialVisibleItems = response.data.data.reduce((acc, category) => {
-          if (!acc[category.categoryType]) {
-            acc[category.categoryType] = 12;
-          }
+        const initialVisible = response.data.data.reduce((acc, cat) => {
+          if (!acc[cat.categoryType]) acc[cat.categoryType] = 12;
           return acc;
         }, {});
-        setVisibleItems(initialVisibleItems);
+        setVisibleItems(initialVisible);
       } catch (error) {
         console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
@@ -164,24 +145,20 @@ const DashboardUser = () => {
       setErrorMessage('Please enter a valid value and select a date.');
       return;
     }
-
     const parsedValue = parseFloat(value);
     if (isNaN(parsedValue) || parsedValue < 0) {
       setErrorMessage('Please enter a non-negative decimal number.');
       return;
     }
-
-    const currentCategory = selectedCategory;
+    const current = selectedCategory;
     handleClose();
-
     setIsSubmitting(true);
     const token = sessionStorage.getItem('jwt');
-
     try {
       const response = await axios.post(
         'http://127.0.0.1:5004/api/addBudget',
         {
-          CategoriesId: currentCategory._id,
+          CategoriesId: current._id,
           valueitem: parsedValue,
           date: selectedDate,
         },
@@ -192,13 +169,11 @@ const DashboardUser = () => {
           },
         }
       );
-
       console.log('Response:', response.data);
-      setAddedItems((prev) => [...prev, currentCategory._id]);
+      setAddedItems((prev) => [...prev, current._id]);
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.error(error.response.data.error || 'You have already added this item on this date.');
-        setAddedItems((prev) => [...prev, currentCategory._id]);
+        setAddedItems((prev) => [...prev, current._id]);
       } else {
         console.error('Error submitting value:', error);
       }
@@ -214,49 +189,10 @@ const DashboardUser = () => {
     }));
   };
 
-  const categoryOptions = categories.map((cat) => cat.categoryName);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: `linear-gradient(135deg, ${originalThemeColors.backgroundGradientStart} 0%, ${originalThemeColors.backgroundGradientEnd} 100%)` }}>
-        <CircularProgress sx={{ color: originalThemeColors.primaryAccent }} size={60} />
-        <Typography variant="h6" sx={{ color: originalThemeColors.textPrimary, ml: 2 }}>
-          Loading Dashboard...
-        </Typography>
-      </Box>
-    );
-  }
-
-  let filteredCategories = categories.filter((category) =>
-    category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (filterType === 'income') {
-    filteredCategories = filteredCategories.filter(
-      (category) => !category.categoryType.toLowerCase().startsWith('expens')
-    );
-  } else if (filterType === 'expenses') {
-    filteredCategories = filteredCategories.filter((category) =>
-      category.categoryType.toLowerCase().startsWith('expens')
-    );
-  }
-
-  const groupedCategories = filteredCategories.reduce((acc, category) => {
-    if (!acc[category.categoryType]) {
-      acc[category.categoryType] = [];
-    }
-    acc[category.categoryType].push(category);
-    return acc;
-  }, {});
-
-  const getCategoryIcon = (type) =>
-    type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
-
   const handleNewDialogOpen = () => {
     setNewDialogOpen(true);
     setNewErrorMessage('');
   };
-
   const handleNewDialogClose = () => {
     setNewDialogOpen(false);
     setNewCategoryName('');
@@ -265,9 +201,9 @@ const DashboardUser = () => {
     setNewErrorMessage('');
   };
 
-  const handleImageChange = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      setNewCategoryImage(event.target.files[0]);
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewCategoryImage(e.target.files[0]);
     }
   };
 
@@ -276,17 +212,14 @@ const DashboardUser = () => {
       setNewErrorMessage('Please fill in all required fields.');
       return;
     }
-
     setIsNewSubmitting(true);
     const token = sessionStorage.getItem('jwt');
-
     const formData = new FormData();
     formData.append('categoryName', newCategoryName);
     formData.append('categoryType', newCategoryType);
     if (newCategoryImage) {
       formData.append('image', newCategoryImage);
     }
-
     try {
       const response = await axios.post(
         'http://127.0.0.1:5004/api/cardusers',
@@ -298,7 +231,6 @@ const DashboardUser = () => {
           },
         }
       );
-      console.log('New Category Response:', response.data);
       setCategories((prev) => [...prev, response.data.data]);
       handleNewDialogClose();
     } catch (error) {
@@ -309,76 +241,121 @@ const DashboardUser = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: themeColors.background,
+        }}
+      >
+        <CircularProgress sx={{ color: themeColors.primaryAccent }} size={60} />
+        <Typography variant="h6" sx={{ color: themeColors.textPrimary, ml: 2 }}>
+          Loading Dashboard...
+        </Typography>
+      </Box>
+    );
+  }
+
+  let filteredCategories = categories.filter((cat) =>
+    cat.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  if (filterType === 'income') {
+    filteredCategories = filteredCategories.filter(
+      (cat) => !cat.categoryType.toLowerCase().startsWith('expens')
+    );
+  } else if (filterType === 'expenses') {
+    filteredCategories = filteredCategories.filter((cat) =>
+      cat.categoryType.toLowerCase().startsWith('expens')
+    );
+  }
+
+  const groupedCategories = filteredCategories.reduce((acc, cat) => {
+    if (!acc[cat.categoryType]) acc[cat.categoryType] = [];
+    acc[cat.categoryType].push(cat);
+    return acc;
+  }, {});
+
+  const getCategoryIcon = (type) =>
+    type && type.toLowerCase().startsWith('expens') ? '💸' : '💰';
+
+  const categoryOptions = categories.map((cat) => cat.categoryName);
+
   return (
     <Container
       maxWidth="xl"
       sx={{
         py: { xs: 3, sm: 5 },
         minHeight: '100vh',
-        background: `linear-gradient(135deg, ${originalThemeColors.backgroundGradientStart} 0%, ${originalThemeColors.backgroundGradientEnd} 100%)`,
-        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
-        position: 'relative',
-        color: originalThemeColors.textPrimary,
+        backgroundColor: themeColors.background,
+        fontFamily:
+          '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        color: themeColors.textPrimary,
       }}
     >
+      {/* العنوان الرئيسي */}
       <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
         <Typography
           variant="h2"
           sx={{
             fontWeight: 'bold',
-            textTransform: 'uppercase',
-            color: originalThemeColors.primaryAccent,
-            textShadow: `2px 2px 4px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-            letterSpacing: '0.07em',
-            transition: 'transform 0.4s ease-in-out, text-shadow 0.4s ease',
+            color: themeColors.primaryAccent,
+            letterSpacing: '0.05em',
+            transition: 'transform 0.3s ease',
             transform: `scale(${scale})`,
             cursor: 'pointer',
-            fontSize: { xs: '2.2rem', sm: '3rem', md: '3.5rem' },
-            mb: 1,
+            fontSize: { xs: '2rem', sm: '2.8rem', md: '3.2rem' },
           }}
           onMouseEnter={() => setScale(1.05)}
           onMouseLeave={() => setScale(1)}
         >
           Finance Tracker
         </Typography>
-        <Typography variant="h6" sx={{ color: originalThemeColors.textSecondary, fontWeight: 300, letterSpacing: '0.05em' }}>
+        <Typography
+          variant="h6"
+          sx={{ color: themeColors.textSecondary, fontWeight: 300, mt: 1 }}
+        >
           Manage your finances with ease
         </Typography>
       </Box>
 
+      {/* شريط البحث */}
       <Box sx={{ mb: { xs: 3, sm: 5 }, maxWidth: '800px', mx: 'auto' }}>
         <Autocomplete
           freeSolo
           options={categoryOptions}
-          onInputChange={(event, newInputValue) => setSearchQuery(newInputValue)}
+          onInputChange={(e, val) => setSearchQuery(val)}
           renderInput={(params) => (
             <TextField
               {...params}
               placeholder="Search for a category..."
               variant="outlined"
               sx={{
-                backgroundColor: originalThemeColors.inputBackground,
+                backgroundColor: themeColors.inputBackground,
                 borderRadius: '30px',
-                boxShadow: `0 4px 15px ${alpha(originalThemeColors.primaryAccent, 0.1)}`,
+                boxShadow: `0 2px 10px ${alpha(themeColors.textPrimary, 0.1)}`,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '30px',
-                  color: originalThemeColors.textPrimary,
+                  color: themeColors.textPrimary,
                   '& fieldset': {
-                    borderColor: alpha(originalThemeColors.primaryAccent, 0.5),
+                    borderColor: alpha(themeColors.primaryAccent, 0.4),
                     borderWidth: '1px',
                   },
                   '&:hover fieldset': {
-                    borderColor: originalThemeColors.primaryAccent,
+                    borderColor: themeColors.primaryAccent,
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: originalThemeColors.primaryAccent,
-                    boxShadow: `0 0 0 3px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
+                    borderColor: themeColors.primaryAccent,
+                    boxShadow: `0 0 0 3px ${alpha(themeColors.primaryAccent, 0.25)}`,
                   },
                 },
                 '& .MuiInputBase-input': {
-                  color: originalThemeColors.textPrimary,
+                  color: themeColors.textPrimary,
                   '&::placeholder': {
-                    color: originalThemeColors.textSecondary,
+                    color: themeColors.textSecondary,
                     opacity: 1,
                   },
                 },
@@ -387,7 +364,7 @@ const DashboardUser = () => {
                 ...params.InputProps,
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ color: originalThemeColors.textSecondary }} />
+                    <SearchIcon sx={{ color: themeColors.textSecondary }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
@@ -395,7 +372,14 @@ const DashboardUser = () => {
                     {params.InputProps.endAdornment}
                     {searchQuery && (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setSearchQuery('')} edge="end" sx={{ color: originalThemeColors.textSecondary, '&:hover': { color: originalThemeColors.primaryAccent } }}>
+                        <IconButton
+                          onClick={() => setSearchQuery('')}
+                          edge="end"
+                          sx={{
+                            color: themeColors.textSecondary,
+                            '&:hover': { color: themeColors.primaryAccent },
+                          }}
+                        >
                           <ClearIcon />
                         </IconButton>
                       </InputAdornment>
@@ -408,43 +392,64 @@ const DashboardUser = () => {
         />
       </Box>
 
+      {/* أزرار الفلترة */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 4, sm: 6 } }}>
-        <ButtonGroup variant="outlined" size="large" sx={{ borderRadius: '20px', overflow: 'hidden', boxShadow: `0 2px 8px ${alpha(originalThemeColors.primaryAccent, 0.15)}` }}>
+        <ButtonGroup
+          variant="outlined"
+          size="large"
+          sx={{
+            borderRadius: '20px',
+            overflow: 'hidden',
+            boxShadow: `0 2px 8px ${alpha(themeColors.textPrimary, 0.1)}`,
+          }}
+        >
           {[
             { label: 'All', value: 'all', icon: <AccountBalanceWalletIcon /> },
             { label: 'Revenues', value: 'income', icon: <AddCircleIcon /> },
             { label: 'Expenses', value: 'expenses', icon: <RemoveCircleIcon /> },
-          ].map((typeOption, index) => (
+          ].map((opt, idx) => (
             <Button
-              key={typeOption.value}
-              onClick={() => setFilterType(typeOption.value)}
-              variant={filterType === typeOption.value ? 'contained' : 'outlined'}
-              startIcon={typeOption.icon}
+              key={opt.value}
+              onClick={() => setFilterType(opt.value)}
+              variant={filterType === opt.value ? 'contained' : 'outlined'}
+              startIcon={opt.icon}
               sx={{
                 textTransform: 'none',
-                fontWeight: filterType === typeOption.value ? 'bold' : 'normal',
-                borderColor: originalThemeColors.primaryAccent,
-                color: filterType === typeOption.value ? originalThemeColors.buttonTextLight : originalThemeColors.buttonTextDark,
-                backgroundColor: filterType === typeOption.value ? originalThemeColors.primaryAccent : 'transparent',
+                fontWeight: filterType === opt.value ? 'bold' : 'normal',
+                borderColor: themeColors.primaryAccent,
+                color:
+                  filterType === opt.value
+                    ? themeColors.buttonTextLight
+                    : themeColors.buttonTextDark,
+                backgroundColor:
+                  filterType === opt.value ? themeColors.primaryAccent : 'transparent',
                 '&:hover': {
-                  backgroundColor: filterType === typeOption.value ? alpha(originalThemeColors.primaryAccent, 0.85) : alpha(originalThemeColors.primaryAccent, 0.08),
-                  borderColor: originalThemeColors.primaryAccent,
+                  backgroundColor:
+                    filterType === opt.value
+                      ? alpha(themeColors.primaryAccent, 0.85)
+                      : alpha(themeColors.primaryAccent, 0.08),
+                  borderColor: themeColors.primaryAccent,
                 },
                 px: { xs: 2, sm: 3 },
                 py: 1.5,
                 fontSize: { xs: '0.8rem', sm: '1rem' },
-                ...(index === 0 && { borderRadius: '20px 0 0 20px' }),
-                ...(index === 2 && { borderRadius: '0 20px 20px 0' }),
+                ...(idx === 0 && { borderRadius: '20px 0 0 20px' }),
+                ...(idx === 2 && { borderRadius: '0 20px 20px 0' }),
               }}
             >
-              {typeOption.label}
+              {opt.label}
             </Button>
           ))}
         </ButtonGroup>
       </Box>
 
+      {/* عرض الفئات */}
       {Object.keys(groupedCategories).length === 0 ? (
-        <Typography variant="h6" align="center" sx={{ color: originalThemeColors.textSecondary, mt: 4, fontStyle: 'italic' }}>
+        <Typography
+          variant="h6"
+          align="center"
+          sx={{ color: themeColors.textSecondary, mt: 4, fontStyle: 'italic' }}
+        >
           No items found.
         </Typography>
       ) : (
@@ -453,93 +458,115 @@ const DashboardUser = () => {
             <Typography
               variant="h5"
               sx={{
-                color: originalThemeColors.primaryAccent,
+                color: themeColors.primaryAccent,
                 fontWeight: 600,
                 mb: 3,
                 pl: 2,
-                borderLeft: `4px solid ${type.toLowerCase().startsWith('expens') ? originalThemeColors.expense : originalThemeColors.income}`,
+                borderLeft: `4px solid ${
+                  type.toLowerCase().startsWith('expens')
+                    ? themeColors.expense
+                    : themeColors.income
+                }`,
                 display: 'inline-block',
               }}
             >
               {type} {getCategoryIcon(type)}
             </Typography>
-            
-            {/* Обновленная сетка карточек - 5 карточек в ряд */}
-            <Grid container spacing={3} sx={{ mb: 2 }}>
-              {groupedCategories[type].slice(0, visibleItems[type]).map((category, index) => {
+
+            {/* شبكة من 5 أعمدة ثابتة */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: 3,
+                mb: 2,
+                '@media (max-width:900px)': {
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                },
+                '@media (max-width:600px)': {
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                },
+              }}
+            >
+              {groupedCategories[type].slice(0, visibleItems[type]).map((category) => {
                 const isAdded = addedItems.includes(category._id);
                 return (
-                  <Grid item xs={12} sm={6} md={2.4} key={category._id}>
-                    <Tooltip
-                      title={isAdded ? "Already added" : `Add ${category.categoryName}`}
-                      placement="top"
-                      arrow
-                    >
-                      <Box sx={{ height: '100%' }}>
-                        <CategoryCard
-                          type={category.categoryType}
-                          onClick={isAdded ? undefined : () => handleClickOpen(category)}
-                          onKeyDown={
-                            isAdded
-                              ? undefined
-                              : (e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    handleClickOpen(category);
-                                  }
-                                }
-                          }
+                  <Tooltip
+                    key={category._id}
+                    title={isAdded ? 'Already added' : `Add ${category.categoryName}`}
+                    placement="top"
+                    arrow
+                  >
+                    <Box sx={{ height: '100%' }}>
+                      <CategoryCard
+                        type={category.categoryType}
+                        onClick={isAdded ? undefined : () => handleClickOpen(category)}
+                        sx={{
+                          opacity: isAdded ? 0.6 : 1,
+                          filter: isAdded ? 'grayscale(50%)' : 'none',
+                          pointerEvents: isAdded ? 'none' : 'auto',
+                        }}
+                        aria-disabled={isAdded}
+                      >
+                        {category.image && (
+                          <Box
+                            component="img"
+                            src={
+                              category.image.startsWith('data:')
+                                ? category.image
+                                : `http://127.0.0.1:5004/${category.image}`
+                            }
+                            alt={category.categoryName}
+                            sx={{
+                              width: { xs: 50, sm: 60, md: 65 },
+                              height: { xs: 50, sm: 60, md: 65 },
+                              borderRadius: '50%',
+                              mb: 1.5,
+                              objectFit: 'cover',
+                              border: `2px solid ${alpha(themeColors.primaryAccent, 0.3)}`,
+                            }}
+                          />
+                        )}
+                        <Typography
+                          variant="subtitle1"
                           sx={{
-                            opacity: isAdded ? 0.6 : 1,
-                            filter: isAdded ? 'grayscale(50%)' : 'none',
-                            pointerEvents: isAdded ? 'none' : 'auto',
-                            minWidth: 0,
-                            height: '100%',
+                            color: themeColors.textPrimary,
+                            fontWeight: 600,
+                            fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
                           }}
-                          aria-disabled={isAdded}
                         >
-                          {category.image && (
-                            <Box
-                              component="img"
-                              src={
-                                category.image.startsWith('data:')
-                                  ? category.image
-                                  : `http://127.0.0.1:5004/${category.image}`
-                              }
-                              alt={category.categoryName}
-                              sx={{
-                                width: { xs: 60, sm: 65, md: 70 },
-                                height: { xs: 60, sm: 65, md: 70 },
-                                borderRadius: '50%',
-                                mb: 1.5,
-                                objectFit: 'cover',
-                                border: `2px solid ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
-                              }}
-                            />
-                          )}
-                          <Typography variant="h6" sx={{ color: originalThemeColors.primaryAccent, fontWeight: 600, fontSize: {xs: '0.9rem', sm: '0.95rem', md: '1rem'} }}>
-                            {category.categoryName}
+                          {category.categoryName}
+                        </Typography>
+                        {isAdded && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: themeColors.expense,
+                              fontWeight: 'bold',
+                              mt: 1,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                            }}
+                          >
+                            Added
                           </Typography>
-                          {isAdded && (
-                            <Typography variant="caption" sx={{ color: originalThemeColors.expense, fontWeight: 'bold', mt: 1, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Added
-                            </Typography>
-                          )}
-                        </CategoryCard>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
+                        )}
+                      </CategoryCard>
+                    </Box>
+                  </Tooltip>
                 );
               })}
-            </Grid>
-            
+            </Box>
+
+            {/* زر تحميل المزيد */}
             {groupedCategories[type].length > visibleItems[type] && (
               <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
                 <Button
                   onClick={() => handleLoadMore(type)}
                   variant="contained"
                   sx={{
-                    backgroundColor: originalThemeColors.primaryAccent,
-                    color: originalThemeColors.buttonTextLight,
+                    backgroundColor: themeColors.primaryAccent,
+                    color: themeColors.buttonTextLight,
                     px: 4,
                     py: 1.5,
                     borderRadius: '8px',
@@ -547,7 +574,7 @@ const DashboardUser = () => {
                     fontWeight: 600,
                     transition: 'background-color 0.3s ease, transform 0.2s ease',
                     '&:hover': {
-                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                      backgroundColor: alpha(themeColors.primaryAccent, 0.85),
                       transform: 'scale(1.03)',
                     },
                   }}
@@ -560,6 +587,7 @@ const DashboardUser = () => {
         ))
       )}
 
+      {/* حوار إضافة قيمة جديدة */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -568,16 +596,16 @@ const DashboardUser = () => {
         PaperProps={{
           sx: {
             borderRadius: '16px',
-            boxShadow: `0 10px 30px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-            background: originalThemeColors.surface,
-            color: originalThemeColors.textPrimary,
+            boxShadow: `0 10px 30px ${alpha(themeColors.textPrimary, 0.1)}`,
+            background: themeColors.dialogSurface,
+            color: themeColors.textPrimary,
           },
         }}
       >
         <DialogTitle
           sx={{
-            background: `linear-gradient(135deg, ${originalThemeColors.primaryAccent}, ${alpha(originalThemeColors.primaryAccent, 0.8)})`,
-            color: originalThemeColors.buttonTextLight,
+            background: themeColors.primaryAccent,
+            color: themeColors.buttonTextLight,
             p: { xs: 2, sm: 2.5 },
             textAlign: 'center',
             fontSize: { xs: '1.5rem', sm: '1.75rem' },
@@ -589,37 +617,53 @@ const DashboardUser = () => {
             justifyContent: 'space-between',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {selectedCategory && getCategoryIcon(selectedCategory.categoryType)} {selectedCategory?.categoryName}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {selectedCategory && getCategoryIcon(selectedCategory.categoryType)}{' '}
+            {selectedCategory?.categoryName}
           </Box>
-          <IconButton onClick={handleClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              color: themeColors.buttonTextLight,
+              '&:hover': { background: alpha(themeColors.buttonTextLight, 0.15) },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: originalThemeColors.dialogSurface }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: themeColors.dialogSurface }}>
           {selectedCategory?.image && (
             <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Box
-              component="img"
-              src={
-                selectedCategory.image.startsWith('data:')
-                  ? selectedCategory.image
-                  : `http://127.0.0.1:5004/${selectedCategory.image}`
-              }
-              alt={selectedCategory.categoryName}
-              sx={{
-                width: 100,
-                height: 100,
-                borderRadius: '50%',
-                mb: 2,
-                objectFit: 'cover',
-                border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}`,
-                boxShadow: `0 0 10px ${alpha(originalThemeColors.primaryAccent, 0.3)}`,
-              }}
-            />
+              <Box
+                component="img"
+                src={
+                  selectedCategory.image.startsWith('data:')
+                    ? selectedCategory.image
+                    : `http://127.0.0.1:5004/${selectedCategory.image}`
+                }
+                alt={selectedCategory.categoryName}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  mb: 2,
+                  objectFit: 'cover',
+                  border: `3px solid ${alpha(themeColors.primaryAccent, 0.5)}`,
+                  boxShadow: `0 0 10px ${alpha(themeColors.primaryAccent, 0.3)}`,
+                }}
+              />
             </Box>
           )}
-          <Typography variant="subtitle1" sx={{ fontSize: {xs: '1rem', sm: '1.1rem'}, color: originalThemeColors.primaryAccent, mb: 2, fontWeight: 500, textAlign: 'center' }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontSize: { xs: '1rem', sm: '1.1rem' },
+              color: themeColors.primaryAccent,
+              mb: 2,
+              fontWeight: 500,
+              textAlign: 'center',
+            }}
+          >
             Type: {selectedCategory?.categoryType}
           </Typography>
           <TextField
@@ -635,15 +679,18 @@ const DashboardUser = () => {
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
-                backgroundColor: originalThemeColors.inputBackground,
+                backgroundColor: themeColors.inputBackground,
                 borderRadius: '8px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': { borderColor: originalThemeColors.borderColor },
-                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+                color: themeColors.textPrimary,
+                '& fieldset': { borderColor: themeColors.borderColor },
+                '&:hover fieldset': { borderColor: themeColors.primaryAccent },
+                '&.Mui-focused fieldset': {
+                  borderColor: themeColors.primaryAccent,
+                  boxShadow: `0 0 0 2px ${alpha(themeColors.primaryAccent, 0.2)}`,
+                },
               },
-              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
-              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+              '& .MuiInputLabel-root': { color: themeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: themeColors.primaryAccent },
             }}
           />
           <TextField
@@ -658,22 +705,33 @@ const DashboardUser = () => {
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
-                backgroundColor: originalThemeColors.inputBackground,
+                backgroundColor: themeColors.inputBackground,
                 borderRadius: '8px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': { borderColor: originalThemeColors.borderColor },
-                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+                color: themeColors.textPrimary,
+                '& fieldset': { borderColor: themeColors.borderColor },
+                '&:hover fieldset': { borderColor: themeColors.primaryAccent },
+                '&.Mui-focused fieldset': {
+                  borderColor: themeColors.primaryAccent,
+                  boxShadow: `0 0 0 2px ${alpha(themeColors.primaryAccent, 0.2)}`,
+                },
                 '& input[type="date"]::-webkit-calendar-picker-indicator': {
-                    filter: 'invert(0.3) sepia(1) saturate(5) hue-rotate(190deg)',
-                }
+                  filter: 'invert(0.3) sepia(1) saturate(5) hue-rotate(190deg)',
+                },
               },
-              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
-              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+              '& .MuiInputLabel-root': { color: themeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: themeColors.primaryAccent },
             }}
           />
           {errorMessage && (
-            <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: themeColors.expense,
+                textAlign: 'center',
+                mb: 2,
+                fontWeight: 500,
+              }}
+            >
               {errorMessage}
             </Typography>
           )}
@@ -683,7 +741,7 @@ const DashboardUser = () => {
             p: { xs: 2, sm: 2.5 },
             justifyContent: 'center',
             gap: 2,
-            backgroundColor: originalThemeColors.dialogSurface,
+            backgroundColor: themeColors.dialogSurface,
             borderBottomLeftRadius: '16px',
             borderBottomRightRadius: '16px',
           }}
@@ -692,17 +750,17 @@ const DashboardUser = () => {
             onClick={handleClose}
             variant="outlined"
             sx={{
-              borderColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.primaryAccent,
+              borderColor: themeColors.primaryAccent,
+              color: themeColors.primaryAccent,
               px: { xs: 3, sm: 4 },
               py: 1.2,
               borderRadius: '8px',
               fontSize: { xs: '0.9rem', sm: '1rem' },
               fontWeight: 500,
               '&:hover': {
-                borderColor: originalThemeColors.primaryAccent,
-                background: alpha(originalThemeColors.primaryAccent, 0.08),
-              }
+                borderColor: themeColors.primaryAccent,
+                background: alpha(themeColors.primaryAccent, 0.08),
+              },
             }}
           >
             Cancel
@@ -712,8 +770,8 @@ const DashboardUser = () => {
             variant="contained"
             disabled={isSubmitting}
             sx={{
-              backgroundColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.buttonTextLight,
+              backgroundColor: themeColors.primaryAccent,
+              color: themeColors.buttonTextLight,
               px: { xs: 3, sm: 4 },
               py: 1.2,
               borderRadius: '8px',
@@ -721,20 +779,21 @@ const DashboardUser = () => {
               fontWeight: 600,
               transition: 'background-color 0.3s ease, transform 0.2s ease',
               '&:hover': {
-                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                backgroundColor: alpha(themeColors.primaryAccent, 0.85),
                 transform: 'scale(1.02)',
               },
               '&.Mui-disabled': {
-                background: alpha(originalThemeColors.textSecondary, 0.5),
-                color: alpha(originalThemeColors.white, 0.7)
-              }
+                background: alpha(themeColors.textSecondary, 0.5),
+                color: alpha(themeColors.buttonTextLight, 0.7),
+              },
             }}
           >
-            {isSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
+            {isSubmitting ? <CircularProgress size={24} sx={{ color: themeColors.buttonTextLight }} /> : 'Submit'}
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* حوار إضافة فئة جديدة */}
       <Dialog
         open={newDialogOpen}
         onClose={handleNewDialogClose}
@@ -743,16 +802,16 @@ const DashboardUser = () => {
         PaperProps={{
           sx: {
             borderRadius: '20px',
-            boxShadow: `0 12px 40px ${alpha(originalThemeColors.primaryAccent, 0.2)}`,
-            background: originalThemeColors.surface,
-            color: originalThemeColors.textPrimary,
+            boxShadow: `0 12px 40px ${alpha(themeColors.textPrimary, 0.1)}`,
+            background: themeColors.surface,
+            color: themeColors.textPrimary,
           },
         }}
       >
         <DialogTitle
           sx={{
-            background: `linear-gradient(135deg, ${originalThemeColors.primaryAccent}, ${alpha(originalThemeColors.primaryAccent, 0.8)})`,
-            color: originalThemeColors.buttonTextLight,
+            background: themeColors.primaryAccent,
+            color: themeColors.buttonTextLight,
             p: { xs: 2, sm: 3 },
             textAlign: 'center',
             fontSize: { xs: '1.5rem', sm: '1.75rem' },
@@ -765,17 +824,29 @@ const DashboardUser = () => {
           }}
         >
           Add New Category
-          <IconButton onClick={handleNewDialogClose} sx={{ color: originalThemeColors.buttonTextLight, '&:hover': { background: alpha(originalThemeColors.white, 0.15)} }}>
+          <IconButton
+            onClick={handleNewDialogClose}
+            sx={{
+              color: themeColors.buttonTextLight,
+              '&:hover': { background: alpha(themeColors.buttonTextLight, 0.15) },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: originalThemeColors.dialogSurface }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, backgroundColor: themeColors.dialogSurface }}>
           {newCategoryImage && (
             <Box sx={{ textAlign: 'center', mb: 2 }}>
               <img
                 src={URL.createObjectURL(newCategoryImage)}
                 alt="Preview"
-                style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${alpha(originalThemeColors.primaryAccent, 0.5)}` }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: `3px solid ${alpha(themeColors.primaryAccent, 0.5)}`,
+                }}
               />
             </Box>
           )}
@@ -790,31 +861,40 @@ const DashboardUser = () => {
             sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
-                backgroundColor: originalThemeColors.inputBackground,
+                backgroundColor: themeColors.inputBackground,
                 borderRadius: '8px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': { borderColor: originalThemeColors.borderColor },
-                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+                color: themeColors.textPrimary,
+                '& fieldset': { borderColor: themeColors.borderColor },
+                '&:hover fieldset': { borderColor: themeColors.primaryAccent },
+                '&.Mui-focused fieldset': {
+                  borderColor: themeColors.primaryAccent,
+                  boxShadow: `0 0 0 2px ${alpha(themeColors.primaryAccent, 0.2)}`,
+                },
               },
-              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
-              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
+              '& .MuiInputLabel-root': { color: themeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: themeColors.primaryAccent },
             }}
           />
-          <FormControl fullWidth sx={{
+          <FormControl
+            fullWidth
+            sx={{
               mb: 2.5,
               '& .MuiOutlinedInput-root': {
-                backgroundColor: originalThemeColors.inputBackground,
+                backgroundColor: themeColors.inputBackground,
                 borderRadius: '8px',
-                color: originalThemeColors.textPrimary,
-                '& fieldset': { borderColor: originalThemeColors.borderColor },
-                '&:hover fieldset': { borderColor: originalThemeColors.primaryAccent },
-                '&.Mui-focused fieldset': { borderColor: originalThemeColors.primaryAccent, boxShadow: `0 0 0 2px ${alpha(originalThemeColors.primaryAccent, 0.2)}` },
+                color: themeColors.textPrimary,
+                '& fieldset': { borderColor: themeColors.borderColor },
+                '&:hover fieldset': { borderColor: themeColors.primaryAccent },
+                '&.Mui-focused fieldset': {
+                  borderColor: themeColors.primaryAccent,
+                  boxShadow: `0 0 0 2px ${alpha(themeColors.primaryAccent, 0.2)}`,
+                },
               },
-              '& .MuiInputLabel-root': { color: originalThemeColors.textSecondary },
-              '& .MuiInputLabel-root.Mui-focused': { color: originalThemeColors.primaryAccent },
-              '& .MuiSelect-icon': { color: originalThemeColors.textSecondary },
-            }}>
+              '& .MuiInputLabel-root': { color: themeColors.textSecondary },
+              '& .MuiInputLabel-root.Mui-focused': { color: themeColors.primaryAccent },
+              '& .MuiSelect-icon': { color: themeColors.textSecondary },
+            }}
+          >
             <InputLabel id="category-type-label">Category Type</InputLabel>
             <Select
               labelId="category-type-label"
@@ -824,40 +904,53 @@ const DashboardUser = () => {
               MenuProps={{
                 PaperProps: {
                   sx: {
-                    backgroundColor: originalThemeColors.surface,
-                    color: originalThemeColors.textPrimary,
+                    backgroundColor: themeColors.surface,
+                    color: themeColors.textPrimary,
                     '& .MuiMenuItem-root:hover': {
-                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.08),
+                      backgroundColor: alpha(themeColors.primaryAccent, 0.08),
                     },
                     '& .MuiMenuItem-root.Mui-selected': {
-                      backgroundColor: alpha(originalThemeColors.primaryAccent, 0.15),
-                      color: originalThemeColors.primaryAccent,
-                    }
-                  }
-                }
+                      backgroundColor: alpha(themeColors.primaryAccent, 0.15),
+                      color: themeColors.primaryAccent,
+                    },
+                  },
+                },
               }}
             >
               <MenuItem value="expenses">Expenses</MenuItem>
               <MenuItem value="income">Income</MenuItem>
             </Select>
           </FormControl>
-          <Button variant="outlined" component="label" fullWidth sx={{
-            mb: 2.5,
-            borderColor: originalThemeColors.primaryAccent,
-            color: originalThemeColors.primaryAccent,
-            py: 1.2,
-            borderRadius: '8px',
-            fontWeight: 500,
-            '&:hover': {
-              borderColor: originalThemeColors.primaryAccent,
-              background: alpha(originalThemeColors.primaryAccent, 0.08),
-            }
-          }}>
+          <Button
+            variant="outlined"
+            component="label"
+            fullWidth
+            sx={{
+              mb: 2.5,
+              borderColor: themeColors.primaryAccent,
+              color: themeColors.primaryAccent,
+              py: 1.2,
+              borderRadius: '8px',
+              fontWeight: 500,
+              '&:hover': {
+                borderColor: themeColors.primaryAccent,
+                background: alpha(themeColors.primaryAccent, 0.08),
+              },
+            }}
+          >
             Upload Image
             <input type="file" hidden accept="image/*" onChange={handleImageChange} />
           </Button>
           {newErrorMessage && (
-            <Typography variant="body2" sx={{ color: originalThemeColors.expense, textAlign: 'center', mb: 2, fontWeight: 500 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: themeColors.expense,
+                textAlign: 'center',
+                mb: 2,
+                fontWeight: 500,
+              }}
+            >
               {newErrorMessage}
             </Typography>
           )}
@@ -867,7 +960,7 @@ const DashboardUser = () => {
             p: { xs: 2, sm: 2.5 },
             justifyContent: 'center',
             gap: 2,
-            backgroundColor: originalThemeColors.dialogSurface,
+            backgroundColor: themeColors.dialogSurface,
             borderBottomLeftRadius: '20px',
             borderBottomRightRadius: '20px',
           }}
@@ -876,17 +969,17 @@ const DashboardUser = () => {
             onClick={handleNewDialogClose}
             variant="outlined"
             sx={{
-              borderColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.primaryAccent,
+              borderColor: themeColors.primaryAccent,
+              color: themeColors.primaryAccent,
               px: { xs: 3, sm: 4 },
               py: 1.2,
               borderRadius: '8px',
               fontSize: { xs: '0.9rem', sm: '1rem' },
               fontWeight: 500,
               '&:hover': {
-                borderColor: originalThemeColors.primaryAccent,
-                background: alpha(originalThemeColors.primaryAccent, 0.08),
-              }
+                borderColor: themeColors.primaryAccent,
+                background: alpha(themeColors.primaryAccent, 0.08),
+              },
             }}
           >
             Cancel
@@ -896,8 +989,8 @@ const DashboardUser = () => {
             variant="contained"
             disabled={isNewSubmitting}
             sx={{
-              backgroundColor: originalThemeColors.primaryAccent,
-              color: originalThemeColors.buttonTextLight,
+              backgroundColor: themeColors.primaryAccent,
+              color: themeColors.buttonTextLight,
               px: { xs: 3, sm: 4 },
               py: 1.2,
               borderRadius: '8px',
@@ -905,16 +998,20 @@ const DashboardUser = () => {
               fontWeight: 600,
               transition: 'background-color 0.3s ease, transform 0.2s ease',
               '&:hover': {
-                backgroundColor: alpha(originalThemeColors.primaryAccent, 0.85),
+                backgroundColor: alpha(themeColors.primaryAccent, 0.85),
                 transform: 'scale(1.02)',
               },
               '&.Mui-disabled': {
-                background: alpha(originalThemeColors.textSecondary, 0.5),
-                color: alpha(originalThemeColors.white, 0.7)
-              }
+                background: alpha(themeColors.textSecondary, 0.5),
+                color: alpha(themeColors.buttonTextLight, 0.7),
+              },
             }}
           >
-            {isNewSubmitting ? <CircularProgress size={24} sx={{ color: originalThemeColors.buttonTextLight }} /> : 'Submit'}
+            {isNewSubmitting ? (
+              <CircularProgress size={24} sx={{ color: themeColors.buttonTextLight }} />
+            ) : (
+              'Submit'
+            )}
           </Button>
         </DialogActions>
       </Dialog>
