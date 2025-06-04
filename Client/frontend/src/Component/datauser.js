@@ -388,8 +388,7 @@ const BudgetItems = () => {
   const [exportProgress, setExportProgress] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [showError, setShowError] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+
 
   const token = sessionStorage.getItem("jwt");
 
@@ -603,22 +602,7 @@ const BudgetItems = () => {
   const totals = calculateTotals(filteredItems);
   const balance = totals.Revenues - totals.Expenses;
 
-  useEffect(() => {
-    if (balance < 0) {
-      setShowError(true);
-      setShowSuccess(false);
-      const timer = setTimeout(() => setShowError(false), 5000);
-      return () => clearTimeout(timer);
-    } else if (balance > 0) {
-      setShowSuccess(true);
-      setShowError(false);
-      const timer = setTimeout(() => setShowSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowError(false);
-      setShowSuccess(false);
-    }
-  }, [balance]);
+
 
   const exportToExcel = async () => {
     setExportLoading(true);
@@ -695,37 +679,9 @@ const BudgetItems = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <PageContainer>
-        <Snackbar
-          open={showError}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          autoHideDuration={5000}
-          onClose={() => setShowError(false)}
-        >
-          <Alert
-            onClose={() => setShowError(false)}
-            severity="error"
-            variant="filled"
-            sx={{ fontSize: "1rem", padding: "12px 20px", width: "100%", alignItems: "center" }}
-          >
-            Warning: Expenses exceed Revenues!
-          </Alert>
-        </Snackbar>
 
-        <Snackbar
-          open={showSuccess}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          autoHideDuration={5000}
-          onClose={() => setShowSuccess(false)}
-        >
-          <Alert
-            onClose={() => setShowSuccess(false)}
-            severity="success"
-            variant="filled"
-            sx={{ fontSize: "1rem", padding: "12px 20px", width: "100%", alignItems: "center" }}
-          >
-            Success: Revenues exceed Expenses!
-          </Alert>
-        </Snackbar>
+
+
 
         <SectionPaper elevation={3}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>

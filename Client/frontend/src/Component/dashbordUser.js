@@ -41,7 +41,7 @@ const themeColors = {
   surface: '#FFFFFF',
   dialogSurface: '#FFFFFF',
   inputBackground: '#FFFFFF',
-  borderColor: '#E0E0E0',
+  borderColor: '#E0E0E0', // لون الحدود الخفيفة
   buttonTextLight: '#FFFFFF',
   buttonTextDark: '#0D47A1',
 };
@@ -49,35 +49,34 @@ const themeColors = {
 // سهولة الحركة عند التحويم
 const hoverAnimation = keyframes`
   0% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50% { transform: translateY(-8px); }
   100% { transform: translateY(0); }
 `;
 
-// بطاقة التصنيف الحديثة
+// بطاقة التصنيف الحديثة مع حد خفيف احترافي
 const CategoryCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'type',
 })(({ theme, type }) => ({
   backgroundColor: themeColors.surface,
-  borderRadius: '16px',
+  borderRadius: '12px',
   padding: theme.spacing(2),
-  height: '180px',
+  height: '200px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   textAlign: 'center',
-  boxShadow: `0 4px 12px ${alpha(themeColors.textPrimary, 0.08)}`,
-  cursor: 'pointer',
+  boxShadow: `0 4px 16px ${alpha(themeColors.textPrimary, 0.08)}`,
   transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
-  border: `1px solid ${alpha(themeColors.primaryAccent, 0.2)}`,
+  border: `1px solid ${themeColors.borderColor}`, // حد خفيف بلون رمادي
   '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: `0 8px 24px ${alpha(themeColors.textPrimary, 0.16)}`,
-    borderColor: themeColors.primaryAccent,
+    transform: 'translateY(-8px)',
+    boxShadow: `0 12px 24px ${alpha(themeColors.textPrimary, 0.16)}`,
+    borderColor: themeColors.primaryAccent, // عند التحويم يتحول الحد إلى اللون المميز
     animation: `${hoverAnimation} 0.6s ease-in-out`,
   },
   [theme.breakpoints.down('sm')]: {
-    height: '160px',
+    height: '180px',
     padding: theme.spacing(1.5),
   },
 }));
@@ -480,6 +479,9 @@ const DashboardUser = () => {
                 gridTemplateColumns: 'repeat(5, 1fr)',
                 gap: 3,
                 mb: 2,
+                '@media (max-width:1200px)': {
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                },
                 '@media (max-width:900px)': {
                   gridTemplateColumns: 'repeat(3, 1fr)',
                 },
@@ -518,8 +520,8 @@ const DashboardUser = () => {
                             }
                             alt={category.categoryName}
                             sx={{
-                              width: { xs: 50, sm: 60, md: 65 },
-                              height: { xs: 50, sm: 60, md: 65 },
+                              width: { xs: 60, sm: 70, md: 80 },
+                              height: { xs: 60, sm: 70, md: 80 },
                               borderRadius: '50%',
                               mb: 1.5,
                               objectFit: 'cover',
@@ -532,7 +534,7 @@ const DashboardUser = () => {
                           sx={{
                             color: themeColors.textPrimary,
                             fontWeight: 600,
-                            fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                            fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
                           }}
                         >
                           {category.categoryName}
