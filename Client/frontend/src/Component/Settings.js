@@ -1,5 +1,5 @@
 // src/components/Settings.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
@@ -16,29 +16,124 @@ import {
   FaEnvelopeOpenText,
   FaLock,
   FaCommentAlt,
+  FaMoneyBillWave,
+  FaExchangeAlt,
 } from "react-icons/fa";
 
 function Settings() {
-  // The token must have been stored previously in sessionStorage
+  // يجب أن يكون التوكن قد تم تخزينه مسبقًا في sessionStorage
   const token = sessionStorage.getItem("jwt");
 
-  // State for modal visibility
+  // حالة لرؤية النوافذ المنبثقة
   const [showEditModal, setShowEditModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
-  // Form state for editing user data
+  // حالة النموذج لتعديل بيانات المستخدم
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
 
-  // Feedback form state
+  // حالة نموذج الملاحظات
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState({ text: "", type: "" });
 
-  // Handle input changes in the edit form
+  // حالة العملة
+  const [selectedCurrency, setSelectedCurrency] = useState("JOD");
+  const [exchangeRates, setExchangeRates] = useState({});
+  const [currencyLoading, setCurrencyLoading] = useState(false);
+
+  // العملات المتاحة
+  const currencies = [
+    { code: "JOD", name: "Jordanian Dinar", symbol: "JOD" },
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "SAR", name: "Saudi Riyal", symbol: "SAR" },
+    { code: "AED", name: "UAE Dirham", symbol: "AED" },
+    { code: "EGP", name: "Egyptian Pound", symbol: "EGP" },
+    { code: "KWD", name: "Kuwaiti Dinar", symbol: "KWD" },
+    { code: "QAR", name: "Qatari Riyal", symbol: "QAR" },
+    { code: "BHD", name: "Bahraini Dinar", symbol: "BHD" },
+    { code: "OMR", name: "Omani Rial", symbol: "OMR" },
+    { code: "LBP", name: "Lebanese Pound", symbol: "LBP" },
+    { code: "SYP", name: "Syrian Pound", symbol: "SYP" },
+    { code: "IQD", name: "Iraqi Dinar", symbol: "IQD" },
+    { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+    { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+  ];
+
+  // تحميل تفضيل العملة المحفوظ عند تحميل المكون
+  useEffect(() => {
+    const savedCurrency = localStorage.getItem("selectedCurrency");
+    if (savedCurrency) {
+      setSelectedCurrency(savedCurrency);
+    }
+    fetchExchangeRates();
+  }, []);
+
+  // جلب أسعار الصرف من واجهة برمجة تطبيقات خارجية
+  const fetchExchangeRates = async () => {
+    setCurrencyLoading(true);
+    try {
+      // استخدام ExchangeRate-API وهي مجانية ولا تتطلب مفتاح API
+      const response = await fetch("https://api.exchangerate-api.com/v4/latest/JOD");
+      const data = await response.json();
+      setExchangeRates(data.rates);
+      
+      // تخزين الأسعار في localStorage مع طابع زمني للتخزين المؤقت
+      localStorage.setItem("exchangeRates", JSON.stringify({
+        rates: data.rates,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error("Error fetching exchange rates:", error);
+      
+      // محاولة تحميل الأسعار المخزنة مؤقتًا إذا فشلت واجهة برمجة التطبيقات
+      const cachedRates = localStorage.getItem("exchangeRates");
+      if (cachedRates) {
+        const parsed = JSON.parse(cachedRates);
+        // استخدام الأسعار المخزنة مؤقتًا إذا كانت أقدم من ساعة واحدة
+        if (Date.now() - parsed.timestamp < 3600000) {
+          setExchangeRates(parsed.rates);
+        }
+      }
+      
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Unable to update exchange rates. Using cached rates.",
+      });
+    } finally {
+      setCurrencyLoading(false);
+    }
+  };
+
+  // التعامل مع اختيار العملة
+  const handleCurrencyChange = (currencyCode) => {
+    setSelectedCurrency(currencyCode);
+    localStorage.setItem("selectedCurrency", currencyCode);
+    
+    // إطلاق حدث مخصص لإعلام المكونات الأخرى
+    window.dispatchEvent(new CustomEvent("currencyChanged"));
+    
+    Swal.fire({
+      icon: "success",
+      title: "Currency Changed",
+      text: `Currency changed to ${currencies.find(c => c.code === currencyCode)?.name}`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
+  // التعامل مع تغييرات الإدخال في نموذج التعديل
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -47,7 +142,7 @@ function Settings() {
     }));
   };
 
-  // Submit updated user data
+  // إرسال بيانات المستخدم المحدثة
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     if (!token) {
@@ -94,7 +189,7 @@ function Settings() {
     }
   };
 
-  // Delete all budget items
+  // حذف جميع عناصر الميزانية
   const handleDeleteAll = async () => {
     if (!token) {
       Swal.fire({
@@ -151,7 +246,7 @@ function Settings() {
     }
   };
 
-  // Delete user account
+  // حذف حساب المستخدم
   const handleDeleteAccount = async () => {
     if (!token) {
       Swal.fire({
@@ -191,7 +286,7 @@ function Settings() {
             text: "Your account has been deleted successfully.",
           }).then(() => {
             sessionStorage.removeItem("jwt");
-            // Optionally, redirect to login or home page here
+            // اختياريًا ، أعد التوجيه إلى صفحة تسجيل الدخول أو الصفحة الرئيسية هنا
           });
         } else {
           Swal.fire({
@@ -211,7 +306,7 @@ function Settings() {
     }
   };
 
-  // Submit feedback
+  // إرسال الملاحظات
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
@@ -259,7 +354,16 @@ function Settings() {
       </div>
 
       <div className="settings-actions">
-        {/* Delete All Budget Button */}
+        {/* زر إعدادات العملة */}
+        <button
+          className="settings-button currency-button"
+          onClick={() => setShowCurrencyModal(true)}
+        >
+          <FaMoneyBillWave />
+          <span>Currency Settings</span>
+        </button>
+
+        {/* زر حذف جميع الميزانية */}
         <button
           className="settings-button danger-button"
           onClick={handleDeleteAll}
@@ -268,7 +372,7 @@ function Settings() {
           <span>Delete All Budget</span>
         </button>
 
-        {/* Edit Profile Button */}
+        {/* زر تعديل الملف الشخصي */}
         <button
           className="settings-button primary-button"
           onClick={() => setShowEditModal(true)}
@@ -277,7 +381,7 @@ function Settings() {
           <span>Edit Profile</span>
         </button>
 
-        {/* Delete Account Button */}
+        {/* زر حذف الحساب */}
         <button
           className="settings-button warning-button"
           onClick={handleDeleteAccount}
@@ -286,7 +390,7 @@ function Settings() {
           <span>Delete Account</span>
         </button>
 
-        {/* Give Feedback Button */}
+        {/* زر إعطاء ملاحظات */}
         <button
           className="settings-button success-button"
           onClick={() => setShowFeedbackModal(true)}
@@ -296,7 +400,53 @@ function Settings() {
         </button>
       </div>
 
-      {/* Edit Profile Modal */}
+      {/* نافذة اختيار العملة */}
+      {showCurrencyModal && (
+        <div className="modal-overlay">
+          <div className="modal-content currency-modal">
+            <div className="modal-header">
+              <h2>
+                <FaExchangeAlt className="modal-header-icon" /> Currency Settings
+              </h2>
+              <button className="modal-close" onClick={() => setShowCurrencyModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="currency-content">
+              <div className="current-currency">
+                <p>Current Currency: <strong>{currencies.find(c => c.code === selectedCurrency)?.name}</strong></p>
+                <button 
+                  className="refresh-rates-btn"
+                  onClick={fetchExchangeRates}
+                  disabled={currencyLoading}
+                >
+                  {currencyLoading ? "Updating..." : "Refresh Rates"}
+                </button>
+              </div>
+              <div className="currency-grid">
+                {currencies.map((currency) => (
+                  <div
+                    key={currency.code}
+                    className={`currency-item ${selectedCurrency === currency.code ? 'selected' : ''}`}
+                    onClick={() => handleCurrencyChange(currency.code)}
+                  >
+                    <div className="currency-symbol">{currency.symbol}</div>
+                    <div className="currency-info">
+                      <div className="currency-code">{currency.code}</div>
+                      <div className="currency-name">{currency.name}</div>
+                    </div>
+                    {selectedCurrency === currency.code && (
+                      <FaCheckCircle className="selected-icon" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* نافذة تعديل الملف الشخصي */}
       {showEditModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -362,7 +512,7 @@ function Settings() {
         </div>
       )}
 
-      {/* Feedback Modal */}
+      {/* نافذة الملاحظات */}
       {showFeedbackModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -407,16 +557,16 @@ function Settings() {
         </div>
       )}
 
-      {/* CSS Styles */}
+      {/* أنماط CSS */}
       <style jsx>{`
-        /* Modern CSS Reset */
+        /* إعادة تعيين CSS حديثة */
         *, *::before, *::after {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
         }
 
-        /* Main Container Styles */
+        /* أنماط الحاوية الرئيسية */
         .settings-container {
           padding: 2.5rem 1.5rem;
           font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -428,7 +578,7 @@ function Settings() {
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
         }
 
-        /* Header Styles */
+        /* أنماط الترويسة */
         .settings-header {
           text-align: center;
           margin-bottom: 2.5rem;
@@ -456,7 +606,7 @@ function Settings() {
           margin-top: 0.5rem;
         }
 
-        /* Button Container */
+        /* حاوية الأزرار */
         .settings-actions {
           display: flex;
           flex-wrap: wrap;
@@ -465,7 +615,7 @@ function Settings() {
           margin-bottom: 2rem;
         }
 
-        /* Button Styles */
+        /* أنماط الأزرار */
         .settings-button {
           display: flex;
           align-items: center;
@@ -528,7 +678,16 @@ function Settings() {
           background-color: #059669;
         }
 
-        /* Modal Styles */
+        .currency-button {
+          background-color: #8b5cf6;
+          color: #ffffff;
+        }
+
+        .currency-button:hover {
+          background-color: #7c3aed;
+        }
+
+        /* أنماط النوافذ المنبثقة */
         .modal-overlay {
           position: fixed;
           top: 0;
@@ -553,6 +712,12 @@ function Settings() {
           box-shadow: 0 32px 64px rgba(0, 0, 0, 0.08);
           position: relative;
           animation: slideIn 0.25s ease;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .currency-modal {
+          max-width: 700px;
         }
 
         .modal-header {
@@ -568,28 +733,24 @@ function Settings() {
           font-size: 1.75rem;
           font-weight: 700;
           color: #1e293b;
-          display: inline-flex;
+          display: flex;
           align-items: center;
           gap: 0.5rem;
         }
 
         .modal-header-icon {
           color: #3b82f6;
-          font-size: 1.75rem;
         }
 
         .modal-close {
           background: none;
           border: none;
+          font-size: 1.5rem;
           cursor: pointer;
           color: #64748b;
-          font-size: 1.5rem;
-          padding: 0.25rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          transition: background-color 0.2s ease, color 0.2s ease;
+          padding: 0.5rem;
+          border-radius: 8px;
+          transition: background-color 0.2s ease;
         }
 
         .modal-close:hover {
@@ -597,7 +758,101 @@ function Settings() {
           color: #334155;
         }
 
-        /* Form Styles */
+        /* أنماط خاصة بنافذة العملة */
+        .current-currency {
+          background-color: #f8fafc;
+          padding: 1rem;
+          border-radius: 12px;
+          margin-bottom: 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+
+        .refresh-rates-btn {
+          background-color: #3b82f6;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.875rem;
+          transition: background-color 0.2s ease;
+        }
+
+        .refresh-rates-btn:hover:not(:disabled) {
+          background-color: #2563eb;
+        }
+
+        .refresh-rates-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .currency-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+
+        .currency-item {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          border: 2px solid #e2e8f0;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          position: relative;
+        }
+
+        .currency-item:hover {
+          border-color: #3b82f6;
+          background-color: #f8fafc;
+        }
+
+        .currency-item.selected {
+          border-color: #10b981;
+          background-color: #ecfdf5;
+        }
+
+        .currency-symbol {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #3b82f6;
+          min-width: 2rem;
+          text-align: center;
+        }
+
+        .currency-info {
+          flex: 1;
+        }
+
+        .currency-code {
+          font-weight: 600;
+          color: #1e293b;
+          font-size: 0.875rem;
+        }
+
+        .currency-name {
+          color: #64748b;
+          font-size: 0.75rem;
+        }
+
+        .selected-icon {
+          color: #10b981;
+          font-size: 1.25rem;
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+        }
+
+        /* أنماط النماذج */
         .form-group {
           margin-bottom: 1.5rem;
         }
@@ -607,111 +862,126 @@ function Settings() {
           align-items: center;
           gap: 0.5rem;
           margin-bottom: 0.5rem;
-          font-weight: 500;
-          color: #334155;
-          font-size: 1rem;
+          font-weight: 600;
+          color: #374151;
         }
 
         .input-icon {
-          color: #3b82f6;
+          color: #6b7280;
         }
 
         .form-input, .form-textarea {
           width: 100%;
           padding: 0.75rem 1rem;
-          border-radius: 10px;
-          border: 1px solid #cbd5e1;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
           font-size: 1rem;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-          background-color: #f1f5f9;
+          transition: border-color 0.2s ease;
         }
 
         .form-input:focus, .form-textarea:focus {
           outline: none;
           border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-          background-color: #ffffff;
         }
 
         .form-textarea {
-          height: 140px;
+          min-height: 120px;
           resize: vertical;
         }
 
         .form-button {
           width: 100%;
-          padding: 0.875rem;
-          border: none;
-          border-radius: 10px;
-          font-weight: 600;
+          padding: 0.875rem 1.5rem;
           font-size: 1rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
           cursor: pointer;
+          transition: background-color 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          margin-top: 0.5rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-          background-color: #10b981;
-          color: #ffffff;
-        }
-
-        .form-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         .form-button:disabled {
           opacity: 0.6;
           cursor: not-allowed;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
         }
 
-        /* Feedback Message */
+        /* رسالة الملاحظات */
         .feedback-message {
+          margin-top: 1rem;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          margin-top: 1rem;
-          padding: 0.75rem 1rem;
-          border-radius: 10px;
-          font-size: 0.95rem;
+          font-weight: 500;
         }
 
         .feedback-message.success {
-          background-color: rgba(16, 185, 129, 0.1);
-          color: #059669;
+          background-color: #d1fae5;
+          color: #065f46;
+          border: 1px solid #a7f3d0;
         }
 
         .feedback-message.error {
-          background-color: rgba(239, 68, 68, 0.1);
-          color: #dc2626;
+          background-color: #fee2e2;
+          color: #991b1b;
+          border: 1px solid #fca5a5;
         }
 
-        /* Animations */
+        /* الحركات */
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
 
         @keyframes slideIn {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
+          from { 
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
-        /* Responsive Styles */
+        /* التصميم المتجاوب */
         @media (max-width: 768px) {
-          .settings-button {
-            width: 100%;
+          .settings-container {
+            padding: 1.5rem 1rem;
+            margin: 1rem auto;
           }
 
           .settings-header h1 {
             font-size: 2rem;
           }
 
+          .settings-actions {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .settings-button {
+            width: 100%;
+            max-width: 300px;
+          }
+
           .modal-content {
+            width: 95%;
             padding: 1.5rem;
+          }
+
+          .currency-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .current-currency {
+            flex-direction: column;
+            text-align: center;
           }
         }
       `}</style>

@@ -21,7 +21,7 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Drawer, // Changed from Modal/Dialog
+  Drawer,
   Button,
   useMediaQuery,
   LinearProgress,
@@ -36,7 +36,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as d3 from "d3";
-import { schemePastel1, schemeTableau10 } from "d3-scale-chromatic"; 
+import { schemePastel1, schemeTableau10 } from "d3-scale-chromatic";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
@@ -48,29 +48,53 @@ import PieChartIcon from '@mui/icons-material/PieChart';
 import LabelIcon from '@mui/icons-material/Label';
 import CloseIcon from '@mui/icons-material/Close';
 
+// --- قائمة العملات ---
+const currencies = [
+    { code: "JOD", name: "Jordanian Dinar", symbol: "JOD" },
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "SAR", name: "Saudi Riyal", symbol: "SAR" },
+    { code: "AED", name: "UAE Dirham", symbol: "AED" },
+    { code: "EGP", name: "Egyptian Pound", symbol: "EGP" },
+    { code: "KWD", name: "Kuwaiti Dinar", symbol: "KWD" },
+    { code: "QAR", name: "Qatari Riyal", symbol: "QAR" },
+    { code: "BHD", name: "Bahraini Dinar", symbol: "BHD" },
+    { code: "OMR", name: "Omani Rial", symbol: "OMR" },
+    { code: "LBP", name: "Lebanese Pound", symbol: "LBP" },
+    { code: "SYP", name: "Syrian Pound", symbol: "SYP" },
+    { code: "IQD", name: "Iraqi Dinar", symbol: "IQD" },
+    { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+    { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+];
+
 const modernTheme = createTheme({
   palette: {
     primary: {
-      main: "#5DB7A8", 
+      main: "#5DB7A8",
     },
     secondary: {
-      main: "#F0A868", 
+      main: "#F0A868",
     },
     background: {
-      default: "#F4F7F6", 
+      default: "#F4F7F6",
       paper: "#FFFFFF",
     },
     text: {
-      primary: "#333745", 
+      primary: "#333745",
       secondary: "#5E6472",
     },
     success: {
-      main: "#81C784", 
+      main: "#81C784",
       light: "#A5D6A7",
       dark: "#388E3C",
     },
     error: {
-      main: "#FF8A65", 
+      main: "#FF8A65",
       light: "#FFAB91",
       dark: "#D32F2F",
     },
@@ -100,17 +124,17 @@ const modernTheme = createTheme({
         color: "#5E6472",
     },
     body2: {
-        color: "#5E6472", 
+        color: "#5E6472",
     }
   },
   shape: {
-    borderRadius: 12, 
+    borderRadius: 12,
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: "0 6px 18px rgba(93, 183, 168, 0.1)", 
+          boxShadow: "0 6px 18px rgba(93, 183, 168, 0.1)",
           transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
           "&:hover": {
             transform: "translateY(-5px)",
@@ -135,7 +159,7 @@ const modernTheme = createTheme({
         },
         containedPrimary: {
           "&:hover": {
-            backgroundColor: "#4E9A8C", 
+            backgroundColor: "#4E9A8C",
           },
         },
       },
@@ -143,7 +167,7 @@ const modernTheme = createTheme({
     MuiAppBar: {
         styleOverrides: {
             root: {
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)", 
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
             }
         }
     },
@@ -190,7 +214,7 @@ const RectangularCardContent = styled(CardContent)(({ theme }) => ({
 }));
 
 const StyledLinearProgress = styled(LinearProgress)(({ theme, categorytype }) => ({
-  width: "100px", 
+  width: "100px",
   height: 10,
   borderRadius: theme.shape.borderRadius,
   backgroundColor: theme.palette.grey[200],
@@ -198,9 +222,9 @@ const StyledLinearProgress = styled(LinearProgress)(({ theme, categorytype }) =>
     borderRadius: theme.shape.borderRadius,
     backgroundColor:
       categorytype === "Revenues"
-        ? theme.palette.success.main 
+        ? theme.palette.success.main
         : categorytype === "Expenses"
-        ? theme.palette.error.main 
+        ? theme.palette.error.main
         : theme.palette.primary.main,
     minWidth: "8px",
   },
@@ -209,11 +233,11 @@ const StyledLinearProgress = styled(LinearProgress)(({ theme, categorytype }) =>
 const TotalCard = styled(Card, {
   shouldForwardProp: (prop) => prop !== "bgColor" && prop !== "gradientBg",
 })(({ theme, gradientBg }) => ({
-  minWidth: 220, 
+  minWidth: 220,
   textAlign: "center",
   color: theme.palette.common.white,
   padding: theme.spacing(2.5),
-  background: gradientBg || theme.palette.primary.main, 
+  background: gradientBg || theme.palette.primary.main,
 }));
 
 const DetailItem = ({ icon, label, value, valueColor }) => (
@@ -230,11 +254,10 @@ const DetailItem = ({ icon, label, value, valueColor }) => (
     </Paper>
 );
 
-// *** NEW DRAWER COMPONENT ***
-const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals }) => {
+const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals, currency }) => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-    const drawerWidth = isSmallScreen ? '90vw' : 400; // Adjust width for responsiveness
+    const drawerWidth = isSmallScreen ? '90vw' : 400;
 
     if (!category) return null;
 
@@ -242,9 +265,11 @@ const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals 
         ? ((category.valueitem / totals[category.CategoriesId.categoryType]) * 100).toFixed(1)
         : "0.0";
 
+    const convertedValue = (parseFloat(category.valueitem) * currency.rate).toFixed(2);
+
     return (
         <Drawer
-            anchor="right" // Slide from the right
+            anchor="right"
             open={open}
             onClose={handleClose}
             PaperProps={{
@@ -254,12 +279,11 @@ const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals 
                     borderBottomLeftRadius: theme.shape.borderRadius,
                     display: 'flex',
                     flexDirection: 'column',
-                    maxHeight: '100vh', // Ensure drawer doesn't exceed viewport height
-                    backgroundColor: theme.palette.background.default, // Use default background
+                    maxHeight: '100vh',
+                    backgroundColor: theme.palette.background.default,
                 }
             }}
         >
-            {/* Drawer Header */}
             <Box sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -285,11 +309,10 @@ const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals 
                 </IconButton>
             </Box>
 
-            {/* Drawer Content - Scrollable */}
             <Box sx={{
                 p: { xs: 2, sm: 3 },
-                overflowY: 'auto', // Make content scrollable
-                flexGrow: 1, // Allow content to take available space
+                overflowY: 'auto',
+                flexGrow: 1,
             }}>
                 {category && (
                     <Box>
@@ -322,7 +345,7 @@ const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals 
                                 <DetailItem
                                     icon={<MonetizationOnIcon />}
                                     label="Value"
-                                    value={`$${parseFloat(category.valueitem).toFixed(2)}`}
+                                    value={`${currency.symbol} ${convertedValue}`}
                                     valueColor={category.CategoriesId?.categoryType === "Revenues" ? theme.palette.success.dark : theme.palette.error.dark}
                                 />
                             </Grid>
@@ -333,18 +356,16 @@ const CategoryDetailDrawer = ({ open, handleClose, category, filterType, totals 
                                     value={`${percentage}%`}
                                 />
                             </Grid>
-                            {/* Add more DetailItems if needed */}
                         </Grid>
                     </Box>
                 )}
             </Box>
 
-            {/* Drawer Footer */}
             <Box sx={{
                 p: '8px 16px',
                 borderTop: `1px solid ${theme.palette.divider}`,
-                backgroundColor: theme.palette.background.paper, // Use paper background for footer
-                textAlign: 'right', // Align button to the right
+                backgroundColor: theme.palette.background.paper,
+                textAlign: 'right',
                 flexShrink: 0,
             }}>
                 <Button onClick={handleClose} variant="contained" color="primary" size="small" sx={{ minWidth: '100px' }}>
@@ -362,15 +383,57 @@ const GraphComponent = () => {
   const [filterType, setFilterType] = useState("Revenues");
   const [dateType, setDateType] = useState("month");
   const svgRef = useRef();
-  const [drawerOpen, setDrawerOpen] = useState(false); // Changed state name
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const d3ColorScale = d3.scaleOrdinal([...schemePastel1, ...schemeTableau10]); 
-  const theme = useTheme(); 
+  // --- START: تعديلات العملة ---
+  const [currency, setCurrency] = useState({
+      code: "JOD",
+      symbol: "JOD",
+      rate: 1,
+  });
+  // --- END: تعديلات العملة ---
+
+  const d3ColorScale = d3.scaleOrdinal([...schemePastel1, ...schemeTableau10]);
+  const theme = useTheme();
 
   useEffect(() => {
     fetchBudget();
   }, []);
+
+  // --- START: خطاف للاستماع لتغييرات العملة ---
+  useEffect(() => {
+    const updateCurrencyState = () => {
+        const savedCurrencyCode = localStorage.getItem("selectedCurrency") || "JOD";
+        const cachedRatesData = localStorage.getItem("exchangeRates");
+        let rates = {};
+
+        if (cachedRatesData) {
+            try {
+                rates = JSON.parse(cachedRatesData).rates;
+            } catch (error) {
+                console.error("Failed to parse exchange rates from localStorage", error);
+                rates = {};
+            }
+        }
+
+        const currencyInfo = currencies.find(c => c.code === savedCurrencyCode) || currencies[0];
+        const rate = rates[savedCurrencyCode] || 1;
+
+        setCurrency({
+            code: savedCurrencyCode,
+            symbol: currencyInfo.symbol,
+            rate: rate,
+        });
+    };
+
+    updateCurrencyState();
+    window.addEventListener('currencyChanged', updateCurrencyState);
+    return () => {
+        window.removeEventListener('currencyChanged', updateCurrencyState);
+    };
+  }, []);
+  // --- END: خطاف للاستماع لتغييرات العملة ---
 
   const token = sessionStorage.getItem("jwt");
 
@@ -441,44 +504,63 @@ const GraphComponent = () => {
     );
   };
 
-  const filteredItems = filterItems(budgetItems);
+  const allFilteredByDateAndType = filterItems(budgetItems);
 
   const calculateTotals = (items) => {
-    const totals = { Revenues: 0, Expenses: 0 };
-    items.forEach((item) => {
-      const value = parseFloat(item.valueitem) || 0;
-      if (item.CategoriesId?.categoryType === "Revenues") totals.Revenues += value;
-      else if (item.CategoriesId?.categoryType === "Expenses") totals.Expenses += value;
-    });
-    return totals;
+      const totals = { Revenues: 0, Expenses: 0 };
+      // حساب الإجماليات على جميع العناصر التي تمت تصفيتها حسب التاريخ فقط
+      const allItemsForDate = filterItems(budgetItems.filter(i => i.CategoriesId?.categoryType === "Revenues" || i.CategoriesId?.categoryType === "Expenses"));
+      
+      let totalRevenues = 0;
+      let totalExpenses = 0;
+
+      budgetItems.forEach(item => {
+         const itemDate = new Date(item.date);
+         const selectedDate = new Date(filterDate);
+         let match = false;
+         if (dateType === "month") {
+             if(selectedDate.getMonth() === itemDate.getMonth() && selectedDate.getFullYear() === itemDate.getFullYear()) match = true;
+         } else if (dateType === "year") {
+             if(selectedDate.getFullYear() === itemDate.getFullYear()) match = true;
+         } else if (dateType === 'full') {
+             if(selectedDate.getDate() === itemDate.getDate() && selectedDate.getMonth() === itemDate.getMonth() && selectedDate.getFullYear() === itemDate.getFullYear()) match = true;
+         }
+
+         if(match) {
+             const value = parseFloat(item.valueitem) || 0;
+             if (item.CategoriesId?.categoryType === "Revenues") totalRevenues += value;
+             else if (item.CategoriesId?.categoryType === "Expenses") totalExpenses += value;
+         }
+      });
+      
+      return { Revenues: totalRevenues, Expenses: totalExpenses };
   };
 
-  const totals = calculateTotals(filteredItems);
+  const totals = calculateTotals(budgetItems); // إرسال جميع العناصر
   const balance = totals.Revenues - totals.Expenses;
 
   const handleItemClick = (item) => {
     setSelectedCategory(item);
-    setDrawerOpen(true); // Open Drawer
+    setDrawerOpen(true);
   };
   
   const handleCloseDrawer = () => {
-    setDrawerOpen(false); // Close Drawer
-    // Optionally add a small delay before clearing category to allow animation
-    setTimeout(() => setSelectedCategory(null), 300); 
+    setDrawerOpen(false);
+    setTimeout(() => setSelectedCategory(null), 300);
   };
 
   useEffect(() => {
-    if (filteredItems.length > 0 && !loading) {
-      drawPieChart(filteredItems);
+    if (allFilteredByDateAndType.length > 0 && !loading) {
+      drawPieChart(allFilteredByDateAndType);
     } else {
       d3.select(svgRef.current).selectAll("*").remove();
     }
-  }, [filteredItems, loading, d3ColorScale, theme]); 
+  }, [allFilteredByDateAndType, loading, d3ColorScale, theme, currency]); // إضافة العملة إلى التبعيات
 
   const drawPieChart = (data) => {
     const width = 700;
     const height = 500;
-    const radius = Math.min(width, height) / 2 - 40; 
+    const radius = Math.min(width, height) / 2 - 40;
     const svg = d3
       .select(svgRef.current)
       .attr("viewBox", `0 0 ${width} ${height}`)
@@ -494,7 +576,7 @@ const GraphComponent = () => {
         .style("position", "absolute")
         .style("text-align", "center")
         .style("padding", "10px")
-        .style("background", "rgba(40, 40, 40, 0.85)") 
+        .style("background", "rgba(40, 40, 40, 0.85)")
         .style("color", "#fff")
         .style("border-radius", "8px")
         .style("pointer-events", "none")
@@ -507,8 +589,8 @@ const GraphComponent = () => {
       .append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
     const pie = d3.pie().value((d) => parseFloat(d.valueitem)).sort(null);
-    const arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius); 
-    const arcHover = d3.arc().innerRadius(radius * 0.55).outerRadius(radius + 8); 
+    const arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius);
+    const arcHover = d3.arc().innerRadius(radius * 0.55).outerRadius(radius + 8);
 
     const arcs = g.selectAll(".arc").data(pie(data)).enter().append("g").attr("class", "arc");
 
@@ -517,8 +599,8 @@ const GraphComponent = () => {
     arcs
       .append("path")
       .attr("d", arc)
-      .attr("fill", (d, i) => d3ColorScale(d.data.CategoriesId?.categoryName || i)) 
-      .attr("stroke", theme.palette.background.paper) 
+      .attr("fill", (d, i) => d3ColorScale(d.data.CategoriesId?.categoryName || i))
+      .attr("stroke", theme.palette.background.paper)
       .style("stroke-width", "3px")
       .each(function (d) {
         this._current = d;
@@ -527,10 +609,11 @@ const GraphComponent = () => {
         clearTimeout(timeoutId);
         d3.select(this).transition().duration(150).attr("d", arcHover);
         tooltip.transition().duration(150).style("opacity", 1);
+        const convertedValue = (d.data.valueitem * currency.rate).toFixed(2);
         tooltip
           .html(
             `<div style="font-weight: bold; margin-bottom: 4px;">${d.data.CategoriesId?.categoryName || "Unknown"}</div>` +
-            `<div>Value: ${parseFloat(d.data.valueitem).toFixed(2)}</div>`
+            `<div>Value: ${currency.symbol} ${convertedValue}</div>`
           )
           .style("left", event.pageX + 15 + "px")
           .style("top", event.pageY - 15 + "px");
@@ -554,7 +637,7 @@ const GraphComponent = () => {
         handleItemClick(d.data);
       })
       .transition()
-      .duration(800) 
+      .duration(800)
       .attrTween("d", function (d) {
         const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
         return function (t) {
@@ -563,9 +646,11 @@ const GraphComponent = () => {
       });
 
     const totalValue = d3.sum(data, (d) => parseFloat(d.valueitem));
+    const convertedTotalValue = (totalValue * currency.rate).toFixed(2);
+
     g.append("text")
       .attr("text-anchor", "middle")
-      .attr("dy", "0.0em") 
+      .attr("dy", "0.0em")
       .style("font-size", "28px")
       .style("font-weight", "bold")
       .style("fill", theme.palette.text.primary)
@@ -586,7 +671,7 @@ const GraphComponent = () => {
       .append("tspan")
       .attr("x", 0)
       .attr("dy", "0.9em")
-      .text(totalValue.toFixed(2));
+      .text(`${currency.symbol} ${convertedTotalValue}`);
   };
 
   return (
@@ -600,16 +685,15 @@ const GraphComponent = () => {
         </AppBar>
 
         <Container
-          maxWidth="xl" 
+          maxWidth="xl"
           sx={{
-            py: 3, 
+            py: 3,
             backgroundColor: theme.palette.background.default,
-            minHeight: "calc(100vh - 64px)", 
+            minHeight: "calc(100vh - 64px)",
           }}
         >
-          {/* Filters Section */}
           <Paper
-            elevation={0} 
+            elevation={0}
             sx={{
               p: 2.5,
               mb: 3,
@@ -617,8 +701,8 @@ const GraphComponent = () => {
               flexDirection: { xs: "column", sm: "row" },
               alignItems: "center",
               gap: 2,
-              justifyContent: "space-around", 
-              borderRadius: theme.shape.borderRadius, 
+              justifyContent: "space-around",
+              borderRadius: theme.shape.borderRadius,
             }}
           >
             <Box display="flex" alignItems="center" gap={1}>
@@ -673,14 +757,13 @@ const GraphComponent = () => {
             </FormControl>
           </Paper>
 
-          {/* Totals Section */}
           <Box
             sx={{
               mb: 3,
               display: "flex",
               flexWrap: "wrap",
-              justifyContent: "center", 
-              gap: { xs: 2, md: 3 }, 
+              justifyContent: "center",
+              gap: { xs: 2, md: 3 },
             }}
           >
              <TotalCard gradientBg={`linear-gradient(135deg, ${theme.palette.success.light}, ${theme.palette.success.main})`}>
@@ -692,7 +775,7 @@ const GraphComponent = () => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ fontWeight: "bold", color: theme.palette.common.white }}>
-                  ${totals.Revenues.toFixed(2)}
+                  {currency.symbol}{(totals.Revenues * currency.rate).toFixed(2)}
                 </Typography>
               </CardContent>
             </TotalCard>
@@ -706,7 +789,7 @@ const GraphComponent = () => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ fontWeight: "bold", color: theme.palette.common.white }}>
-                  ${totals.Expenses.toFixed(2)}
+                  {currency.symbol}{(totals.Expenses * currency.rate).toFixed(2)}
                 </Typography>
               </CardContent>
             </TotalCard>
@@ -715,7 +798,7 @@ const GraphComponent = () => {
               gradientBg={
                 balance >= 0
                   ? `linear-gradient(135deg, ${theme.palette.primary.light || '#88D4C5'}, ${theme.palette.primary.main})`
-                  : `linear-gradient(135deg, ${theme.palette.secondary.light || '#F7C99B'}, ${theme.palette.secondary.main})` 
+                  : `linear-gradient(135deg, ${theme.palette.secondary.light || '#F7C99B'}, ${theme.palette.secondary.main})`
               }
             >
               <CardContent>
@@ -726,18 +809,17 @@ const GraphComponent = () => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ fontWeight: "bold", color: theme.palette.common.white }}>
-                  ${balance.toFixed(2)}
+                  {currency.symbol}{(balance * currency.rate).toFixed(2)}
                 </Typography>
               </CardContent>
             </TotalCard>
           </Box>
 
-          {/* Main Content: Chart and List/Cards */}
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
               <CircularProgress size={50} sx={{color: theme.palette.primary.main}}/>
             </Box>
-          ) : filteredItems.length === 0 ? (
+          ) : allFilteredByDateAndType.length === 0 ? (
             <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
               <Typography variant="h5" color="textSecondary" sx={{color: theme.palette.text.secondary}}>
                 No items found for the selected filters.
@@ -745,14 +827,13 @@ const GraphComponent = () => {
             </Box>
           ) : (
             <>
-              {/* Pie Chart and Category List */}
               <Grid container spacing={3} justifyContent="center">
                 <Grid item xs={12} md={7} lg={8}>
-                    <Paper elevation={0} sx={{ 
+                    <Paper elevation={0} sx={{
                         p: {xs: 1, sm: 2},
-                        height: { xs: "auto", md: "550px" }, 
-                        display: 'flex', 
-                        justifyContent: 'center', 
+                        height: { xs: "auto", md: "550px" },
+                        display: 'flex',
+                        justifyContent: 'center',
                         alignItems: 'center',
                         overflow: "hidden"
                     }}>
@@ -760,17 +841,16 @@ const GraphComponent = () => {
                     </Paper>
                 </Grid>
                 <Grid item xs={12} md={5} lg={4}>
-                    <Paper elevation={0} sx={{ 
-                        p: {xs: 1, sm: 2}, 
-                        height: { xs: "auto", md: "550px" }, 
+                    <Paper elevation={0} sx={{
+                        p: {xs: 1, sm: 2},
+                        height: { xs: "auto", md: "550px" },
                         overflowY: 'auto',
                     }}>
                         <List>
-                        {filteredItems.map((item, index) => {
-                            const percentage =
-                            totals[item.CategoriesId?.categoryType]
-                                ? (item.valueitem / totals[item.CategoriesId.categoryType]) * 100
-                                : 0;
+                        {allFilteredByDateAndType.map((item, index) => {
+                            const totalForType = allFilteredByDateAndType.reduce((sum, current) => sum + parseFloat(current.valueitem), 0);
+                            const percentage = totalForType > 0 ? (item.valueitem / totalForType) * 100 : 0;
+                            const convertedValue = (item.valueitem * currency.rate).toFixed(2);
                             return (
                             <ListItem
                                 key={index}
@@ -778,7 +858,7 @@ const GraphComponent = () => {
                                 sx={{
                                 cursor: "pointer",
                                 transition: "background-color 0.2s ease",
-                                borderRadius: theme.shape.borderRadius -4, 
+                                borderRadius: theme.shape.borderRadius -4,
                                 mb: 1,
                                 "&:hover": { backgroundColor: theme.palette.action.hover },
                                 }}
@@ -795,7 +875,7 @@ const GraphComponent = () => {
                                 primaryTypographyProps={{ variant: 'subtitle1', fontWeight: '500', color: theme.palette.text.primary }}
                                 secondaryTypographyProps={{ variant: 'body2', color: theme.palette.text.secondary }}
                                 primary={`${item.CategoriesId?.categoryName || "Unknown"}`}
-                                secondary={`Value: ${item.valueitem.toFixed(2)} (${percentage.toFixed(1)}%)`}
+                                secondary={`Value: ${currency.symbol}${convertedValue} (${percentage.toFixed(1)}%)`}
                                 />
                             </ListItem>
                             );
@@ -805,20 +885,18 @@ const GraphComponent = () => {
                 </Grid>
               </Grid>
 
-              {/* Rectangular Cards Section */}
               <Grid container spacing={3} sx={{mt: 1}} justifyContent="center">
-                {filteredItems.map((item, index) => {
-                  const percentage =
-                    totals[item.CategoriesId?.categoryType]
-                      ? (item.valueitem / totals[item.CategoriesId.categoryType]) * 100
-                      : 0;
+                {allFilteredByDateAndType.map((item, index) => {
+                  const totalForType = allFilteredByDateAndType.reduce((sum, current) => sum + parseFloat(current.valueitem), 0);
+                  const percentage = totalForType > 0 ? (item.valueitem / totalForType) * 100 : 0;
+                  const convertedValue = (item.valueitem * currency.rate).toFixed(2);
                   return (
                     <Grid
                       item
                       key={index}
                       xs={12}
                       sm={6}
-                      md={4} 
+                      md={4}
                       lg={4}
                       sx={{ display: "flex", justifyContent: "center" }}
                     >
@@ -852,12 +930,12 @@ const GraphComponent = () => {
                             }}
                           >
                             {item.CategoriesId?.categoryType === "Expenses"
-                              ? `-$${parseFloat(item.valueitem).toFixed(2)}`
-                              : `$${parseFloat(item.valueitem).toFixed(2)}`}
+                              ? `-${currency.symbol}${convertedValue}`
+                              : `+${currency.symbol}${convertedValue}`}
                           </Typography>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                             <StyledLinearProgress
-                              categorytype={item.CategoriesId?.categoryType} 
+                              categorytype={item.CategoriesId?.categoryType}
                               variant="determinate"
                               value={percentage}
                             />
@@ -875,13 +953,13 @@ const GraphComponent = () => {
           )}
         </Container>
 
-        {/* Use the NEW Drawer Component */}
-        <CategoryDetailDrawer 
-            open={drawerOpen} 
-            handleClose={handleCloseDrawer} 
-            category={selectedCategory} 
+        <CategoryDetailDrawer
+            open={drawerOpen}
+            handleClose={handleCloseDrawer}
+            category={selectedCategory}
             filterType={filterType}
             totals={totals}
+            currency={currency}
         />
       </>
   );
@@ -898,4 +976,3 @@ const App = () => {
 };
 
 export default App;
-

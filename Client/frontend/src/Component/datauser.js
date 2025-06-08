@@ -23,8 +23,8 @@ import {
   Alert,
   Paper,
 } from "@mui/material";
-import { styled } from "@mui/system"; 
-import { alpha, colors } from "@mui/material/styles"; // Added colors for direct use
+import { styled } from "@mui/system";
+import { alpha } from "@mui/material/styles";
 import CategoryIcon from "@mui/icons-material/Category";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
@@ -42,8 +42,31 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
-// --- Enhanced Styled Components for a Modern, Strong, and Organized Look ---
+// --- قائمة العملات للوصول إلى الرموز ---
+const currencies = [
+    { code: "JOD", name: "Jordanian Dinar", symbol: "JOD" },
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "SAR", name: "Saudi Riyal", symbol: "SAR" },
+    { code: "AED", name: "UAE Dirham", symbol: "AED" },
+    { code: "EGP", name: "Egyptian Pound", symbol: "EGP" },
+    { code: "KWD", name: "Kuwaiti Dinar", symbol: "KWD" },
+    { code: "QAR", name: "Qatari Riyal", symbol: "QAR" },
+    { code: "BHD", name: "Bahraini Dinar", symbol: "BHD" },
+    { code: "OMR", name: "Omani Rial", symbol: "OMR" },
+    { code: "LBP", name: "Lebanese Pound", symbol: "LBP" },
+    { code: "SYP", name: "Syrian Pound", symbol: "SYP" },
+    { code: "IQD", name: "Iraqi Dinar", symbol: "IQD" },
+    { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+    { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+];
 
+// --- المكونات المصممة ---
 const PageContainer = styled(Box)(({ theme }) => ({
   fontFamily: "\"Inter\", sans-serif",
   padding: theme.spacing(3),
@@ -314,41 +337,11 @@ const StyledDateCard = styled(Box)(({ theme }) => ({
   fontWeight: 600,
 }));
 
-const SummaryCard = styled(Card)(({ theme, bgColor: rawBgColor }) => {
-  let actualBgColorString;
-  let textColor = theme.palette.common.white; // Default to white for gradients
-
-  if (typeof rawBgColor === "function") {
-    actualBgColorString = rawBgColor(theme); 
-  } else {
-    actualBgColorString = rawBgColor; 
-  }
-
-  if (typeof actualBgColorString === "string" && !actualBgColorString.startsWith("linear-gradient")) {
-    // It's a solid color string, so we can try to get contrast text
-    try {
-      textColor = theme.palette.getContrastText(actualBgColorString);
-    } catch (e) {
-      // If getContrastText fails for any reason with a non-gradient string, fallback to white
-      console.warn(`Failed to get contrast text for solid color: ${actualBgColorString}`, e);
-      textColor = theme.palette.common.white;
-    }
-  } else if (typeof actualBgColorString === "string" && actualBgColorString.startsWith("linear-gradient")){
-    // For gradients, explicitly set a common contrasting color (e.g., white)
-    // More sophisticated logic could try to determine if the gradient is light or dark on average
-    // but for simplicity and robustness, a fixed color is often best for gradients.
-    textColor = theme.palette.common.white; 
-  } else {
-    // Fallback for undefined or unexpected bgColor types - use contrast against default primary.main
-     actualBgColorString = `linear-gradient(135deg, ${theme.palette.primary.light}, ${theme.palette.primary.main})`;
-     textColor = theme.palette.getContrastText(theme.palette.primary.main);
-  }
-
-  return {
+const SummaryCard = styled(Card)(({ theme, bgColor }) => ({
     minWidth: { xs: "100%", sm: 220 },
     textAlign: "center",
-    background: actualBgColorString,
-    color: textColor,
+    background: bgColor,
+    color: theme.palette.common.white, // FIX: Set color to white for contrast on gradients
     borderRadius: "20px",
     boxShadow: "0 6px 18px rgba(0,0,0,0.1)",
     padding: theme.spacing(2.5, 2),
@@ -358,22 +351,22 @@ const SummaryCard = styled(Card)(({ theme, bgColor: rawBgColor }) => {
     alignItems: "center",
     minHeight: "180px",
     transition: "transform 0.3s ease, box-shadow 0.3s ease",
-    "& .MuiTypography-root": { 
-      color: "inherit", 
+    "& .MuiTypography-root": {
+        color: "inherit",
     },
     "&:hover": {
-      transform: "translateY(-4px)",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        transform: "translateY(-4px)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
     },
-  };
-});
+}));
+
 
 const getImageUrl = (image) => {
   if (!image) return "/placeholder-image.svg";
   return image.startsWith("data:") ? image : `http://127.0.0.1:5004/${image}`;
 };
 
-// Main Component
+// المكون الرئيسي
 const BudgetItems = () => {
   const [budgetItems, setBudgetItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -388,14 +381,64 @@ const BudgetItems = () => {
   const [exportProgress, setExportProgress] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-
+  
+  // -- START: التعديلات الخاصة بالعملة --
+  const [currency, setCurrency] = useState({
+      code: "JOD",
+      symbol: "JOD",
+      rate: 1,
+  });
+  const [exchangeRates, setExchangeRates] = useState({});
+  // -- END: التعديلات الخاصة بالعملة --
 
   const token = sessionStorage.getItem("jwt");
 
-  // --- FUNCTIONALITY: REMAINS UNCHANGED ---
   useEffect(() => {
     fetchBudget();
   }, []);
+
+  // -- START: الخطاف للاستماع لتغييرات العملة --
+  useEffect(() => {
+    const updateCurrencyState = () => {
+        const savedCurrencyCode = localStorage.getItem("selectedCurrency") || "JOD";
+        const cachedRatesData = localStorage.getItem("exchangeRates");
+        let rates = {};
+
+        if (cachedRatesData) {
+            try {
+                rates = JSON.parse(cachedRatesData).rates;
+                setExchangeRates(rates);
+            } catch (error) {
+                console.error("Failed to parse exchange rates from localStorage", error);
+                rates = {};
+            }
+        }
+
+        const currencyInfo = currencies.find(c => c.code === savedCurrencyCode) || currencies[0];
+        const rate = rates[savedCurrencyCode] || 1;
+
+        setCurrency({
+            code: savedCurrencyCode,
+            symbol: currencyInfo.symbol,
+            rate: rate,
+        });
+    };
+
+    updateCurrencyState(); // التحديث الأولي عند تحميل المكون
+
+    const handleCurrencyChange = () => {
+        updateCurrencyState();
+    };
+    
+    // إضافة مستمع للحدث المخصص
+    window.addEventListener('currencyChanged', handleCurrencyChange);
+
+    // التنظيف عند إلغاء تحميل المكون
+    return () => {
+        window.removeEventListener('currencyChanged', handleCurrencyChange);
+    };
+  }, []);
+  // -- END: الخطاف للاستماع لتغييرات العملة --
 
   const fetchBudget = async () => {
     try {
@@ -464,7 +507,10 @@ const BudgetItems = () => {
 
   const handleUpdateClick = (item) => {
     setSelectedItem(item);
-    setUpdatedValue(item.valueitem);
+    // -- START: عرض القيمة المحولة في نافذة التحديث --
+    const convertedValue = (item.valueitem * currency.rate).toFixed(2);
+    setUpdatedValue(convertedValue);
+    // -- END: عرض القيمة المحولة في نافذة التحديث --
     setOpenDialog(true);
   };
 
@@ -478,18 +524,24 @@ const BudgetItems = () => {
     if (!selectedItem) return;
 
     const numericValue = parseFloat(updatedValue);
-    if (isNaN(numericValue)) {
-      alert("Please enter a valid number.");
+    if (isNaN(numericValue) || numericValue < 0) {
+      alert("Please enter a valid positive number.");
       return;
     }
+    
+    // -- START: تحويل القيمة مرة أخرى إلى JOD قبل إرسالها إلى الخادم --
+    const valueInJOD = numericValue / currency.rate;
+    // -- END: تحويل القيمة مرة أخرى إلى JOD --
+    
     handleCloseDialog();
+
     try {
       const response = await axios.put(
         "http://127.0.0.1:5004/api/updateBudget",
         {
           CategoriesId: selectedItem.CategoriesId._id,
           date: selectedItem.date,
-          valueitem: numericValue,
+          valueitem: valueInJOD, // إرسال القيمة بالدينار الأردني
         },
         {
           headers: {
@@ -505,7 +557,7 @@ const BudgetItems = () => {
           prevItems.map((item) =>
             item.CategoriesId._id === selectedItem.CategoriesId._id &&
             new Date(item.date).toISOString() === new Date(selectedItem.date).toISOString()
-              ? { ...item, valueitem: numericValue }
+              ? { ...item, valueitem: valueInJOD } // تحديث الحالة بالقيمة الأصلية (JOD)
               : item
           )
         );
@@ -612,37 +664,43 @@ const BudgetItems = () => {
       Date: format(new Date(item.date), "dd/MM/yyyy"),
       Item: item.CategoriesId.categoryName,
       Type: item.CategoriesId.categoryType,
-      Value: item.valueitem,
+      Value: (item.valueitem * currency.rate).toFixed(2), // تصدير القيمة المحولة
+      Currency: currency.code, // إضافة عمود العملة
     }));
 
     const totalsRow = [
+      {}, // صف فارغ للفاصل
       {
         Date: "Totals",
         Item: "Revenues",
         Type: "",
-        Value: totals.Revenues.toFixed(2),
+        Value: (totals.Revenues * currency.rate).toFixed(2),
+        Currency: currency.code,
       },
       {
         Date: "Totals",
         Item: "Expenses",
         Type: "",
-        Value: totals.Expenses.toFixed(2),
+        Value: (totals.Expenses * currency.rate).toFixed(2),
+        Currency: currency.code,
       },
       {
         Date: "Totals",
         Item: "Balance",
         Type: "",
-        Value: balance.toFixed(2),
+        Value: (balance * currency.rate).toFixed(2),
+        Currency: currency.code,
       },
     ];
 
     const exportData = [...wsData, ...totalsRow];
-    const ws = XLSX.utils.json_to_sheet(exportData, { header: ["Date", "Item", "Type", "Value"] });
+    const ws = XLSX.utils.json_to_sheet(exportData, { header: ["Date", "Item", "Type", "Value", "Currency"] });
     ws["!cols"] = [
       { wpx: 100 },
       { wpx: 200 },
       { wpx: 100 },
       { wpx: 100 },
+      { wpx: 80 },
     ];
 
     const headerCellStyle = {
@@ -656,7 +714,7 @@ const BudgetItems = () => {
         right: { style: "thin", color: { rgb: "FF000000" } }
       }
     };
-    const headers = ["Date", "Item", "Type", "Value"];
+    const headers = ["Date", "Item", "Type", "Value", "Currency"];
     headers.forEach((header, index) => {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: index });
       if (ws[cellAddress]) {
@@ -668,21 +726,16 @@ const BudgetItems = () => {
     setTimeout(() => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "BudgetItems");
-      XLSX.writeFile(wb, "BudgetItems_Report.xlsx");
+      XLSX.writeFile(wb, `BudgetItems_Report_${currency.code}.xlsx`);
       setExportProgress(100);
       setExportLoading(false);
       setExportProgress(0);
     }, 100);
   };
-  // --- END OF UNCHANGED FUNCTIONALITY ---
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <PageContainer>
-
-
-
-
         <SectionPaper elevation={3}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
                 <FilterListIcon color="primary" sx={{ fontSize: 32 }} />
@@ -783,11 +836,11 @@ const BudgetItems = () => {
 
         <SectionPaper elevation={3}>
             <Typography variant="h5" component="h2" fontWeight="700" color="text.primary" gutterBottom sx={{mb: 2.5}}>
-                Financial Summary
+                Financial Summary ({currency.code})
             </Typography>
             <Grid container spacing={3} justifyContent="center">
                 <Grid item xs={12} sm={6} md={4}>
-                    <SummaryCard bgColor={(theme) => `linear-gradient(135deg, ${theme.palette.success.light}, ${theme.palette.success.main})`}>
+                    <SummaryCard bgColor={`linear-gradient(135deg, ${alpha("#2e7d32", 0.8)}, ${alpha("#1b5e20", 1)})`}>
                         <CardContent sx={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
                             <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
                                 <TrendingUpIcon sx={{ fontSize: {xs: 28, sm: 32, md: 36} }} />
@@ -796,13 +849,13 @@ const BudgetItems = () => {
                                 </Typography>
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: {xs: "1.75rem", sm: "2rem", md: "2.25rem"} }}>
-                                {totals.Revenues.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {currency.symbol} {(totals.Revenues * currency.rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </Typography>
                         </CardContent>
                     </SummaryCard>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                    <SummaryCard bgColor={(theme) => `linear-gradient(135deg, ${theme.palette.error.light}, ${theme.palette.error.main})`}>
+                    <SummaryCard bgColor={`linear-gradient(135deg, ${alpha("#d32f2f", 0.8)}, ${alpha("#c62828", 1)})`}>
                          <CardContent sx={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
                             <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
                                 <TrendingDownIcon sx={{ fontSize: {xs: 28, sm: 32, md: 36} }} />
@@ -811,16 +864,16 @@ const BudgetItems = () => {
                                 </Typography>
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: {xs: "1.75rem", sm: "2rem", md: "2.25rem"} }}>
-                                {totals.Expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                               {currency.symbol} {(totals.Expenses * currency.rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </Typography>
                         </CardContent>
                     </SummaryCard>
                 </Grid>
                 <Grid item xs={12} sm={12} md={4}>
                     <SummaryCard
-                        bgColor={(theme) => balance >= 0
-                            ? `linear-gradient(135deg, ${theme.palette.info.light}, ${theme.palette.info.main})`
-                            : `linear-gradient(135deg, ${theme.palette.warning.light}, ${theme.palette.warning.main})`
+                        bgColor={balance >= 0
+                            ? `linear-gradient(135deg, ${alpha("#0288d1", 0.8)}, ${alpha("#01579b", 1)})`
+                            : `linear-gradient(135deg, ${alpha("#f57c00", 0.8)}, ${alpha("#e65100", 1)})`
                         }
                     >
                         <CardContent sx={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
@@ -831,7 +884,7 @@ const BudgetItems = () => {
                                 </Typography>
                             </Box>
                             <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: {xs: "1.75rem", sm: "2rem", md: "2.25rem"} }}>
-                                {balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {currency.symbol} {(balance * currency.rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </Typography>
                         </CardContent>
                     </SummaryCard>
@@ -864,104 +917,107 @@ const BudgetItems = () => {
               <Grid container spacing={3} justifyContent="flex-start">
                 {items
                   .filter((item) => item.CategoriesId)
-                  .map((item, index) => (
-                    <Grid item key={`${item.CategoriesId?._id}-${item.date}-${index}`} xs={12} md={6} lg={4}>
-                      <StyledCard>
-                        <ImageContainer>
-                          <img
-                            src={getImageUrl(item.CategoriesId.image)}
-                            alt={item.CategoriesId.categoryName || "Category Image"}
-                          />
-                        </ImageContainer>
-                        <CardContent
-                          sx={{
-                            flexGrow: 1,
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between", 
-                            alignItems: {xs: "center", sm: "flex-start"},
-                            textAlign: {xs: "center", sm: "left"},
-                            width: "100%",
-                            overflow: "hidden", 
-                            py: {xs: 1, sm: 0.5}, 
-                            px: {xs: 0, sm: 1}
-                          }}
-                        >
-                          <Box sx={{width: "100%", mb: 1.5, overflow: "hidden"}}> 
-                            <Typography
-                                variant="h5"
-                                component="div"
-                                noWrap={false} 
-                                sx={{
-                                color:
-                                    item.CategoriesId.categoryType === "Revenues"
-                                    ? "success.main"
-                                    : "error.main",
-                                fontWeight: "700",
-                                mb: 0.5,
-                                wordBreak: "break-word",
-                                lineHeight: 1.3
-                                }}
+                  .map((item, index) => {
+                    const convertedValue = (parseFloat(item.valueitem) * currency.rate);
+                    return (
+                        <Grid item key={`${item.CategoriesId?._id}-${item.date}-${index}`} xs={12} md={6} lg={4}>
+                          <StyledCard>
+                            <ImageContainer>
+                              <img
+                                src={getImageUrl(item.CategoriesId.image)}
+                                alt={item.CategoriesId.categoryName || "Category Image"}
+                              />
+                            </ImageContainer>
+                            <CardContent
+                              sx={{
+                                flexGrow: 1,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between", 
+                                alignItems: {xs: "center", sm: "flex-start"},
+                                textAlign: {xs: "center", sm: "left"},
+                                width: "100%",
+                                overflow: "hidden", 
+                                py: {xs: 1, sm: 0.5}, 
+                                px: {xs: 0, sm: 1}
+                              }}
                             >
-                                {item.CategoriesId.categoryType === "Expenses"
-                                ? `-`
-                                : `+`}
-                                {parseFloat(item.valueitem).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </Typography>
-                            <Box display="flex" alignItems="center" gap={1} sx={{ justifyContent: {xs: "center", sm: "flex-start"}}}>
-                                <CategoryIcon
-                                sx={{
-                                    color:
-                                    item.CategoriesId.categoryType === "Revenues"
-                                        ? "success.dark"
-                                        : "error.dark",
-                                    fontSize: "1.1rem"
-                                }}
-                                />
+                              <Box sx={{width: "100%", mb: 1.5, overflow: "hidden"}}> 
                                 <Typography
-                                variant="h6"
-                                noWrap={false} 
-                                sx={{
-                                    color: "text.primary",
-                                    fontWeight: "600",
-                                    fontSize: "1rem", 
+                                    variant="h5"
+                                    component="div"
+                                    noWrap={false} 
+                                    sx={{
+                                    color:
+                                        item.CategoriesId.categoryType === "Revenues"
+                                        ? "success.main"
+                                        : "error.main",
+                                    fontWeight: "700",
+                                    mb: 0.5,
                                     wordBreak: "break-word",
-                                    whiteSpace: "normal", 
-                                }}
+                                    lineHeight: 1.3
+                                    }}
                                 >
-                                {item.CategoriesId.categoryName}
+                                    {item.CategoriesId.categoryType === "Expenses"
+                                    ? `-`
+                                    : `+`}
+                                    {currency.symbol} {convertedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Typography>
-                            </Box>
-                          </Box>
-                          <Box
-                            display="flex"
-                            justifyContent={{xs: "center", sm: "flex-end"}}
-                            gap={1.5}
-                            sx={{ width: "100%", mt: "auto" }} 
-                          >
-                            <StyledButton
-                              variant="outlined"
-                              color="primary"
-                              onClick={() => handleUpdateClick(item)}
-                              startIcon={<EditIcon />}
-                              size="small"
-                            >
-                              Update
-                            </StyledButton>
-                            <StyledButton
-                              variant="outlined"
-                              color="error"
-                              onClick={() => handleDeleteClick(item)}
-                              startIcon={<DeleteIcon />}
-                              size="small"
-                            >
-                              Delete
-                            </StyledButton>
-                          </Box>
-                        </CardContent>
-                      </StyledCard>
-                    </Grid>
-                  ))}
+                                <Box display="flex" alignItems="center" gap={1} sx={{ justifyContent: {xs: "center", sm: "flex-start"}}}>
+                                    <CategoryIcon
+                                    sx={{
+                                        color:
+                                        item.CategoriesId.categoryType === "Revenues"
+                                            ? "success.dark"
+                                            : "error.dark",
+                                        fontSize: "1.1rem"
+                                    }}
+                                    />
+                                    <Typography
+                                    variant="h6"
+                                    noWrap={false} 
+                                    sx={{
+                                        color: "text.primary",
+                                        fontWeight: "600",
+                                        fontSize: "1rem", 
+                                        wordBreak: "break-word",
+                                        whiteSpace: "normal", 
+                                    }}
+                                    >
+                                    {item.CategoriesId.categoryName}
+                                    </Typography>
+                                </Box>
+                              </Box>
+                              <Box
+                                display="flex"
+                                justifyContent={{xs: "center", sm: "flex-end"}}
+                                gap={1.5}
+                                sx={{ width: "100%", mt: "auto" }} 
+                              >
+                                <StyledButton
+                                  variant="outlined"
+                                  color="primary"
+                                  onClick={() => handleUpdateClick(item)}
+                                  startIcon={<EditIcon />}
+                                  size="small"
+                                >
+                                  Update
+                                </StyledButton>
+                                <StyledButton
+                                  variant="outlined"
+                                  color="error"
+                                  onClick={() => handleDeleteClick(item)}
+                                  startIcon={<DeleteIcon />}
+                                  size="small"
+                                >
+                                  Delete
+                                </StyledButton>
+                              </Box>
+                            </CardContent>
+                          </StyledCard>
+                        </Grid>
+                    );
+                  })}
               </Grid>
             </Box>
           ))
@@ -976,12 +1032,12 @@ const BudgetItems = () => {
               Item: <Typography component="span" fontWeight="600" color="text.primary">{selectedItem?.CategoriesId?.categoryName}</Typography>
             </Typography>
              <Typography variant="body1" color="text.secondary" sx={{ marginBottom: 2 }}>
-              Current Value: <Typography component="span" fontWeight="600" color="text.primary">{parseFloat(selectedItem?.valueitem || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Typography>
+              Current Value: <Typography component="span" fontWeight="600" color="text.primary">{currency.symbol} {selectedItem ? (parseFloat(selectedItem.valueitem) * currency.rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}</Typography>
             </Typography>
             <StyledTextField
               autoFocus
               margin="dense"
-              label="New Value"
+              label={`New Value in ${currency.code}`}
               type="number"
               fullWidth
               value={updatedValue}
@@ -1019,7 +1075,7 @@ const BudgetItems = () => {
                     dated 
                     <Typography component="span" fontWeight="bold"> {itemToDelete ? format(new Date(itemToDelete.date), "dd/MM/yyyy") : ""} </Typography>
                     with value 
-                    <Typography component="span" fontWeight="bold"> {itemToDelete?.valueitem ? parseFloat(itemToDelete.valueitem).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}? </Typography>
+                    <Typography component="span" fontWeight="bold"> {currency.symbol} {itemToDelete ? (parseFloat(itemToDelete.valueitem) * currency.rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}? </Typography>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                     This action cannot be undone.
@@ -1041,4 +1097,3 @@ const BudgetItems = () => {
 };
 
 export default BudgetItems;
-
