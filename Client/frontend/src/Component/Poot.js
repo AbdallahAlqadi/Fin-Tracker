@@ -8,12 +8,86 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   FaTimes, FaFilter, FaCalendarAlt, FaFileAlt, FaListUl,
   FaRegFileAlt, FaHistory, FaDownload, FaPrint, FaShare, FaSearch, FaBookmark,
-  FaFileExcel, FaFilePdf, FaWhatsapp, FaFacebook, FaArrowRight
+  FaFileExcel, FaFilePdf, FaWhatsapp, FaFacebook, FaArrowRight,
+  FaChevronDown, FaChevronUp // Added for collapsible sections
 } from 'react-icons/fa';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 import '../cssStyle/poot.css'; // Assuming the CSS file is named poot.css
+
+// CollapsibleSection Component (moved inline for simplicity, can be a separate file)
+function CollapsibleSection({ title, content, level }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const contentRef = useRef(null);
+  const [contentHeight, setContentHeight] = useState('0px');
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(isCollapsed ? '0px' : `${contentRef.current.scrollHeight}px`);
+    }
+  }, [isCollapsed, content]); // Recalculate height if content changes
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  const HeadingTag = `h${level}`; // Dynamically choose h2 or h3
+
+  return (
+    <div className={`collapsible-section section-level-${level}`}>
+      <HeadingTag className="collapsible-header" onClick={toggleCollapse}>
+        {title}
+        <button className="collapse-toggle-button">
+          {isCollapsed ? <FaChevronDown /> : <FaChevronUp />}
+        </button>
+      </HeadingTag>
+      <div
+        className="collapsible-content-wrapper"
+        style={{ maxHeight: contentHeight }}
+        ref={contentRef}
+      >
+        <div className="collapsible-content">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ node, ...props }) => <h1 className="report-h1" {...props} />,
+              h2: ({ node, ...props }) => <h2 className="report-h2" {...props} />,
+              h3: ({ node, ...props }) => <h3 className="report-h3" {...props} />,
+              p: ({ node, ...props }) => <p className="report-paragraph" {...props} />,
+              table: ({ node, ...props }) => <table className="report-table" {...props} />,
+              th: ({ node, ...props }) => <th {...props} />,
+              td: ({ node, ...props }) => <td {...props} />,
+              ul: ({ node, ...props }) => <ul className="report-list" {...props} />,
+              ol: ({ node, ...props }) => <ol className="report-ordered-list" {...props} />,
+              li: ({ node, ...props }) => <li className="report-list-item" {...props} />,
+              blockquote: ({ node, ...props }) => <blockquote className="report-blockquote" {...props} />,
+              code: ({ node, inline, className, children, ...props }) => {
+                const match = /language-(\w+)/.exec(className || '');
+                return !inline && match ? (
+                  <SyntaxHighlighter
+                    style={atomDark}
+                    language={match[1]}
+                    PreTag="div"
+                    {...props}
+                  >
+                    {String(children).replace(/\n$/, '')}
+                  </SyntaxHighlighter>
+                ) : (
+                  <code className="report-inline-code" {...props}>
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ModernReportDashboard() {
   // State for budget data
@@ -183,6 +257,55 @@ function ModernReportDashboard() {
       return 'Received an unexpected response from the report generation service.';
     }
   }
+
+  // Helper function to parse markdown into sections for collapsibility
+  const parseMarkdownIntoCollapsibleSections = (markdownText) => {
+    const sections = [];
+    const lines = markdownText.split('\n');
+    let currentSection = null;
+    let currentContentLines = [];
+
+    lines.forEach((line, index) => {
+      if (line.startsWith('## ') || line.startsWith('### ')) {
+        // If there's a current section, push it before starting a new one
+        if (currentSection) {
+          currentSection.content = currentContentLines.join('\n').trim();
+          sections.push(currentSection);
+          currentContentLines = []; // Reset for new section
+        }
+
+        const level = line.startsWith('## ') ? 2 : 3;
+        const title = line.substring(level === 2 ? 3 : 4).trim();
+        currentSection = {
+          id: `section-${sections.length + 1}`,
+          title: title,
+          level: level,
+          content: '', // Will be filled from currentContentLines
+        };
+      } else {
+        // Accumulate content lines
+        currentContentLines.push(line);
+      }
+    });
+
+    // Add the last section after the loop finishes
+    if (currentSection) {
+      currentSection.content = currentContentLines.join('\n').trim();
+      sections.push(currentSection);
+    } else if (markdownText.trim().length > 0) {
+      // If no headings found, treat the whole text as one section
+      sections.push({
+        id: 'section-1',
+        title: 'Report Content',
+        level: 2,
+        content: markdownText.trim(),
+      });
+    }
+
+    return sections;
+  };
+
+  const collapsibleSections = useMemo(() => parseMarkdownIntoCollapsibleSections(reportContent), [reportContent]);
 
   // Handle report generation
   async function handleGenerateReport() {
@@ -370,9 +493,12 @@ function ModernReportDashboard() {
                     </div>
                     <div className="history-item-actions">
                       <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(report.id);
+                        }}
                         className={`bookmark-button ${bookmarkedReports.includes(report.id) ? 'bookmarked' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); toggleBookmark(report.id); }}
-                        title={bookmarkedReports.includes(report.id) ? 'Remove bookmark' : 'Bookmark report'}
+                        title={bookmarkedReports.includes(report.id) ? 'Remove Bookmark' : 'Bookmark Report'}
                       >
                         <FaBookmark />
                       </button>
@@ -380,67 +506,64 @@ function ModernReportDashboard() {
                   </div>
                 ))
               ) : (
-                <p className="no-history">{searchTerm ? 'No matching results found.' : 'Create a new report to get started.'}</p>
+                <p className="no-history">No reports in history.</p>
               )}
             </div>
           </div>
-          {bookmarkedReports.length > 0 && (
-            <div className="sidebar-section">
-              <h3><FaBookmark /> Bookmarked</h3>
-              <div className="bookmarked-list">
-                {reportHistory
-                  .filter(report => bookmarkedReports.includes(report.id))
-                  .map(report => (
-                    <div
-                      key={`bookmark-${report.id}`}
-                      className="bookmarked-item"
-                      onClick={() => loadReportFromHistory(report)}
-                    >
-                      <FaRegFileAlt />
-                      <span>{report.title}</span>
-                    </div>
-                  ))
-                }
-              </div>
+
+          <div className="sidebar-section">
+            <h3><FaBookmark /> Bookmarked Reports</h3>
+            <div className="bookmarked-list">
+              {bookmarkedReports.length > 0 ? (
+                reportHistory.filter(report => bookmarkedReports.includes(report.id)).map(report => (
+                  <div
+                    key={report.id}
+                    className="bookmarked-item"
+                    onClick={() => loadReportFromHistory(report)}
+                  >
+                    <FaRegFileAlt /> {report.title}
+                  </div>
+                ))
+              ) : (
+                <p className="no-history">No bookmarked reports.</p>
+              )}
             </div>
-          )}
+          </div>
         </aside>
 
         <main className="dashboard-main">
           <div className="filter-panel">
             <div className="panel-header">
-              <h2><FaFilter /> Generate a New Report</h2>
-              <p>Select your criteria to analyze financial data.</p>
+              <h2><FaFilter /> Report Filters</h2>
+              <p>Select criteria to generate your financial report.</p>
             </div>
             <div className="filter-controls">
               <div className="filter-group">
-                <label><FaCalendarAlt /> Date Range</label>
-                <select value={dateType} onChange={(e) => setDateType(e.target.value)}>
-                  <option value="month">Monthly</option>
-                  <option value="year">Yearly</option>
-                  <option value="full">Specific Day</option>
+                <label htmlFor="dateType"><FaCalendarAlt /> Date Type</label>
+                <select id="dateType" value={dateType} onChange={(e) => setDateType(e.target.value)}>
+                  <option value="month">Month</option>
+                  <option value="year">Year</option>
+                  <option value="full">Full Date</option>
                 </select>
               </div>
               <div className="filter-group">
-                <label>Select Date</label>
-                {dateType === 'full' && (
-                  <input type="date" value={filterDate.toISOString().split('T')[0]} onChange={(e) => setFilterDate(new Date(e.target.value))} />
-                )}
-                {dateType === 'month' && (
-                  <input type="month" value={`${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}`} onChange={(e) => setFilterDate(new Date(e.target.value))} />
-                )}
-                {dateType === 'year' && (
-                  <input type="number" value={filterDate.getFullYear()} onChange={(e) => {
-                    const newDate = new Date(filterDate);
-                    newDate.setFullYear(e.target.value);
-                    setFilterDate(newDate);
-                  }} min="2000" max="2100" />
-                )}
+                <label htmlFor="filterDate"><FaCalendarAlt /> Select Date</label>
+                <input
+                  type={dateType === 'full' ? 'date' : dateType === 'month' ? 'month' : 'number'}
+                  value={dateType === 'year' ? filterDate.getFullYear() : filterDate.toISOString().split('T')[0].substring(0, dateType === 'month' ? 7 : 10)}
+                  onChange={(e) => {
+                    if (dateType === 'year') {
+                      setFilterDate(new Date(parseInt(e.target.value), 0, 1));
+                    } else {
+                      setFilterDate(new Date(e.target.value));
+                    }
+                  }}
+                />
               </div>
               <div className="filter-group">
-                <label><FaListUl /> Category Type</label>
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-                  <option value="All">All Types</option>
+                <label htmlFor="filterType"><FaListUl /> Category Type</label>
+                <select id="filterType" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                  <option value="All">All</option>
                   <option value="Income">Income</option>
                   <option value="Expense">Expense</option>
                 </select>
@@ -450,92 +573,86 @@ function ModernReportDashboard() {
                 onClick={handleGenerateReport}
                 disabled={isGeneratingReport || loadingBudget}
               >
-                {isGeneratingReport ? 'Generating...' : 'Generate Report'}
-                {!isGeneratingReport && <FaArrowRight />}
+                {isGeneratingReport ? 'Generating...' : 'Generate Report'} <FaArrowRight />
               </button>
             </div>
           </div>
 
           <div className="report-display">
-            {isGeneratingReport && !reportContent && (
+            {isGeneratingReport ? (
               <div className="loading-report-state">
-                  <div className="spinner"></div>
-                  <h3>{reportTitle}</h3>
-                  <p>Our AI is analyzing your data. This might take a moment...</p>
+                <div className="spinner"></div>
+                <h3>Generating Report...</h3>
+                <p>Please wait while we process your financial data.</p>
               </div>
-            )}
-            {!isGeneratingReport && !reportContent ? (
-              <div className="empty-report-state">
-                <FaFileAlt className="empty-icon" />
-                <h3>Your Report Will Appear Here</h3>
-                <p>Use the filter panel above to set your criteria and generate a new financial report.</p>
-              </div>
-            ) : (
-             !isGeneratingReport && reportContent && (
+            ) : reportContent ? (
               <>
                 <div className="report-header">
                   <h2>{reportTitle}</h2>
                   <div className="report-actions">
-                    <button onClick={handlePrintReport} title="Print"><FaPrint /></button>
-                    <button onClick={handleDownloadReport} title="Download PDF"><FaFilePdf /></button>
+                    <button onClick={handleDownloadReport} title="Download PDF"><FaDownload /></button>
+                    <button onClick={handlePrintReport} title="Print Report"><FaPrint /></button>
                     <button onClick={handleExportToExcel} title="Export to Excel"><FaFileExcel /></button>
-                    <button onClick={handleShareReport} title="Share"><FaShare /></button>
+                    <button onClick={handleShareReport} title="Share Report"><FaShare /></button>
                   </div>
                 </div>
-                <div className="report-feedback">
+                {activeReportId && (
+                  <div className="report-feedback">
                     <span className="feedback-question">Was this report helpful?</span>
                     <div className="feedback-buttons">
-                        <button className={`feedback-button ${reportFeedback[activeReportId] === true ? 'positive' : ''}`} onClick={() => submitFeedback(activeReportId, true)}>Yes</button>
-                        <button className={`feedback-button ${reportFeedback[activeReportId] === false ? 'negative' : ''}`} onClick={() => submitFeedback(activeReportId, false)}>No</button>
+                      <button
+                        className={`feedback-button ${reportFeedback[activeReportId] === true ? 'positive' : ''}`}
+                        onClick={() => submitFeedback(activeReportId, true)}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        className={`feedback-button ${reportFeedback[activeReportId] === false ? 'negative' : ''}`}
+                        onClick={() => submitFeedback(activeReportId, false)}
+                      >
+                        No
+                      </button>
                     </div>
-                </div>
-
+                  </div>
+                )}
                 <div className="report-content" ref={reportContentRef}>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h1: ({node, ...props}) => <h1 className="report-h1" {...props} />,
-                      h2: ({node, ...props}) => <h2 className="report-h2" {...props} />,
-                      h3: ({node, ...props}) => <h3 className="report-h3" {...props} />,
-                      p: ({node, ...props}) => <p className="report-paragraph" {...props} />,
-                      ul: ({node, ...props}) => <ul className="report-list" {...props} />,
-                      ol: ({node, ...props}) => <ol className="report-ordered-list" {...props} />,
-                      li: ({node, ...props}) => <li className="report-list-item" {...props} />,
-                      blockquote: ({node, ...props}) => <blockquote className="report-blockquote" {...props} />,
-                      table: ({node, ...props}) => <table className="report-table" {...props} />,
-                      code: ({ node, inline, className, children, ...props }) => {
-                        const match = /language-(\w+)/.exec(className || '');
-                        return !inline && match ? (
-                          <SyntaxHighlighter style={atomDark} language={match[1]} PreTag="div" {...props}>
-                            {String(children).replace(/\n$/, '')}
-                          </SyntaxHighlighter>
-                        ) : (
-                          <code className="report-inline-code" {...props}>{children}</code>
-                        );
-                      },
-                    }}
-                  >
-                    {reportContent}
-                  </ReactMarkdown>
+                  {collapsibleSections.map((section) => (
+                    <CollapsibleSection
+                      key={section.id}
+                      title={section.title}
+                      content={section.content}
+                      level={section.level}
+                    />
+                  ))}
                 </div>
               </>
-            ))}
+            ) : (
+              <div className="empty-report-state">
+                <FaFileAlt className="empty-icon" />
+                <h3>No Report Generated</h3>
+                <p>Use the filters on the left to generate a financial report.</p>
+              </div>
+            )}
           </div>
         </main>
       </div>
 
       {showShareModal && (
-        <div className="share-modal-overlay">
-          <div className="share-modal">
+        <div className="share-modal-overlay" onClick={closeShareModal}>
+          <div className="share-modal" onClick={(e) => e.stopPropagation()}>
             <div className="share-modal-header">
               <h3>Share Report</h3>
               <button className="close-modal" onClick={closeShareModal}><FaTimes /></button>
             </div>
             <div className="share-modal-content">
-              <p>Choose a platform to share this report:</p>
+              <p>Choose how you'd like to share this report:</p>
               <div className="share-buttons">
-                <button className="share-button whatsapp" onClick={shareOnWhatsApp}><FaWhatsapp /> WhatsApp</button>
-                <button className="share-button facebook" onClick={shareOnFacebook}><FaFacebook /> Facebook</button>
+                <button className="share-button whatsapp" onClick={shareOnWhatsApp}>
+                  <FaWhatsapp /> WhatsApp
+                </button>
+                <button className="share-button facebook" onClick={shareOnFacebook}>
+                  <FaFacebook /> Facebook
+                </button>
               </div>
             </div>
           </div>
@@ -546,3 +663,5 @@ function ModernReportDashboard() {
 }
 
 export default ModernReportDashboard;
+
+
