@@ -30,10 +30,10 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
-// جديد: لوحة ألوان هادئة وعصرية
+// لوحة ألوان هادئة وعصرية
 const themeColors = {
   background: '#F9FAFB',
-  primaryAccent: '#0D47A1', // أزرق غامق محترف
+  primaryAccent: '#0D47A1',
   textPrimary: '#212121',
   textSecondary: '#424242',
   expense: '#C62828',
@@ -41,43 +41,44 @@ const themeColors = {
   surface: '#FFFFFF',
   dialogSurface: '#FFFFFF',
   inputBackground: '#FFFFFF',
-  borderColor: '#E0E0E0', // لون الحدود الخفيفة
+  borderColor: '#E0E0E0',
   buttonTextLight: '#FFFFFF',
   buttonTextDark: '#0D47A1',
 };
 
-// سهولة الحركة عند التحويم
+// تأثير تحويم محسّن
 const hoverAnimation = keyframes`
   0% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-10px); }
   100% { transform: translateY(0); }
 `;
 
-// بطاقة التصنيف الحديثة مع حد خفيف احترافي
+// بطاقة محسّنة مع تصميم أكثر جاذبية
 const CategoryCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'type',
 })(({ theme, type }) => ({
   backgroundColor: themeColors.surface,
-  borderRadius: '12px',
-  padding: theme.spacing(2),
-  height: '200px',
+  borderRadius: '16px',
+  padding: theme.spacing(2.5),
+  height: '220px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   textAlign: 'center',
-  boxShadow: `0 4px 16px ${alpha(themeColors.textPrimary, 0.08)}`,
-  transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
-  border: `1px solid ${themeColors.borderColor}`, // حد خفيف بلون رمادي
+  boxShadow: `0 6px 20px ${alpha(themeColors.textPrimary, 0.1)}`,
+  transition: 'transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease',
+  border: `2px solid ${themeColors.borderColor}`,
   '&:hover': {
-    transform: 'translateY(-8px)',
-    boxShadow: `0 12px 24px ${alpha(themeColors.textPrimary, 0.16)}`,
-    borderColor: themeColors.primaryAccent, // عند التحويم يتحول الحد إلى اللون المميز
-    animation: `${hoverAnimation} 0.6s ease-in-out`,
+    transform: 'translateY(-10px)',
+    boxShadow: `0 16px 32px ${alpha(themeColors.textPrimary, 0.2)}`,
+    borderColor: themeColors.primaryAccent,
+    backgroundColor: alpha(themeColors.primaryAccent, 0.05),
+    animation: `${hoverAnimation} 0.8s ease-in-out`,
   },
   [theme.breakpoints.down('sm')]: {
-    height: '180px',
-    padding: theme.spacing(1.5),
+    height: '200px',
+    padding: theme.spacing(2),
   },
 }));
 
@@ -472,12 +473,12 @@ const DashboardUser = () => {
               {type} {getCategoryIcon(type)}
             </Typography>
 
-            {/* شبكة من 5 أعمدة ثابتة */}
+            {/* شبكة محسّنة مع 5 بطاقات في الصف */}
             <Box
               sx={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: 3,
+                gap: 3.5,
                 mb: 2,
                 '@media (max-width:1200px)': {
                   gridTemplateColumns: 'repeat(4, 1fr)',
@@ -520,12 +521,12 @@ const DashboardUser = () => {
                             }
                             alt={category.categoryName}
                             sx={{
-                              width: { xs: 60, sm: 70, md: 80 },
-                              height: { xs: 60, sm: 70, md: 80 },
+                              width: { xs: 70, sm: 80, md: 90 },
+                              height: { xs: 70, sm: 80, md: 90 },
                               borderRadius: '50%',
-                              mb: 1.5,
+                              mb: 2,
                               objectFit: 'cover',
-                              border: `2px solid ${alpha(themeColors.primaryAccent, 0.3)}`,
+                              border: `2px solid ${alpha(themeColors.primaryAccent, 0.4)}`,
                             }}
                           />
                         )}
@@ -534,7 +535,7 @@ const DashboardUser = () => {
                           sx={{
                             color: themeColors.textPrimary,
                             fontWeight: 600,
-                            fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                            fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
                           }}
                         >
                           {category.categoryName}
