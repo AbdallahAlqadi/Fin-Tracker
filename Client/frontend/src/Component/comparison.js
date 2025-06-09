@@ -60,6 +60,30 @@ ChartJS.register(
   Filler
 );
 
+// --- قائمة العملات ---
+const currencies = [
+    { code: "JOD", name: "Jordanian Dinar", symbol: "JOD" },
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "SAR", name: "Saudi Riyal", symbol: "SAR" },
+    { code: "AED", name: "UAE Dirham", symbol: "AED" },
+    { code: "EGP", name: "Egyptian Pound", symbol: "EGP" },
+    { code: "KWD", name: "Kuwaiti Dinar", symbol: "KWD" },
+    { code: "QAR", name: "Qatari Riyal", symbol: "QAR" },
+    { code: "BHD", name: "Bahraini Dinar", symbol: "BHD" },
+    { code: "OMR", name: "Omani Rial", symbol: "OMR" },
+    { code: "LBP", name: "Lebanese Pound", symbol: "LBP" },
+    { code: "SYP", name: "Syrian Pound", symbol: "SYP" },
+    { code: "IQD", name: "Iraqi Dinar", symbol: "IQD" },
+    { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+    { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+];
+
 // Styled components with modern design principles
 const StyledContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4, 5, 6),
@@ -248,6 +272,14 @@ const Comparison = () => {
   const [showExpenses, setShowExpenses] = useState(true);
   const [chartHovered, setChartHovered] = useState(false);
 
+  // --- START: تعديلات العملة ---
+  const [currency, setCurrency] = useState({
+    code: "JOD",
+    symbol: "JOD",
+    rate: 1,
+  });
+  // --- END: تعديلات العملة ---
+
   useEffect(() => {
     fetchBudget();
     
@@ -261,6 +293,40 @@ const Comparison = () => {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // --- START: خطاف للاستماع لتغييرات العملة ---
+  useEffect(() => {
+    const updateCurrencyState = () => {
+        const savedCurrencyCode = localStorage.getItem("selectedCurrency") || "JOD";
+        const cachedRatesData = localStorage.getItem("exchangeRates");
+        let rates = {};
+
+        if (cachedRatesData) {
+            try {
+                rates = JSON.parse(cachedRatesData).rates;
+            } catch (error) {
+                console.error("Failed to parse exchange rates from localStorage", error);
+                rates = {};
+            }
+        }
+
+        const currencyInfo = currencies.find(c => c.code === savedCurrencyCode) || currencies[0];
+        const rate = rates[savedCurrencyCode] || 1;
+
+        setCurrency({
+            code: savedCurrencyCode,
+            symbol: currencyInfo.symbol,
+            rate: rate,
+        });
+    };
+
+    updateCurrencyState();
+    window.addEventListener('currencyChanged', updateCurrencyState);
+    return () => {
+        window.removeEventListener('currencyChanged', updateCurrencyState);
+    };
+  }, []);
+  // --- END: خطاف للاستماع لتغييرات العملة ---
 
   const token = sessionStorage.getItem("jwt");
 
@@ -296,18 +362,20 @@ const Comparison = () => {
       if (dateType === "year") {
         key = year;
       } else if (dateType === "month") {
-        key = `${year}-${month}`;
+        key = `${year}-${String(month).padStart(2, '0')}`;
       } else if (dateType === "day") {
-        key = `${year}-${month}-${day}`;
+        key = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
       if (!groupedData[key]) {
         groupedData[key] = { Revenues: 0, Expenses: 0 };
       }
       groupedData[key][categoryType] += parseFloat(item.valueitem);
     });
-    const sortedKeys = Object.keys(groupedData).sort(
-      (a, b) => new Date(a) - new Date(b)
-    );
+    const sortedKeys = Object.keys(groupedData).sort((a, b) => {
+        const dateA = new Date(a.split('-').join('/'));
+        const dateB = new Date(b.split('-').join('/'));
+        return dateA - dateB;
+    });
     const sortedData = {};
     sortedKeys.forEach((key) => {
       sortedData[key] = groupedData[key];
@@ -372,7 +440,7 @@ const Comparison = () => {
     if (showRevenues) {
       datasets.push({
         label: "Revenues",
-        data: labels.map((label) => filteredItems[label].Revenues || 0),
+        data: labels.map((label) => (filteredItems[label].Revenues || 0) * currency.rate),
         backgroundColor: "rgba(46, 204, 113, 0.7)",
         borderColor: "rgba(46, 204, 113, 1)",
         borderWidth: 2,
@@ -392,7 +460,7 @@ const Comparison = () => {
     if (showExpenses) {
       datasets.push({
         label: "Expenses",
-        data: labels.map((label) => filteredItems[label].Expenses || 0),
+        data: labels.map((label) => (filteredItems[label].Expenses || 0) * currency.rate),
         backgroundColor: "rgba(231, 76, 60, 0.7)",
         borderColor: "rgba(231, 76, 60, 1)",
         borderWidth: 2,
@@ -436,7 +504,7 @@ const Comparison = () => {
       },
       title: {
         display: true,
-        text: "Budget Comparison",
+        text: `Budget Comparison (${currency.code})`,
         font: { 
           size: 24, 
           weight: "bold",
@@ -460,12 +528,10 @@ const Comparison = () => {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += new Intl.NumberFormat('en-US', { 
-                style: 'currency', 
-                currency: 'USD',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              }).format(context.parsed.y);
+              label += `${currency.symbol} ${context.parsed.y.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+              })}`;
             }
             return label;
           }
@@ -502,7 +568,7 @@ const Comparison = () => {
           color: "#64748b",
           padding: 10,
           callback: function(value) {
-            return '$' + value.toLocaleString();
+            return `${currency.symbol}${value.toLocaleString()}`;
           }
         },
         beginAtZero: true,

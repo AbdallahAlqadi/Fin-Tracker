@@ -9,14 +9,37 @@ import {
   FaTimes, FaFilter, FaCalendarAlt, FaFileAlt, FaListUl,
   FaRegFileAlt, FaHistory, FaDownload, FaPrint, FaShare, FaSearch, FaBookmark,
   FaFileExcel, FaFilePdf, FaWhatsapp, FaFacebook, FaArrowRight,
-  FaChevronDown, FaChevronUp // Added for collapsible sections
+  FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
-import '../cssStyle/poot.css'; // Assuming the CSS file is named poot.css
+import '../cssStyle/poot.css';
 
-// CollapsibleSection Component (moved inline for simplicity, can be a separate file)
+// --- قائمة العملات ---
+const currencies = [
+    { code: "JOD", name: "Jordanian Dinar", symbol: "JOD" },
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "SAR", name: "Saudi Riyal", symbol: "SAR" },
+    { code: "AED", name: "UAE Dirham", symbol: "AED" },
+    { code: "EGP", name: "Egyptian Pound", symbol: "EGP" },
+    { code: "KWD", name: "Kuwaiti Dinar", symbol: "KWD" },
+    { code: "QAR", name: "Qatari Riyal", symbol: "QAR" },
+    { code: "BHD", name: "Bahraini Dinar", symbol: "BHD" },
+    { code: "OMR", name: "Omani Rial", symbol: "OMR" },
+    { code: "LBP", name: "Lebanese Pound", symbol: "LBP" },
+    { code: "SYP", name: "Syrian Pound", symbol: "SYP" },
+    { code: "IQD", name: "Iraqi Dinar", symbol: "IQD" },
+    { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+    { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+];
+
 function CollapsibleSection({ title, content, level }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const contentRef = useRef(null);
@@ -26,13 +49,13 @@ function CollapsibleSection({ title, content, level }) {
     if (contentRef.current) {
       setContentHeight(isCollapsed ? '0px' : `${contentRef.current.scrollHeight}px`);
     }
-  }, [isCollapsed, content]); // Recalculate height if content changes
+  }, [isCollapsed, content]);
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  const HeadingTag = `h${level}`; // Dynamically choose h2 or h3
+  const HeadingTag = `h${level}`;
 
   return (
     <div className={`collapsible-section section-level-${level}`}>
@@ -90,14 +113,11 @@ function CollapsibleSection({ title, content, level }) {
 }
 
 function ModernReportDashboard() {
-  // State for budget data
   const [budgetItems, setBudgetItems] = useState([]);
   const [loadingBudget, setLoadingBudget] = useState(true);
   const [dateType, setDateType] = useState('month');
   const [filterDate, setFilterDate] = useState(new Date());
   const [filterType, setFilterType] = useState('All');
-
-  // State for Report Display
   const [reportContent, setReportContent] = useState('');
   const [reportTitle, setReportTitle] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -106,32 +126,66 @@ function ModernReportDashboard() {
   const [bookmarkedReports, setBookmarkedReports] = useState([]);
   const [reportFeedback, setReportFeedback] = useState({});
   const [activeReportId, setActiveReportId] = useState(null);
-
-  // State for share modal
   const [showShareModal, setShowShareModal] = useState(false);
-
-  // References
   const reportContentRef = useRef(null);
+  
+  // --- START: تعديلات العملة ---
+  const [currency, setCurrency] = useState({
+    code: "JOD",
+    symbol: "JOD",
+    rate: 1,
+  });
+  // --- END: تعديلات العملة ---
 
-  // API configuration
   const token = sessionStorage.getItem('jwt');
   const BUDGET_API = 'http://127.0.0.1:5004/api/getUserBudget';
   const GEMINI_API_KEY = 'AIzaSyB-Ib9v9X1Jzv4hEloKk1oIOQO8ClVaM_w'; // IMPORTANT: Keep your key secure
   const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-  // Fetch budget data on component mount
   useEffect(() => {
     fetchBudget();
   }, []);
 
-  // Scroll to top when report content changes
+  // --- START: خطاف للاستماع لتغييرات العملة ---
+  useEffect(() => {
+    const updateCurrencyState = () => {
+        const savedCurrencyCode = localStorage.getItem("selectedCurrency") || "JOD";
+        const cachedRatesData = localStorage.getItem("exchangeRates");
+        let rates = {};
+
+        if (cachedRatesData) {
+            try {
+                rates = JSON.parse(cachedRatesData).rates;
+            } catch (error) {
+                console.error("Failed to parse exchange rates from localStorage", error);
+                rates = {};
+            }
+        }
+
+        const currencyInfo = currencies.find(c => c.code === savedCurrencyCode) || currencies[0];
+        const rate = rates[savedCurrencyCode] || 1;
+
+        setCurrency({
+            code: savedCurrencyCode,
+            symbol: currencyInfo.symbol,
+            rate: rate,
+        });
+    };
+
+    updateCurrencyState();
+    window.addEventListener('currencyChanged', updateCurrencyState);
+    return () => {
+        window.removeEventListener('currencyChanged', updateCurrencyState);
+    };
+  }, []);
+  // --- END: خطاف للاستماع لتغييرات العملة ---
+
   useEffect(() => {
     if (reportContentRef.current && reportContent) {
       reportContentRef.current.scrollTop = 0;
     }
   }, [reportContent]);
 
-  // Fetch budget data from API
   async function fetchBudget() {
     setLoadingBudget(true);
     try {
@@ -155,7 +209,6 @@ function ModernReportDashboard() {
     }
   }
 
-  // Group budget items by category
   const groupByCategory = (items) => {
     return items.reduce((acc, item) => {
       const cat = item.CategoriesId?.categoryName || 'Unknown';
@@ -165,10 +218,8 @@ function ModernReportDashboard() {
     }, {});
   };
 
-  // Memoize grouped items
   const groupedBudgetItems = useMemo(() => groupByCategory(budgetItems), [budgetItems]);
 
-  // Filter items based on selected filters
   const filterItems = (items) => {
     let filtered = items;
     if (filterDate) {
@@ -195,11 +246,9 @@ function ModernReportDashboard() {
     return Object.values(grouped).filter(i => i.CategoriesId?.categoryName && i.CategoriesId.categoryName !== 'Unknown');
   };
 
-  // Memoize filtered items
   const filteredItems = useMemo(() => filterItems(budgetItems), [budgetItems, filterDate, dateType, filterType]);
 
-  // Generate report content via Gemini API
-  async function getReportContent(items) {
+  async function getReportContent(items, currentCurrency) {
     if (items.length === 0) {
       return 'Insufficient data to generate a detailed report.';
     }
@@ -207,6 +256,7 @@ function ModernReportDashboard() {
     const englishInstructions = `
       **Very Important: Please strictly adhere to the requested format and structure below to ensure clarity and usefulness.**
       Please generate a professional and detailed financial report in English, focusing on actionable insights and practical solutions based on the provided budget data.
+      The data is presented in ${currentCurrency.code}. Please use the currency symbol "${currentCurrency.symbol}" for all monetary values.
       Use Markdown formatting effectively for visual appeal and readability. The report must include the following sections in order:
 
       1.  **📊 Clear Main Report Title:** Accurately reflecting the report's content and time period (e.g., "Detailed Financial Analysis for [Filter Type] for [Month] [Year] 📈" or "Annual Financial Performance Summary for [Year] 🗓️").
@@ -258,7 +308,6 @@ function ModernReportDashboard() {
     }
   }
 
-  // Helper function to parse markdown into sections for collapsibility
   const parseMarkdownIntoCollapsibleSections = (markdownText) => {
     const sections = [];
     const lines = markdownText.split('\n');
@@ -267,11 +316,10 @@ function ModernReportDashboard() {
 
     lines.forEach((line, index) => {
       if (line.startsWith('## ') || line.startsWith('### ')) {
-        // If there's a current section, push it before starting a new one
         if (currentSection) {
           currentSection.content = currentContentLines.join('\n').trim();
           sections.push(currentSection);
-          currentContentLines = []; // Reset for new section
+          currentContentLines = [];
         }
 
         const level = line.startsWith('## ') ? 2 : 3;
@@ -280,20 +328,17 @@ function ModernReportDashboard() {
           id: `section-${sections.length + 1}`,
           title: title,
           level: level,
-          content: '', // Will be filled from currentContentLines
+          content: '',
         };
       } else {
-        // Accumulate content lines
         currentContentLines.push(line);
       }
     });
 
-    // Add the last section after the loop finishes
     if (currentSection) {
       currentSection.content = currentContentLines.join('\n').trim();
       sections.push(currentSection);
     } else if (markdownText.trim().length > 0) {
-      // If no headings found, treat the whole text as one section
       sections.push({
         id: 'section-1',
         title: 'Report Content',
@@ -307,7 +352,6 @@ function ModernReportDashboard() {
 
   const collapsibleSections = useMemo(() => parseMarkdownIntoCollapsibleSections(reportContent), [reportContent]);
 
-  // Handle report generation
   async function handleGenerateReport() {
     const items = filteredItems;
     if (items.length === 0) {
@@ -316,10 +360,17 @@ function ModernReportDashboard() {
     }
 
     setIsGeneratingReport(true);
-    setReportContent(''); // Clear previous report
+    setReportContent('');
     setReportTitle('Generating your report...');
     try {
-      const reportText = await getReportContent(items);
+      // --- START: تحويل البيانات قبل إرسالها ---
+      const itemsForReport = items.map(item => ({
+        ...item,
+        valueitem: (parseFloat(item.valueitem) * currency.rate).toFixed(2)
+      }));
+      // --- END: تحويل البيانات قبل إرسالها ---
+
+      const reportText = await getReportContent(itemsForReport, currency);
       const locale = 'en-US';
       let dateStr;
       if (dateType === 'full') {
@@ -348,13 +399,12 @@ function ModernReportDashboard() {
     } catch (err) {
       console.error(err);
       alert('Sorry, we couldn\'t generate the report.');
-      setReportTitle(''); // Clear generating title on error
+      setReportTitle('');
     } finally {
       setIsGeneratingReport(false);
     }
   }
 
-  // Search and filter history
   const searchReports = (term) => setSearchTerm(term);
   const filteredHistory = useMemo(() => {
     if (!searchTerm) return reportHistory;
@@ -364,7 +414,6 @@ function ModernReportDashboard() {
     );
   }, [reportHistory, searchTerm]);
 
-  // Load, bookmark, and manage feedback
   const loadReportFromHistory = (report) => {
     setReportTitle(report.title);
     setReportContent(report.content);
@@ -381,7 +430,6 @@ function ModernReportDashboard() {
     setReportFeedback(prev => ({ ...prev, [reportId]: isPositive }));
   };
 
-  // Export and Share functions
   const handlePrintReport = () => window.print();
   const handleDownloadReport = async () => {
     if (!reportContentRef.current) return;
@@ -417,12 +465,14 @@ function ModernReportDashboard() {
 
   const handleExportToExcel = () => {
     try {
+        const itemsToExport = filteredItems.map(item => ({
+          Category: item.CategoriesId?.categoryName,
+          Type: item.CategoriesId?.categoryType,
+          Amount: (parseFloat(item.valueitem) * currency.rate).toFixed(2), // تحويل المبلغ
+          Currency: currency.code // إضافة رمز العملة
+        }));
+        const ws = XLSX.utils.json_to_sheet(itemsToExport);
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(filteredItems.map(item => ({
-            Category: item.CategoriesId?.categoryName,
-            Type: item.CategoriesId?.categoryType,
-            Amount: item.valueitem
-        })));
         XLSX.utils.book_append_sheet(wb, ws, 'Data');
         const fileName = `${reportTitle.replace(/[^\w\s]/gi, '_')}.xlsx`;
         XLSX.writeFile(wb, fileName);
@@ -564,8 +614,8 @@ function ModernReportDashboard() {
                 <label htmlFor="filterType"><FaListUl /> Category Type</label>
                 <select id="filterType" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
                   <option value="All">All</option>
-                  <option value="Income">Income</option>
-                  <option value="Expense">Expense</option>
+                  <option value="Revenues">Revenues</option>
+                  <option value="Expenses">Expenses</option>
                 </select>
               </div>
               <button
@@ -663,5 +713,3 @@ function ModernReportDashboard() {
 }
 
 export default ModernReportDashboard;
-
-
