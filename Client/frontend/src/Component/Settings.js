@@ -155,7 +155,7 @@ function Settings() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:5004/api/updateuser", {
+      const response = await fetch("https://fin-tracker-ncbx.onrender.com/api/updateuser", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -213,7 +213,7 @@ function Settings() {
 
     if (result.isConfirmed) {
       try {
-        const response = await fetch("http://127.0.0.1:5004/api/deleteallBudget", {
+        const response = await fetch("https://fin-tracker-ncbx.onrender.com/api/deleteallBudget", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -270,7 +270,7 @@ function Settings() {
 
     if (result.isConfirmed) {
       try {
-        const response = await fetch("http://127.0.0.1:5004/api/deleteuser", {
+        const response = await fetch("https://fin-tracker-ncbx.onrender.com/api/deleteuser", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -324,7 +324,7 @@ function Settings() {
     const username = sessionStorage.getItem("username") || "";
 
     try {
-      await axios.post("http://127.0.0.1:5004/api/fedback", {
+      await axios.post("https://fin-tracker-ncbx.onrender.com/api/fedback", {
         username: username,
         message: feedbackText,
       });

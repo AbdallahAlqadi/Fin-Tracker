@@ -11,7 +11,7 @@ const FedbackUser = () => {
     const fetchFeedbacks = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://127.0.0.1:5004/api/fedback');
+        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/fedback');
         setFeedbacks(response.data);
         setError(null);
       } catch (error) {

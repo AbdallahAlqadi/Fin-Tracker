@@ -108,7 +108,7 @@ const DashboardUser = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5004/api/getcategories');
+        const response = await axios.get('https://fin-tracker-ncbx.onrender.com/api/getcategories');
         setCategories(response.data.data);
         const initialVisible = response.data.data.reduce((acc, cat) => {
           if (!acc[cat.categoryType]) acc[cat.categoryType] = 12;
@@ -156,7 +156,7 @@ const DashboardUser = () => {
     const token = sessionStorage.getItem('jwt');
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5004/api/addBudget',
+        'https://fin-tracker-ncbx.onrender.com/api/addBudget',
         {
           CategoriesId: current._id,
           valueitem: parsedValue,
@@ -222,7 +222,7 @@ const DashboardUser = () => {
     }
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5004/api/cardusers',
+        'https://fin-tracker-ncbx.onrender.com/api/cardusers',
         formData,
         {
           headers: {
@@ -517,7 +517,7 @@ const DashboardUser = () => {
                             src={
                               category.image.startsWith('data:')
                                 ? category.image
-                                : `http://127.0.0.1:5004/${category.image}`
+                                : `https://fin-tracker-ncbx.onrender.com/${category.image}`
                             }
                             alt={category.categoryName}
                             sx={{
@@ -642,7 +642,7 @@ const DashboardUser = () => {
                 src={
                   selectedCategory.image.startsWith('data:')
                     ? selectedCategory.image
-                    : `http://127.0.0.1:5004/${selectedCategory.image}`
+                    : `https://fin-tracker-ncbx.onrender.com/${selectedCategory.image}`
                 }
                 alt={selectedCategory.categoryName}
                 sx={{

@@ -34,7 +34,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://127.0.0.1:5004/api/users/login', { email, password });
+      const res = await axios.post('https://fin-tracker-ncbx.onrender.com/api/users/login', { email, password });
       sessionStorage.setItem('jwt', res.data.token);
       navigate('/tolpad');
     } catch (error) {

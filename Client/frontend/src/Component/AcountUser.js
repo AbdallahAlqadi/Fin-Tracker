@@ -182,7 +182,7 @@ const UsersTable = () => {
   // Check if current user is admin
   const checkAdminStatus = async () => {
     try {
-      const { data } = await axios.get('http://127.0.0.1:5004/api/home', {
+      const { data } = await axios.get('https://fin-tracker-ncbx.onrender.com/api/home', {
         headers: { Auth: `Bearer ${token}` },
       });
       setCurrentUser(data);
@@ -194,7 +194,7 @@ const UsersTable = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data } = await axios.get('http://127.0.0.1:5004/api/alluser', {
+      const { data } = await axios.get('https://fin-tracker-ncbx.onrender.com/api/alluser', {
         headers: { Auth: `Bearer ${token}` },
       });
       setUsers(data.users);
@@ -238,7 +238,7 @@ const UsersTable = () => {
       }
 
       await axios.put(
-        `http://127.0.0.1:5004/api/admin/users/${editingUser._id}`,
+        `https://fin-tracker-ncbx.onrender.com/api/admin/users/${editingUser._id}`,
         updateData,
         {
           headers: { Auth: `Bearer ${token}` },
@@ -271,7 +271,7 @@ const UsersTable = () => {
   const handleDeleteConfirm = async () => {
     try {
       await axios.delete(
-        `http://127.0.0.1:5004/api/admin/users/${deletingUser._id}`,
+        `https://fin-tracker-ncbx.onrender.com/api/admin/users/${deletingUser._id}`,
         {
           headers: { Auth: `Bearer ${token}` },
         }

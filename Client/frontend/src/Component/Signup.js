@@ -43,7 +43,7 @@ const Signup = () => {
     }
 
     try {
-      const res = await axios.post('http://127.0.0.1:5004/api/users', {
+      const res = await axios.post('https://fin-tracker-ncbx.onrender.com/api/users', {
         username,
         email,
         password,
