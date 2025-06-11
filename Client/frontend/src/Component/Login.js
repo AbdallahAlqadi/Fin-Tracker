@@ -1,5 +1,3 @@
-// src/pages/Login.jsx
-
 import React, { useState, useEffect } from 'react';
 import '../cssStyle/login.css';
 import { useNavigate } from 'react-router-dom';
@@ -38,8 +36,9 @@ const Login = () => {
     try {
       const res = await axios.post('https://fin-tracker-ncbx.onrender.com/api/users/login', { email, password });
       sessionStorage.setItem('jwt', res.data.token);
-      // Flag to show the welcome alert once
       sessionStorage.setItem('showWelcomeMessage', 'true');
+      // Corrected: Assuming the username is directly in res.data after login
+      sessionStorage.setItem('username', res.data.username); 
       navigate('/tolpad');
     } catch (error) {
       Swal.fire({
@@ -101,3 +100,5 @@ const Login = () => {
 };
 
 export default Login;
+
+

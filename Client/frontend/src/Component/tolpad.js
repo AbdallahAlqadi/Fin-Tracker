@@ -1,5 +1,3 @@
-// src/layouts/DashboardLayoutBasic.jsx
-
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import Box from '@mui/material/Box';
@@ -17,7 +15,13 @@ import DashboardUser from '../Component/dashbordUser';
 import BudgetItems from '../Component/datauser';
 import Graph from '../Component/graphdatauser';
 import Comparison from '../Component/comparison';
+import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
+import AddToDriveIcon from '@mui/icons-material/AddToDrive';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
+import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 import FedbackUser from '../Component/fedbackuser';
+import ChatIcon from '@mui/icons-material/Chat';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage';
 import AcountUser from '../Component/AcountUser';
 import LogOut from '../Component/LogOut';
@@ -26,7 +30,7 @@ import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 
 const demoTheme = createTheme({
   palette: {
@@ -100,7 +104,10 @@ function DashboardLayoutBasic(props) {
     { path: '/alluser', component: <AcountUser /> },
     { path: '/poot', component: <Poot /> },
     { path: '/setting', component: <Settings /> },
+
+
     { path: '/logout', component: <LogOut /> },
+
   ];
 
   const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
@@ -125,6 +132,7 @@ function DashboardLayoutBasic(props) {
       title: 'Comparison',
       icon: <SignalCellularAltIcon />,
     },
+ 
     {
       segment: 'poot',
       title: 'Report',
@@ -156,24 +164,9 @@ function DashboardLayoutBasic(props) {
           },
         });
 
-        // Conditionally update username in sessionStorage to prevent overwriting with undefined
-        if (res.data.user && res.data.user.username) {
-          sessionStorage.setItem('username', res.data.user.username);
-        }
+        sessionStorage.setItem('username', res.data.user);
 
         setUser(res.data.user);
-
-        // Show welcome message if flag is set
-        if (sessionStorage.getItem('showWelcomeMessage') === 'true') {
-          const storedUsername = sessionStorage.getItem('username');
-          Swal.fire({
-            icon: 'success',
-            title: `مرحباً بك يا ${storedUsername}!`, // Welcome message with username
-            showConfirmButton: false,
-            timer: 2000
-          });
-          sessionStorage.removeItem('showWelcomeMessage'); // Clear the flag
-        }
 
         if (res.data.roul === 'admin') {
           console.log('User is admin');
@@ -203,6 +196,7 @@ function DashboardLayoutBasic(props) {
               title: 'Comparison',
               icon: <SignalCellularAltIcon />,
             },
+           
             {
               segment: 'alluser',
               title: 'AllUserAcount',
@@ -213,6 +207,7 @@ function DashboardLayoutBasic(props) {
               title: 'FedbakUser',
               icon: <ChatBubbleIcon />,
             },
+          
             {
               segment: 'poot',
               title: 'Report',
@@ -254,6 +249,24 @@ function DashboardLayoutBasic(props) {
     }
   }, [location.pathname]);
 
+  // New useEffect for welcome message
+  useEffect(() => {
+    const showWelcomeMessage = sessionStorage.getItem('showWelcomeMessage');
+    const username = sessionStorage.getItem('username');
+
+    if (showWelcomeMessage === 'true' && username) {
+      Swal.fire({
+        title: `مرحباً بك يا ${username}!`, 
+        text: 'نتمنى لك يوماً سعيداً.',
+        icon: 'success',
+        timer: 3000, 
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+      sessionStorage.removeItem('showWelcomeMessage');
+    }
+  }, []);
+
   const demoWindow = window !== undefined ? window() : undefined;
 
   return (
@@ -269,3 +282,5 @@ function DashboardLayoutBasic(props) {
 }
 
 export default DashboardLayoutBasic;
+
+
