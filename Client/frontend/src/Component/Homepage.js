@@ -13,14 +13,6 @@ const data = [
 
 export default function HomePage() {
   const [chartType, setChartType] = useState('bar');
-  
-  // Currency Converter State
-  const [amount, setAmount] = useState('');
-  const [fromCurrency, setFromCurrency] = useState('USD');
-  const [toCurrency, setToCurrency] = useState('EUR');
-  const [convertedAmount, setConvertedAmount] = useState('');
-  const [exchangeRates, setExchangeRates] = useState({});
-  const [loading, setLoading] = useState(false);
 
   const translations = {
     title: "Financial Dashboard",
@@ -48,7 +40,7 @@ export default function HomePage() {
       },
       currencyConverter: {
         title: "Currency Converter",
-        description: "Convert between different currencies with real-time exchange rates."
+        description: "Convert between different currencies with real-time exchange rates and accurate calculations."
       }
     },
     chartTitle: "Revenue vs. Expenses",
@@ -60,59 +52,6 @@ export default function HomePage() {
     period: "Period",
     amount: "Amount",
     currency: "$",
-  };
-
-  // Mock exchange rates
-  const mockRates = {
-    USD: { EUR: 0.85, GBP: 0.73, JPY: 110.0, CAD: 1.25, AUD: 1.35, CHF: 0.92, CNY: 6.45 },
-    EUR: { USD: 1.18, GBP: 0.86, JPY: 129.5, CAD: 1.47, AUD: 1.59, CHF: 1.08, CNY: 7.60 },
-    GBP: { USD: 1.37, EUR: 1.16, JPY: 150.8, CAD: 1.71, AUD: 1.85, CHF: 1.26, CNY: 8.84 },
-    JPY: { USD: 0.0091, EUR: 0.0077, GBP: 0.0066, CAD: 0.011, AUD: 0.012, CHF: 0.0084, CNY: 0.059 },
-    CAD: { USD: 0.80, EUR: 0.68, GBP: 0.58, JPY: 88.0, AUD: 1.08, CHF: 0.74, CNY: 5.16 },
-    AUD: { USD: 0.74, EUR: 0.63, GBP: 0.54, JPY: 81.5, CAD: 0.93, CHF: 0.68, CNY: 4.78 },
-    CHF: { USD: 1.09, EUR: 0.93, GBP: 0.79, JPY: 119.6, CAD: 1.36, AUD: 1.47, CNY: 7.02 },
-    CNY: { USD: 0.155, EUR: 0.132, GBP: 0.113, JPY: 16.95, CAD: 0.194, AUD: 0.209, CHF: 0.142 }
-  };
-
-  const currencies = [
-    { code: 'USD', name: 'US Dollar', symbol: '$' },
-    { code: 'EUR', name: 'Euro', symbol: '€' },
-    { code: 'GBP', name: 'British Pound', symbol: '£' },
-    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-    { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
-    { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' }
-  ];
-
-  useEffect(() => {
-    setExchangeRates(mockRates);
-  }, []);
-
-  const handleConvert = () => {
-    if (!amount || isNaN(amount)) {
-      setConvertedAmount('');
-      return;
-    }
-
-    setLoading(true);
-    
-    setTimeout(() => {
-      const rate = exchangeRates[fromCurrency]?.[toCurrency] || 1;
-      const result = (parseFloat(amount) * rate).toFixed(2);
-      setConvertedAmount(result);
-      setLoading(false);
-    }, 500);
-  };
-
-  const swapCurrencies = () => {
-    setFromCurrency(toCurrency);
-    setToCurrency(fromCurrency);
-    setConvertedAmount('');
-  };
-
-  const getCurrencySymbol = (code) => {
-    return currencies.find(c => c.code === code)?.symbol || code;
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -193,7 +132,7 @@ export default function HomePage() {
             <h2>{translations.features.dataComparison.title}</h2>
             <p>{translations.features.dataComparison.description}</p>
           </div>
-          <div className="feature-card currency-converter-card">
+          <div className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="8" cy="8" r="6"></circle>
@@ -204,100 +143,6 @@ export default function HomePage() {
             </div>
             <h2>{translations.features.currencyConverter.title}</h2>
             <p>{translations.features.currencyConverter.description}</p>
-            
-            <div className="currency-converter-content">
-              <div className="converter-row">
-                <div className="currency-input-group">
-                  <label htmlFor="amount">Amount</label>
-                  <input
-                    id="amount"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                    className="currency-input"
-                  />
-                </div>
-                
-                <div className="currency-select-group">
-                  <label htmlFor="fromCurrency">From</label>
-                  <select
-                    id="fromCurrency"
-                    value={fromCurrency}
-                    onChange={(e) => setFromCurrency(e.target.value)}
-                    className="currency-select"
-                  >
-                    {currencies.map(currency => (
-                      <option key={currency.code} value={currency.code}>
-                        {currency.code} - {currency.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="converter-swap">
-                <button 
-                  onClick={swapCurrencies}
-                  className="swap-button"
-                  title="Swap currencies"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 16V4m0 0L3 8m4-4l4 4"></path>
-                    <path d="M17 8v12m0 0l4-4m-4 4l-4-4"></path>
-                  </svg>
-                </button>
-              </div>
-
-              <div className="converter-row">
-                <div className="currency-select-group">
-                  <label htmlFor="toCurrency">To</label>
-                  <select
-                    id="toCurrency"
-                    value={toCurrency}
-                    onChange={(e) => setToCurrency(e.target.value)}
-                    className="currency-select"
-                  >
-                    {currencies.map(currency => (
-                      <option key={currency.code} value={currency.code}>
-                        {currency.code} - {currency.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="currency-result-group">
-                  <label>Converted Amount</label>
-                  <div className="currency-result">
-                    {loading ? (
-                      <div className="loading-spinner">Converting...</div>
-                    ) : convertedAmount ? (
-                      <span className="result-amount">
-                        {getCurrencySymbol(toCurrency)} {convertedAmount}
-                      </span>
-                    ) : (
-                      <span className="result-placeholder">--</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <button 
-                onClick={handleConvert}
-                className="convert-button"
-                disabled={!amount || loading}
-              >
-                {loading ? 'Converting...' : 'Convert'}
-              </button>
-
-              {convertedAmount && (
-                <div className="exchange-rate-info">
-                  <small>
-                    1 {fromCurrency} = {(exchangeRates[fromCurrency]?.[toCurrency] || 0).toFixed(4)} {toCurrency}
-                  </small>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </section>
