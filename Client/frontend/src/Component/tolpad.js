@@ -30,7 +30,263 @@ import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
-import Swal from 'sweetalert2';
+// Remove Swal import - we'll use custom modal instead
+// import Swal from 'sweetalert2';
+
+// Professional Welcome Modal Component
+const ProfessionalWelcomeModal = ({ isOpen, onClose, userName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        animation: 'fadeIn 0.3s ease-out'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '20px',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+          maxWidth: '450px',
+          width: '100%',
+          padding: '40px 30px',
+          textAlign: 'center',
+          position: 'relative',
+          animation: 'slideIn 0.3s ease-out',
+          transform: 'scale(1)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '15px',
+            right: '15px',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            color: '#666',
+            cursor: 'pointer',
+            padding: '5px',
+            borderRadius: '50%',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#f0f0f0'}
+          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+        >
+          ×
+        </button>
+
+        {/* Welcome Icon */}
+        <div style={{ marginBottom: '25px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            animation: 'pulse 2s infinite',
+            position: 'relative'
+          }}>
+            <span style={{ fontSize: '36px', color: 'white' }}>✨</span>
+            <div style={{
+              position: 'absolute',
+              top: '-5px',
+              right: '-5px',
+              width: '25px',
+              height: '25px',
+              backgroundColor: '#10B981',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <span style={{ fontSize: '14px', color: 'white' }}>✓</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Welcome Message */}
+        <h2 style={{
+          fontSize: '28px',
+          fontWeight: 'bold',
+          color: '#1f2937',
+          marginBottom: '15px',
+          lineHeight: '1.3'
+        }}>
+          Welcome Back, {userName}! 👋
+        </h2>
+
+        <p style={{
+          fontSize: '16px',
+          color: '#6b7280',
+          marginBottom: '30px',
+          lineHeight: '1.5'
+        }}>
+          We're delighted to have you here. Ready to explore amazing features and achieve great things together?
+        </p>
+
+        {/* Action Button */}
+        <button
+          onClick={onClose}
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            padding: '12px 30px',
+            borderRadius: '25px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = 'none';
+          }}
+        >
+          Get Started <span>→</span>
+        </button>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+          from { 
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+          }
+          to { 
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// Professional Welcome Toast Component
+const ProfessionalWelcomeToast = ({ isVisible, onClose, userName }) => {
+  if (!isVisible) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      zIndex: 9998,
+      animation: 'slideInRight 0.3s ease-out'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+        padding: '16px',
+        maxWidth: '320px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          background: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <span style={{ fontSize: '20px', color: 'white' }}>😊</span>
+        </div>
+        
+        <div style={{ flex: 1 }}>
+          <p style={{
+            fontWeight: '600',
+            color: '#1f2937',
+            fontSize: '14px',
+            margin: '0 0 4px 0'
+          }}>
+            Welcome, {userName}!
+          </p>
+          <p style={{
+            color: '#6b7280',
+            fontSize: '12px',
+            margin: 0
+          }}>
+            Ready to get started?
+          </p>
+        </div>
+        
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#9ca3af',
+            cursor: 'pointer',
+            padding: '4px',
+            borderRadius: '4px',
+            fontSize: '16px'
+          }}
+          onMouseOver={(e) => e.target.style.color = '#6b7280'}
+          onMouseOut={(e) => e.target.style.color = '#9ca3af'}
+        >
+          ×
+        </button>
+      </div>
+
+      <style jsx>{`
+        @keyframes slideInRight {
+          from { 
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to { 
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const demoTheme = createTheme({
   palette: {
@@ -89,6 +345,10 @@ function DashboardLayoutBasic(props) {
   const [user, setUser] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Welcome message states
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showWelcomeToast, setShowWelcomeToast] = useState(false);
 
   const allPages = [
     { path: '/dashboard', component: <CategoryForm /> },
@@ -215,17 +475,19 @@ function DashboardLayoutBasic(props) {
           ]);
         }
 
-        // Check for welcome message flag
+        // PROFESSIONAL WELCOME MESSAGE - REPLACES SWEETALERT2
         if (sessionStorage.getItem('showWelcome') === 'true') {
-          Swal.fire({
-            icon: 'success',
-            title: `👋 مرحبًا يا ${res.data.user}!`,
-            html: `سعداء بعودتك معنا 😊`,
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true,
-            background: '#ffffff',
-          });
+          // Show professional modal welcome
+          setShowWelcomeModal(true);
+          
+          // Also show toast notification
+          setShowWelcomeToast(true);
+          
+          // Auto-hide toast after 5 seconds
+          setTimeout(() => {
+            setShowWelcomeToast(false);
+          }, 5000);
+          
           sessionStorage.removeItem('showWelcome');
         }
       } catch (err) {
@@ -259,8 +521,23 @@ function DashboardLayoutBasic(props) {
           <DemoPageContent pathname={currentComponent} />
         </PageContainer>
       </DashboardLayout>
+
+      {/* Professional Welcome Modal */}
+      <ProfessionalWelcomeModal 
+        isOpen={showWelcomeModal} 
+        onClose={() => setShowWelcomeModal(false)} 
+        userName={user}
+      />
+
+      {/* Professional Welcome Toast */}
+      <ProfessionalWelcomeToast 
+        isVisible={showWelcomeToast}
+        onClose={() => setShowWelcomeToast(false)}
+        userName={user}
+      />
     </AppProvider>
   );
 }
 
 export default DashboardLayoutBasic;
+
