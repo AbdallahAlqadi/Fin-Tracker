@@ -30,6 +30,7 @@ import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Swal from 'sweetalert2';
 
 const demoTheme = createTheme({
   palette: {
@@ -74,14 +75,12 @@ function DemoPageContent({ pathname }) {
         textAlign: 'center',
       }}
     >
-      {/* تم تعديل Typography ليستخدم عنصر div بدلاً من p */}
       <Typography component="div">{pathname}</Typography>
     </Box>
   );
 }
 
 DemoPageContent.propTypes = {
-  // يمكن أن يكون المحتوى نصاً أو مكوناً
   pathname: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
 };
 
@@ -91,7 +90,6 @@ function DashboardLayoutBasic(props) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // قائمة الصفحات والمكونات
   const allPages = [
     { path: '/dashboard', component: <CategoryForm /> },
     { path: '/dashboarduser', component: <DashboardUser /> },
@@ -103,10 +101,7 @@ function DashboardLayoutBasic(props) {
     { path: '/alluser', component: <AcountUser /> },
     { path: '/poot', component: <Poot /> },
     { path: '/setting', component: <Settings /> },
-
-
     { path: '/logout', component: <LogOut /> },
-
   ];
 
   const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
@@ -131,7 +126,6 @@ function DashboardLayoutBasic(props) {
       title: 'Comparison',
       icon: <SignalCellularAltIcon />,
     },
- 
     {
       segment: 'poot',
       title: 'Report',
@@ -149,7 +143,6 @@ function DashboardLayoutBasic(props) {
     },
   ]);
 
-  // الصفحة الافتراضية
   const router = useDemoRouter('/homepage');
 
   useEffect(() => {
@@ -164,7 +157,6 @@ function DashboardLayoutBasic(props) {
         });
 
         sessionStorage.setItem('username', res.data.user);
-
         setUser(res.data.user);
 
         if (res.data.roul === 'admin') {
@@ -195,7 +187,6 @@ function DashboardLayoutBasic(props) {
               title: 'Comparison',
               icon: <SignalCellularAltIcon />,
             },
-           
             {
               segment: 'alluser',
               title: 'AllUserAcount',
@@ -206,7 +197,6 @@ function DashboardLayoutBasic(props) {
               title: 'FedbakUser',
               icon: <ChatBubbleIcon />,
             },
-          
             {
               segment: 'poot',
               title: 'Report',
@@ -224,9 +214,18 @@ function DashboardLayoutBasic(props) {
             },
           ]);
         }
+
+        // Check for welcome message flag
+        if (sessionStorage.getItem('showWelcome') === 'true') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Welcome',
+            text: `Welcome, ${res.data.user}!`,
+          });
+          sessionStorage.removeItem('showWelcome'); // Remove the flag after showing the message
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
-
         if (err.response && err.response.status === 401) {
           navigate('/');
         } else {
@@ -236,7 +235,6 @@ function DashboardLayoutBasic(props) {
     };
 
     invaliedToken();
-    // تحديث الصفحة الحالية بناءً على router.pathname
     setCurrentComponent(allPages.find((page) => page.path === router.pathname)?.component);
   }, [router]);
 

@@ -36,6 +36,7 @@ const Login = () => {
     try {
       const res = await axios.post('https://fin-tracker-ncbx.onrender.com/api/users/login', { email, password });
       sessionStorage.setItem('jwt', res.data.token);
+      sessionStorage.setItem('showWelcome', 'true'); // Set flag for welcome message
       navigate('/tolpad');
     } catch (error) {
       Swal.fire({
