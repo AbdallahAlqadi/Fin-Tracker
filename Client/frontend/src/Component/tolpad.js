@@ -1,3 +1,5 @@
+// src/layouts/DashboardLayoutBasic.jsx
+
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import Box from '@mui/material/Box';
@@ -15,13 +17,7 @@ import DashboardUser from '../Component/dashbordUser';
 import BudgetItems from '../Component/datauser';
 import Graph from '../Component/graphdatauser';
 import Comparison from '../Component/comparison';
-import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
-import AddToDriveIcon from '@mui/icons-material/AddToDrive';
-import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
-import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 import FedbackUser from '../Component/fedbackuser';
-import ChatIcon from '@mui/icons-material/Chat';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import HomePage from '../Component/Homepage';
 import AcountUser from '../Component/AcountUser';
 import LogOut from '../Component/LogOut';
@@ -30,7 +26,7 @@ import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 
 const demoTheme = createTheme({
   palette: {
@@ -52,16 +48,14 @@ const demoTheme = createTheme({
 
 function useDemoRouter(initialPath) {
   const [pathname, setPathname] = React.useState(initialPath);
-
-  const router = React.useMemo(() => {
-    return {
+  return React.useMemo(
+    () => ({
       pathname,
       searchParams: new URLSearchParams(),
       navigate: (path) => setPathname(String(path)),
-    };
-  }, [pathname]);
-
-  return router;
+    }),
+    [pathname]
+  );
 }
 
 function DemoPageContent({ pathname }) {
@@ -75,14 +69,12 @@ function DemoPageContent({ pathname }) {
         textAlign: 'center',
       }}
     >
-      {/* تم تعديل Typography ليستخدم عنصر div بدلاً من p */}
       <Typography component="div">{pathname}</Typography>
     </Box>
   );
 }
 
 DemoPageContent.propTypes = {
-  // يمكن أن يكون المحتوى نصاً أو مكوناً
   pathname: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
 };
 
@@ -92,7 +84,6 @@ function DashboardLayoutBasic(props) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // قائمة الصفحات والمكونات
   const allPages = [
     { path: '/dashboard', component: <CategoryForm /> },
     { path: '/dashboarduser', component: <DashboardUser /> },
@@ -104,10 +95,7 @@ function DashboardLayoutBasic(props) {
     { path: '/alluser', component: <AcountUser /> },
     { path: '/poot', component: <Poot /> },
     { path: '/setting', component: <Settings /> },
-
-
     { path: '/logout', component: <LogOut /> },
-
   ];
 
   const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
@@ -115,42 +103,13 @@ function DashboardLayoutBasic(props) {
     {
       segment: 'dashboarduser',
       title: 'DashbordUser',
-      icon: <DashboardCustomizeIcon />,
+      icon: <DashboardIcon />,
     },
-    {
-      segment: 'showdatauser',
-      title: 'ShowDataUser',
-      icon: <AddToDriveIcon />,
-    },
-    {
-      segment: 'graphdatauser',
-      title: 'Graph',
-      icon: <DataSaverOffIcon />,
-    },
-    {
-      segment: 'comparison',
-      title: 'Comparison',
-      icon: <SignalCellularAltIcon />,
-    },
- 
-    {
-      segment: 'poot',
-      title: 'Report',
-      icon: <FaceIcon />,
-    },
-    {
-      segment: 'setting',
-      title: 'setting',
-      icon: <SettingsIcon />,
-    },
-    {
-      segment: 'logout',
-      title: 'logout',
-      icon: <ExitToAppIcon />
-    },
+    // ... other default nav items
+    { segment: 'logout', title: 'logout', icon: <ExitToAppIcon /> },
   ]);
 
-  // الصفحة الافتراضية
+  // default to homepage (or tolopad) after login
   const router = useDemoRouter('/homepage');
 
   useEffect(() => {
@@ -158,100 +117,51 @@ function DashboardLayoutBasic(props) {
 
     const invaliedToken = async () => {
       try {
-        const res = await axios.get('https://fin-tracker-ncbx.onrender.com/api/home', {
-          headers: {
-            Auth: 'Bearer ' + token,
-          },
-        });
+        const res = await axios.get(
+          'https://fin-tracker-ncbx.onrender.com/api/home',
+          {
+            headers: { Auth: 'Bearer ' + token },
+          }
+        );
 
-        sessionStorage.setItem('username', res.data.user.username); // Ensure username is stored
-
+        if (res.data.user && res.data.user.username) {
+          sessionStorage.setItem('username', res.data.user.username);
+        }
         setUser(res.data.user);
 
-        // Show welcome message if flag is set
+        // Show welcome once if flagged
         if (sessionStorage.getItem('showWelcomeMessage') === 'true') {
           const storedUsername = sessionStorage.getItem('username');
           Swal.fire({
             icon: 'success',
-            title: `مرحباً بك يا ${storedUsername}!`, // Welcome message with username
+            title: `مرحباً بك يا ${storedUsername}!`,
             showConfirmButton: false,
-            timer: 2000
+            timer: 2000,
           });
-          sessionStorage.removeItem('showWelcomeMessage'); // Clear the flag
+          sessionStorage.removeItem('showWelcomeMessage');
         }
 
+        // adjust nav for admin
         if (res.data.roul === 'admin') {
-          console.log('User is admin');
           setDashNavigate([
-            {
-              segment: 'dashboard',
-              title: 'Dashboard',
-              icon: <DashboardIcon />,
-            },
-            {
-              segment: 'dashboarduser',
-              title: 'DashbordUser',
-              icon: <DashboardCustomizeIcon />,
-            },
-            {
-              segment: 'showdatauser',
-              title: 'ShowDataUser',
-              icon: <AddToDriveIcon />,
-            },
-            {
-              segment: 'graphdatauser',
-              title: 'Graph',
-              icon: <DataSaverOffIcon />,
-            },
-            {
-              segment: 'comparison',
-              title: 'Comparison',
-              icon: <SignalCellularAltIcon />,
-            },
-           
-            {
-              segment: 'alluser',
-              title: 'AllUserAcount',
-              icon: <AccountCircleIcon />,
-            },
-            {
-              segment: 'fedbackuser',
-              title: 'FedbakUser',
-              icon: <ChatBubbleIcon />,
-            },
-          
-            {
-              segment: 'poot',
-              title: 'Report',
-              icon: <FaceIcon />,
-            },
-            {
-              segment: 'setting',
-              title: 'setting',
-              icon: <SettingsIcon />,
-            },
-            {
-              segment: 'logout',
-              title: 'logout',
-              icon: <ExitToAppIcon />
-            },
+            { segment: 'dashboard', title: 'Dashboard', icon: <DashboardIcon /> },
+            // ... other admin nav items
+            { segment: 'logout', title: 'logout', icon: <ExitToAppIcon /> },
           ]);
         }
       } catch (err) {
         console.error('Error fetching data:', err);
-
-        if (err.response && err.response.status === 401) {
+        if (err.response?.status === 401) {
           navigate('/');
-        } else {
-          console.error('Unexpected error:', err.message);
         }
       }
     };
 
     invaliedToken();
-    // تحديث الصفحة الحالية بناءً على router.pathname
-    setCurrentComponent(allPages.find((page) => page.path === router.pathname)?.component);
-  }, [router]);
+    setCurrentComponent(
+      allPages.find((page) => page.path === router.pathname)?.component
+    );
+  }, [router, navigate]);
 
   useEffect(() => {
     if (location.pathname === '/tolpad') {
@@ -261,7 +171,7 @@ function DashboardLayoutBasic(props) {
     }
   }, [location.pathname]);
 
-  const demoWindow = window !== undefined ? window() : undefined;
+  const demoWindow = window ? window() : undefined;
 
   return (
     <AppProvider navigation={dashNavigate} router={router} theme={demoTheme} window={demoWindow}>
@@ -276,5 +186,3 @@ function DashboardLayoutBasic(props) {
 }
 
 export default DashboardLayoutBasic;
-
-

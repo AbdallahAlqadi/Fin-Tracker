@@ -1,3 +1,5 @@
+// src/pages/Login.jsx
+
 import React, { useState, useEffect } from 'react';
 import '../cssStyle/login.css';
 import { useNavigate } from 'react-router-dom';
@@ -10,13 +12,10 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Animated background with a modern look
-    document.body.style.background = `
-      #4299e1`;
+    document.body.style.background = `#4299e1`;
     document.body.style.backgroundSize = '200% 200%';
     document.body.style.animation = 'gradientShift 8s ease infinite';
 
-    // Add background animation if not already present
     if (!document.getElementById('gradientShiftStyle')) {
       const style = document.createElement('style');
       style.id = 'gradientShiftStyle';
@@ -34,9 +33,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://fin-tracker-ncbx.onrender.com/api/users/login', { email, password });
+      const res = await axios.post(
+        'https://fin-tracker-ncbx.onrender.com/api/users/login',
+        { email, password }
+      );
+
+      // store token and flag to show welcome once
       sessionStorage.setItem('jwt', res.data.token);
-      sessionStorage.setItem('showWelcomeMessage', 'true'); // Add this line
+      sessionStorage.setItem('showWelcomeMessage', 'true');
+
       navigate('/tolpad');
     } catch (error) {
       Swal.fire({
@@ -87,9 +92,7 @@ const Login = () => {
         <div className="signup-link">
           <p>
             Don't have an account?{' '}
-            <span onClick={() => navigate('/signup')}>
-              Sign up now
-            </span>
+            <span onClick={() => navigate('/signup')}>Sign up now</span>
           </p>
         </div>
       </div>
@@ -98,5 +101,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
