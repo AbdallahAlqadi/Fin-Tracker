@@ -1,286 +1,169 @@
-import PropTypes from 'prop-types';
+// DashboardLayoutBasic.js - الكود المُصحح
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { createTheme } from '@mui/material/styles';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import { AppProvider } from '@toolpad/core/AppProvider';
-import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import { useNavigate, useLocation } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import { PageContainer } from '@toolpad/core/PageContainer';
-import CategoryForm from '../Component/dashbordAdmin';
-import DashboardUser from '../Component/dashbordUser';
-import BudgetItems from '../Component/datauser';
-import Graph from '../Component/graphdatauser';
-import Comparison from '../Component/comparison';
-import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
-import AddToDriveIcon from '@mui/icons-material/AddToDrive';
-import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
-import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
-import FedbackUser from '../Component/fedbackuser';
-import ChatIcon from '@mui/icons-material/Chat';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
-import HomePage from '../Component/Homepage';
-import AcountUser from '../Component/AcountUser';
-import LogOut from '../Component/LogOut';
-import Poot from '../Component/Poot';
-import Settings from '../Component/Settings';
-import FaceIcon from '@mui/icons-material/Face';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import SettingsIcon from '@mui/icons-material/Settings';
-import Swal from 'sweetalert2';
 
-const demoTheme = createTheme({
-  palette: {
-    mode: 'light',
-    background: {
-      default: '#ffffff',
-    },
-  },
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 600,
-      lg: 1200,
-      xl: 1536,
-    },
-  },
-});
-
-function useDemoRouter(initialPath) {
-  const [pathname, setPathname] = React.useState(initialPath);
-
-  const router = React.useMemo(() => {
-    return {
-      pathname,
-      searchParams: new URLSearchParams(),
-      navigate: (path) => setPathname(String(path)),
-    };
-  }, [pathname]);
-
-  return router;
-}
-
-function DemoPageContent({ pathname }) {
-  return (
-    <Box
-      sx={{
-        py: 4,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-      }}
-    >
-      {/* تم تعديل Typography ليستخدم عنصر div بدلاً من p */}
-      <Typography component="div">{pathname}</Typography>
-    </Box>
-  );
-}
-
-DemoPageContent.propTypes = {
-  // يمكن أن يكون المحتوى نصاً أو مكوناً
-  pathname: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
-};
-
-function DashboardLayoutBasic(props) {
-  const { window } = props;
-  const [user, setUser] = useState({});
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // قائمة الصفحات والمكونات
-  const allPages = [
-    { path: '/dashboard', component: <CategoryForm /> },
-    { path: '/dashboarduser', component: <DashboardUser /> },
-    { path: '/showdatauser', component: <BudgetItems /> },
-    { path: '/graphdatauser', component: <Graph /> },
-    { path: '/comparison', component: <Comparison /> },
-    { path: '/fedbackuser', component: <FedbackUser /> },
-    { path: '/homepage', component: <HomePage /> },
-    { path: '/alluser', component: <AcountUser /> },
-    { path: '/poot', component: <Poot /> },
-    { path: '/setting', component: <Settings /> },
-
-
-    { path: '/logout', component: <LogOut /> },
-
-  ];
-
-  const [currentComponent, setCurrentComponent] = useState(<CategoryForm />);
-  const [dashNavigate, setDashNavigate] = useState([
-    {
-      segment: 'dashboarduser',
-      title: 'DashbordUser',
-      icon: <DashboardCustomizeIcon />,
-    },
-    {
-      segment: 'showdatauser',
-      title: 'ShowDataUser',
-      icon: <AddToDriveIcon />,
-    },
-    {
-      segment: 'graphdatauser',
-      title: 'Graph',
-      icon: <DataSaverOffIcon />,
-    },
-    {
-      segment: 'comparison',
-      title: 'Comparison',
-      icon: <SignalCellularAltIcon />,
-    },
- 
-    {
-      segment: 'poot',
-      title: 'Report',
-      icon: <FaceIcon />,
-    },
-    {
-      segment: 'setting',
-      title: 'setting',
-      icon: <SettingsIcon />,
-    },
-    {
-      segment: 'logout',
-      title: 'logout',
-      icon: <ExitToAppIcon />
-    },
-  ]);
-
-  // الصفحة الافتراضية
-  const router = useDemoRouter('/homepage');
+const DashboardLayoutBasic = ({ children }) => {
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('jwt');
-
-    const invaliedToken = async () => {
-      try {
-        const res = await axios.get('https://fin-tracker-ncbx.onrender.com/api/home', {
-          headers: {
-            Auth: 'Bearer ' + token,
-          },
-        });
-
-        sessionStorage.setItem('username', res.data.user);
-
-        setUser(res.data.user);
-
-        if (res.data.roul === 'admin') {
-          console.log('User is admin');
-          setDashNavigate([
-            {
-              segment: 'dashboard',
-              title: 'Dashboard',
-              icon: <DashboardIcon />,
-            },
-            {
-              segment: 'dashboarduser',
-              title: 'DashbordUser',
-              icon: <DashboardCustomizeIcon />,
-            },
-            {
-              segment: 'showdatauser',
-              title: 'ShowDataUser',
-              icon: <AddToDriveIcon />,
-            },
-            {
-              segment: 'graphdatauser',
-              title: 'Graph',
-              icon: <DataSaverOffIcon />,
-            },
-            {
-              segment: 'comparison',
-              title: 'Comparison',
-              icon: <SignalCellularAltIcon />,
-            },
-           
-            {
-              segment: 'alluser',
-              title: 'AllUserAcount',
-              icon: <AccountCircleIcon />,
-            },
-            {
-              segment: 'fedbackuser',
-              title: 'FedbakUser',
-              icon: <ChatBubbleIcon />,
-            },
-          
-            {
-              segment: 'poot',
-              title: 'Report',
-              icon: <FaceIcon />,
-            },
-            {
-              segment: 'setting',
-              title: 'setting',
-              icon: <SettingsIcon />,
-            },
-            {
-              segment: 'logout',
-              title: 'logout',
-              icon: <ExitToAppIcon />
-            },
-          ]);
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-
-        if (err.response && err.response.status === 401) {
-          navigate('/');
-        } else {
-          console.error('Unexpected error:', err.message);
-        }
-      }
-    };
-
-    invaliedToken();
-    // تحديث الصفحة الحالية بناءً على router.pathname
-    setCurrentComponent(allPages.find((page) => page.path === router.pathname)?.component);
-  }, [router]);
-
-  useEffect(() => {
-    if (location.pathname === '/tolpad') {
-      document.body.style.background = 'rgba(245, 245, 245, 0.8)';
+    // استخراج اسم المستخدم من sessionStorage
+    const storedUsername = sessionStorage.getItem('username');
+    console.log('Username from sessionStorage:', storedUsername);
+    
+    if (storedUsername && storedUsername !== 'undefined') {
+      setUsername(storedUsername);
+      setLoading(false);
     } else {
-      document.body.style.background = '';
-    }
-  }, [location.pathname]);
-
-  // New useEffect for welcome message
-  useEffect(() => {
-    const showWelcomeMessage = sessionStorage.getItem('showWelcomeMessage');
-    const username = sessionStorage.getItem('username');
-
-    if (showWelcomeMessage === 'true' && username) {
-      Swal.fire({
-        title: `مرحباً بك يا ${username}!`, 
-        text: 'نتمنى لك يوماً سعيداً.',
-        icon: 'success',
-        timer: 3000, 
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
-      sessionStorage.removeItem('showWelcomeMessage');
+      // إذا لم يكن موجود، محاولة جلب بيانات المستخدم من الخادم
+      fetchUserProfile();
     }
   }, []);
 
-  const demoWindow = window !== undefined ? window() : undefined;
+  const fetchUserProfile = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        // إعادة توجيه لصفحة تسجيل الدخول إذا لم يكن هناك توكن
+        window.location.href = '/login';
+        return;
+      }
+
+      const response = await axios.get('/api/user/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      console.log('User profile response:', response.data);
+
+      // استخراج اسم المستخدم بشكل آمن من الاستجابة
+      let extractedUsername = '';
+      
+      if (response.data.username) {
+        extractedUsername = response.data.username;
+      } else if (response.data.user) {
+        if (typeof response.data.user === 'string') {
+          extractedUsername = response.data.user;
+        } else if (typeof response.data.user === 'object') {
+          extractedUsername = response.data.user.username || 
+                             response.data.user.name || 
+                             response.data.user.email?.split('@')[0] || '';
+        }
+      } else if (response.data.name) {
+        extractedUsername = response.data.name;
+      }
+
+      if (extractedUsername) {
+        // حفظ اسم المستخدم في sessionStorage فقط إذا لم يكن موجود
+        const currentStoredUsername = sessionStorage.getItem('username');
+        if (!currentStoredUsername || currentStoredUsername === 'undefined') {
+          sessionStorage.setItem('username', extractedUsername);
+          console.log('Username saved to sessionStorage from profile:', extractedUsername);
+        }
+        
+        setUsername(extractedUsername);
+        setUserProfile(response.data);
+      } else {
+        console.error('Could not extract username from profile response');
+        // يمكن استخدام البريد الإلكتروني كبديل
+        if (response.data.email) {
+          const emailUsername = response.data.email.split('@')[0];
+          setUsername(emailUsername);
+          sessionStorage.setItem('username', emailUsername);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      if (error.response?.status === 401) {
+        // إعادة توجيه لصفحة تسجيل الدخول إذا انتهت صلاحية التوكن
+        sessionStorage.clear();
+        window.location.href = '/login';
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    // مسح جميع البيانات المحفوظة
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    // إعادة توجيه لصفحة تسجيل الدخول
+    window.location.href = '/login';
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">جاري التحميل...</div>
+      </div>
+    );
+  }
 
   return (
-    <AppProvider navigation={dashNavigate} router={router} theme={demoTheme} window={demoWindow}>
-      <DashboardLayout>
-        <Typography>{user.roul}</Typography>
-        <PageContainer>
-          <DemoPageContent pathname={currentComponent} />
-        </PageContainer>
-      </DashboardLayout>
-    </AppProvider>
+    <div className="dashboard-layout">
+      {/* شريط التنقل العلوي */}
+      <header className="dashboard-header">
+        <div className="header-content">
+          <div className="logo">
+            <h1>لوحة التحكم</h1>
+          </div>
+          
+          <div className="user-section">
+            <span className="welcome-message">
+              مرحباً، {username || 'مستخدم'}
+            </span>
+            <button 
+              onClick={handleLogout}
+              className="logout-button"
+            >
+              تسجيل الخروج
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* الشريط الجانبي */}
+      <aside className="dashboard-sidebar">
+        <nav className="sidebar-nav">
+          <ul>
+            <li><a href="/dashboard">الرئيسية</a></li>
+            <li><a href="/dashboard/profile">الملف الشخصي</a></li>
+            <li><a href="/dashboard/settings">الإعدادات</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      {/* المحتوى الرئيسي */}
+      <main className="dashboard-main">
+        <div className="main-content">
+          {children}
+        </div>
+      </main>
+
+      {/* تصحيح الأخطاء - يمكن إزالته في الإنتاج */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="debug-info" style={{
+          position: 'fixed',
+          bottom: '10px',
+          right: '10px',
+          background: '#f0f0f0',
+          padding: '10px',
+          fontSize: '12px',
+          border: '1px solid #ccc'
+        }}>
+          <strong>معلومات التصحيح:</strong><br />
+          اسم المستخدم: {username || 'غير محدد'}<br />
+          sessionStorage username: {sessionStorage.getItem('username') || 'غير موجود'}
+        </div>
+      )}
+    </div>
   );
-}
+};
 
 export default DashboardLayoutBasic;
-
 
