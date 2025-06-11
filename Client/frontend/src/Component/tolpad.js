@@ -219,10 +219,14 @@ function DashboardLayoutBasic(props) {
         if (sessionStorage.getItem('showWelcome') === 'true') {
           Swal.fire({
             icon: 'success',
-            title: 'Welcome',
-            text: `Welcome, ${res.data.user}!`,
+            title: `👋 مرحبًا يا ${res.data.user}!`,
+            html: `سعداء بعودتك معنا 😊`,
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            background: '#ffffff',
           });
-          sessionStorage.removeItem('showWelcome'); // Remove the flag after showing the message
+          sessionStorage.removeItem('showWelcome');
         }
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -233,7 +237,6 @@ function DashboardLayoutBasic(props) {
         }
       }
     };
-
     invaliedToken();
     setCurrentComponent(allPages.find((page) => page.path === router.pathname)?.component);
   }, [router]);
