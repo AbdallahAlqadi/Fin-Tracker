@@ -30,6 +30,7 @@ import Settings from '../Component/Settings';
 import FaceIcon from '@mui/icons-material/Face';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const demoTheme = createTheme({
   palette: {
@@ -163,9 +164,21 @@ function DashboardLayoutBasic(props) {
           },
         });
 
-        sessionStorage.setItem('username', res.data.user);
+        sessionStorage.setItem('username', res.data.user.username); // Ensure username is stored
 
         setUser(res.data.user);
+
+        // Show welcome message if flag is set
+        if (sessionStorage.getItem('showWelcomeMessage') === 'true') {
+          const storedUsername = sessionStorage.getItem('username');
+          Swal.fire({
+            icon: 'success',
+            title: `مرحباً بك يا ${storedUsername}!`, // Welcome message with username
+            showConfirmButton: false,
+            timer: 2000
+          });
+          sessionStorage.removeItem('showWelcomeMessage'); // Clear the flag
+        }
 
         if (res.data.roul === 'admin') {
           console.log('User is admin');
@@ -263,3 +276,5 @@ function DashboardLayoutBasic(props) {
 }
 
 export default DashboardLayoutBasic;
+
+
