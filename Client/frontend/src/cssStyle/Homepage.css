@@ -125,6 +125,157 @@ body {
   flex-grow: 1;
 }
 
+/* Currency Converter Styles */
+.currency-converter-card {
+  grid-column: span 3;
+}
+
+.currency-converter-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.converter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+.currency-input-group,
+.currency-select-group,
+.currency-result-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.currency-input-group label,
+.currency-select-group label,
+.currency-result-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.currency-input,
+.currency-select {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.currency-input:focus,
+.currency-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.currency-result {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--background-color);
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-amount {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--success-color);
+}
+
+.result-placeholder {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.loading-spinner {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.converter-swap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.swap-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swap-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: rotate(180deg);
+}
+
+.swap-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.convert-button {
+  padding: 0.875rem 2rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  align-self: center;
+}
+
+.convert-button:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.convert-button:disabled {
+  background-color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.exchange-rate-info {
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.exchange-rate-info small {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
 /* Chart Section - Updated with modern styling */
 .chart-section {
   margin-bottom: 3rem;
@@ -216,6 +367,10 @@ body {
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  
+  .currency-converter-card {
+    grid-column: span 2;
+  }
 }
 
 @media (max-width: 768px) {
@@ -226,6 +381,15 @@ body {
   
   .features-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .currency-converter-card {
+    grid-column: span 1;
+  }
+  
+  .converter-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
   
   .chart-container {
@@ -266,4 +430,9 @@ body {
   .title {
     font-size: 1.75rem;
   }
+  
+  .convert-button {
+    width: 100%;
+  }
 }
+
