@@ -5,7 +5,9 @@ const Category = require("../models/categoryData"); // Assuming path is correct
 exports.getUserBudget = async (req, res) => {
     try {
         const budget = await Budget.findOne({ userId: req.user }).populate('products.CategoriesId');
+
         res.status(200).json(budget);
+        
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
